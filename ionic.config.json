@@ -1,0 +1,7 @@
+{
+  "name": "ekonomi-frontend",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

@@ -1,0 +1,47 @@
+<ion-content class="ion-padding">
+  <div class="register-container">
+    <!-- Fondo con gradiente suave -->
+    <div class="background-gradient"></div>
+
+    <!-- Mensaje de bienvenida -->
+    <div class="welcome-container">
+      <div class="welcome-icon">
+        <ion-icon name="hand-right-outline"></ion-icon>
+      </div>
+      <h2 class="welcome-title">¡Que bueno tenerte por aquí!</h2>
+      <p class="welcome-subtitle">Completa tus datos para ingresar</p>
+      <div class="welcome-accent-line"></div>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="registerForm" (ngSubmit)="registerAccount()" class="form-content">
+
+      <!-- Nombre de usuario -->
+      <ion-item class="input-item">
+        <ion-icon name="person-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-input type="text" formControlName="username" placeholder="Nombre de usuario"></ion-input>
+      </ion-item>
+
+      <!-- Correo electrónico -->
+      <ion-item class="input-item">
+        <ion-icon name="mail-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-input type="email" formControlName="email" placeholder="Correo electrónico"></ion-input>
+      </ion-item>
+
+      <!-- Contraseña -->
+      <ion-item class="input-item">
+        <ion-icon name="lock-closed-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-input type="password" formControlName="password" placeholder="Contraseña"></ion-input>
+      </ion-item>
+
+      <!-- Botón registrar -->
+      <ion-button expand="block" class="register-button" type="submit" [disabled]="registerForm.invalid">
+        Registrarse
+      </ion-button>
+
+      <div class="footer">
+        <p>© 2025 Ekonomi - Soluciones Financieras</p>
+      </div>
+    </form>
+  </div>
+</ion-content>
