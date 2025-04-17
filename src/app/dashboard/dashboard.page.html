@@ -4,43 +4,57 @@
   <div class="background-circle circle-2"></div>
 
   <div class="content-wrapper">
+    <!-- Header -->
     <div class="header-section">
       <div class="logo-text">Ekonomi</div>
       <ion-icon name="notifications-outline" class="notification-icon"></ion-icon>
     </div>
 
+    <!-- Main Section -->
     <div class="main-section">
       <ion-card class="account-card">
         <ion-card-content>
           <div class="account-info">
             <div class="account-label">Cuenta Corriente</div>
-            <div class="account-number">*66578</div>
+            <!-- Muestra la tarjeta formateada o el placeholder -->
+            <div class="account-number">
+              {{ tarjeta || '*66578' }}
+            </div>
           </div>
 
           <div class="saldo-label">Saldo Disponible</div>
 
+          <!-- Balance Toggle -->
           <div class="balance-section">
             <div class="currency-symbol">$</div>
-            <div id="balance-display" class="balance-amount">2.400.000</div>
-            <div class="show-balance" id="toggle-balance">
-              <ion-icon name="eye-outline" id="eye-icon"></ion-icon>
+            <div class="balance-amount">
+              {{ isBalanceHidden ? '**********' : (saldo | number:'1.0-0') }}
+            </div>
+            <div class="show-balance" (click)="toggleBalance()">
+              <ion-icon [name]="isBalanceHidden ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
             </div>
           </div>
 
           <div class="account-stats">
+            <!-- Límite Disponible -->
             <div class="stat-item limit-section">
               <div class="stat-icon">
                 <ion-icon name="wallet-outline"></ion-icon>
               </div>
               <div class="stat-content">
                 <div class="stat-label">Límite Disponible</div>
-                <div class="stat-value">$600.000</div>
+                <div class="stat-value">
+                  {{ limite | number:'1.0-0' }}
+                </div>
                 <div class="stat-progress">
-                  <div class="progress-bar" style="width: 30%;"></div>
+                  <div class="progress-bar"
+                       [style.width]="limite > 0 ? (saldo / limite * 100) + '%' : '0%'">
+                  </div>
                 </div>
               </div>
             </div>
 
+            <!-- Gastos e Ingresos del mes -->
             <div class="stats-row">
               <div class="stat-item monthly-item expenses">
                 <div class="stat-icon">
@@ -48,8 +62,12 @@
                 </div>
                 <div class="stat-content">
                   <div class="stat-label">Gastos del mes</div>
-                  <div class="stat-value">$600.000</div>
-                  <div class="small-text">30% de ingresos</div>
+                  <div class="stat-value">
+                    {{ gastosMes | number:'1.0-0' }}
+                  </div>
+                  <div class="small-text">
+                    {{ (ingresoMes > 0 ? (gastosMes / ingresoMes * 100) : 0) | number:'1.0-0' }}% de ingresos
+                  </div>
                 </div>
               </div>
 
@@ -59,7 +77,9 @@
                 </div>
                 <div class="stat-content">
                   <div class="stat-label">Ingreso del mes</div>
-                  <div class="stat-value">$2.000.000</div>
+                  <div class="stat-value">
+                    {{ ingresoMes | number:'1.0-0' }}
+                  </div>
                   <div class="small-text">Últimos 30 días</div>
                 </div>
               </div>
@@ -68,18 +88,20 @@
         </ion-card-content>
       </ion-card>
 
+      <!-- Action Buttons -->
       <div class="action-buttons">
-        <ion-button class="action-button add-card">
+        <ion-button class="action-button add-card" (click)="onAddCard()">
           <ion-icon name="card-outline" slot="start"></ion-icon>
           Agregar tarjeta
         </ion-button>
 
-        <ion-button class="action-button set-limit">
+        <ion-button class="action-button set-limit" (click)="onSetLimit()">
           <ion-icon name="options-outline" slot="start"></ion-icon>
           Poner límite
         </ion-button>
       </div>
 
+      <!-- Ad Carousel -->
       <div class="ad-carousel-container">
         <div class="ad-carousel">
           <div class="ad-slide active">
@@ -123,24 +145,31 @@
         </div>
       </div>
 
+      <!-- Transactions List -->
       <div class="transactions-section">
         <h2 class="section-title">Transacciones recientes</h2>
         <ion-list class="transactions-list">
-          <ion-item class="empty-transactions">
-            <div class="empty-message">
-              No hay transacciones recientes disponibles
-            </div>
+          <ion-item *ngFor="let mov of movimientos" class="transaction-item">
+            <ion-label>
+              <h3 [ngClass]="mov.tipo">{{ mov.descripcion }}</h3>
+              <p>{{ mov.fecha | date:'short' }}</p>
+            </ion-label>
+            <ion-badge [color]="mov.tipo==='ingreso' ? 'success' : 'danger'">
+              {{ mov.monto | number:'1.0-0' }}
+            </ion-badge>
+          </ion-item>
+          <ion-item *ngIf="!movimientos.length" class="empty-transactions">
+            <div class="empty-message">No hay transacciones recientes disponibles</div>
           </ion-item>
         </ion-list>
       </div>
     </div>
 
-    <div class="footer">
-      <!-- Opcional: puede agregar contenido aquí -->
-    </div>
+    <div class="footer"></div>
   </div>
 </ion-content>
 
+<!-- Bottom Navigation -->
 <ion-footer class="nav-footer">
   <div class="nav-container">
     <div class="nav-button active">
@@ -161,79 +190,3 @@
     </div>
   </div>
 </ion-footer>
-
-<script>
-document.addEventListener('ionicOverlayDidPresent', initApp);
-document.addEventListener('DOMContentLoaded', initApp);
-
-let appInitialized = false;
-
-function initApp() {
-  if (appInitialized) return;
-  appInitialized = true;
-
-  setTimeout(() => {
-    const balanceToggle = document.getElementById('toggle-balance');
-    const balanceDisplay = document.getElementById('balance-display');
-    const eyeIcon = document.getElementById('eye-icon');
-
-    const realBalance = '2.400.000';
-    const hiddenBalance = '**********';
-    let isBalanceHidden = false;
-
-    if (balanceToggle) {
-      balanceToggle.addEventListener('click', function() {
-        if (isBalanceHidden) {
-          balanceDisplay.textContent = realBalance;
-          eyeIcon.setAttribute('name', 'eye-off-outline');
-        } else {
-          balanceDisplay.textContent = hiddenBalance;
-          eyeIcon.setAttribute('name', 'eye-outline');
-        }
-        isBalanceHidden = !isBalanceHidden;
-      });
-    }
-
-    const slides = document.querySelectorAll('.ad-slide');
-    const indicators = document.querySelectorAll('.indicator');
-    let currentSlide = 0;
-    let carouselInterval;
-
-    function showSlide(index) {
-      slides.forEach(slide => slide.classList.remove('active'));
-      indicators.forEach(indicator => indicator.classList.remove('active'));
-
-      slides[index].classList.add('active');
-      indicators[index].classList.add('active');
-      currentSlide = index;
-    }
-
-    function startCarousel() {
-      if (carouselInterval) clearInterval(carouselInterval);
-
-      carouselInterval = setInterval(() => {
-        let nextSlide = (currentSlide + 1) % slides.length;
-        showSlide(nextSlide);
-      }, 5000);
-    }
-
-    startCarousel();
-
-    indicators.forEach((indicator, index) => {
-      indicator.addEventListener('click', () => {
-        showSlide(index);
-        startCarousel();
-      });
-    });
-
-    const navButtons = document.querySelectorAll('.nav-button');
-
-    navButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        navButtons.forEach(btn => btn.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-  }, 100);
-}
-</script>

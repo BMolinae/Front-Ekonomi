@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, numberAttribute } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://tu-backend-django.com/api'; // Cambia esto con tu URL real
+  private apiUrl = 'http://127.0.0.1:8000/api/'; // Cambia esto con tu URL real
   private tokenKey = 'auth_token';
   private userSubject = new BehaviorSubject<any>(this.getUserFromStorage());
   
@@ -21,7 +21,7 @@ export class AuthService {
 
   // Iniciar sesión
   login(email: string, password: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/api-token-auth/`, { email, password })
+    return this.http.post<any>('http://localhost:8000/api-token-auth/', { username: email, password })
       .pipe(
         tap(response => {
           if (response && response.token) {
@@ -37,7 +37,7 @@ export class AuthService {
 
   // Registrar nuevo usuario
   register(userData: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/register/`, userData);
+    return this.http.post(`${this.apiUrl}register/`, userData);
   }
 
   // Cerrar sesión
@@ -64,10 +64,12 @@ export class AuthService {
 
   // Opcional: obtener datos del usuario actual
   getCurrentUser(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/user/`)
-      .pipe(
+    const token = this.getToken();
+    const headers =  { Authorization: `Token ${token}` };
+
+     return this.http.get<any>(`${this.apiUrl}user/`, { headers }).pipe(
         tap(user => {
-          this.userSubject.next(user);
+          this.userSubject.next(user); localStorage.setItem('user_data', JSON.stringify(user))
         })
       );
   }
@@ -77,4 +79,23 @@ export class AuthService {
     const userData = localStorage.getItem('user_data');
     return userData ? JSON.parse(userData) : null;
   }
+
+  addCard(): Observable<{ saldo: number }> {
+    const token = this.getToken();
+    return this.http.post<{ saldo: number }>(
+      `${this.apiUrl}add-card/`,
+      {},
+      { headers: {Authorization: `Token ${token}`}}
+    );
+  }
+
+  setLimit(limite: number): Observable<{ limite: number }> {
+    const token = this.getToken();
+    return this.http.post<{ limite: number }>(
+      `${this.apiUrl}set-limit/`,
+      { limite },
+      { headers: { Authorization: `Token ${token}` } }
+    );
+  }
 }
+

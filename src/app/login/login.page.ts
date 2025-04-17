@@ -21,7 +21,7 @@ export class LoginPage {
   ) {
     // Crear el formulario con validaciones
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      username: ['', Validators.required],
       password: ['', Validators.required],
     });
   }
@@ -33,16 +33,20 @@ export class LoginPage {
 
   // Ejecuta el login
   login() {
+    console.log('🧪 Formulario:', this.loginForm.value);
+    console.log('🧪 Estado de validación:', this.loginForm.valid);
+    console.log('🧪 Errores:', this.loginForm.controls);
+
     if (this.loginForm.valid) {
-      const { email, password } = this.loginForm.value;
-      
-      this.authService.login(email, password).subscribe(
+      const { username, password } = this.loginForm.value;
+      this.authService.login(username, password).subscribe(
         response => {
           console.log('✅ Autenticado:', response);
           this.router.navigate(['/dashboard']);
         },
         error => {
           console.error('❌ Error al iniciar sesión:', error);
+          console.warn('response body:', error.error);
         }
       );
     } else {
