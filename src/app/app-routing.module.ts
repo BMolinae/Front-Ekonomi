@@ -27,6 +27,11 @@ const routes: Routes = [
     loadComponent: () =>
       import('./dashboard/dashboard.page').then(m => m.DashboardPage), // standalone component
   },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./forgot-password/forgot-password.page').then(m => m.ForgotPasswordPage),
+  }
 ];
 
 @NgModule({

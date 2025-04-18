@@ -31,6 +31,10 @@ export class LoginPage {
     this.router.navigate(['/create-account']);
   }
 
+  goToForgotPassword() {
+    this.router.navigate(['/forgot-password']);
+  }
+
   // Ejecuta el login
   login() {
     console.log('🧪 Formulario:', this.loginForm.value);
