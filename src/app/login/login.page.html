@@ -1,0 +1,59 @@
+<ion-content>
+  <div class="login-container">
+    <!-- Fondo con gradiente -->
+    <div class="background-gradient"></div>
+    <div class="background-circle circle-1"></div>
+    <div class="background-circle circle-2"></div>
+
+    <!-- Contenido -->
+    <div class="content-wrapper">
+      <!-- Logo y título en la parte superior -->
+      <div class="header-section">
+        <div class="logo-text">CB&J</div>
+        <h1 class="app-title">Ekonomi</h1>
+      </div>
+
+      <!-- Sección central con bienvenida y formulario -->
+      <div class="main-section">
+        <div class="welcome-container">
+          <h2 class="welcome-text">Bienvenido <span class="username">"Usuario"</span></h2>
+          <p class="welcome-subtitle">Gestiona tus finanzas de manera inteligente</p>
+        </div>
+
+        <!-- Formulario de inicio de sesión -->
+        <form [formGroup]="loginForm" (ngSubmit)="login()" class="login-form">
+          <div class="form-group">
+            <div class="input-wrapper">
+              <ion-icon name="person-outline"></ion-icon>
+              <ion-input formControlName="username" placeholder="Nombre de Usuario" type="text"></ion-input>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="input-wrapper">
+              <ion-icon name="lock-closed-outline"></ion-icon>
+              <ion-input formControlName="password" placeholder="Contraseña" type="password"></ion-input>
+            </div>
+            <div class="forgot-password">
+              <a href="#">¿Olvidaste tu contraseña?</a>
+            </div>
+          </div>
+
+          <ion-button expand="block" class="login-button" type="submit">
+            INGRESAR
+          </ion-button>
+        </form>
+
+        <div class="create-account">
+          <span>¿No tienes una cuenta?</span>
+          <a (click)="goToCreateAccount()" class="create-link">CREAR CUENTA</a>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>© 2025 Ekonomi - Soluciones Financieras</p>
+      </div>
+    </div>
+  </div>
+</ion-content>

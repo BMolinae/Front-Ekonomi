@@ -1,0 +1,43 @@
+<!-- HTML para Ionic -->
+<ion-content>
+  <div class="login-container">
+    <!-- Fondo con formas y gradiente -->
+    <div class="background-gradient"></div>
+    <div class="background-circle circle-1"></div>
+    <div class="background-circle circle-2"></div>
+    
+    <!-- Contenido -->
+    <div class="content-wrapper">
+      <!-- Logo y título en la parte superior -->
+      <div class="header-section">
+        <div class="logo-text">CB&J</div>
+        <h1 class="app-title">Ekonomi</h1>
+      </div>
+      
+      <!-- Sección central con bienvenida y formulario -->
+      <div class="main-section">
+        <div class="welcome-container">
+          <h2 class="welcome-text">Bienvenido <span class="username">"Usuario"</span></h2>
+          <p class="welcome-subtitle">Gestiona tus finanzas de manera inteligente</p>
+        </div>
+        
+        <!-- Botones de acción -->
+        <div class="action-buttons">
+          <ion-button expand="block" class="login-button" (click)="goToLogin()">
+            INGRESAR
+          </ion-button>
+          
+          <div class="create-account">
+            <span>¿No tienes una cuenta?</span>
+            <a (click)="goToCreateAccount()" class="create-link">CREAR CUENTA</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="footer">
+        <p>© 2025 Ekonomi - Soluciones Financieras</p>
+      </div>
+    </div>
+  </div>
+</ion-content>

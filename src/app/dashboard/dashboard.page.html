@@ -1,0 +1,192 @@
+<ion-content class="dashboard-container">
+  <div class="background-gradient"></div>
+  <div class="background-circle circle-1"></div>
+  <div class="background-circle circle-2"></div>
+
+  <div class="content-wrapper">
+    <!-- Header -->
+    <div class="header-section">
+      <div class="logo-text">Ekonomi</div>
+      <ion-icon name="notifications-outline" class="notification-icon"></ion-icon>
+    </div>
+
+    <!-- Main Section -->
+    <div class="main-section">
+      <ion-card class="account-card">
+        <ion-card-content>
+          <div class="account-info">
+            <div class="account-label">Cuenta Corriente</div>
+            <!-- Muestra la tarjeta formateada o el placeholder -->
+            <div class="account-number">
+              {{ tarjeta || '*66578' }}
+            </div>
+          </div>
+
+          <div class="saldo-label">Saldo Disponible</div>
+
+          <!-- Balance Toggle -->
+          <div class="balance-section">
+            <div class="currency-symbol">$</div>
+            <div class="balance-amount">
+              {{ isBalanceHidden ? '**********' : (saldo | number:'1.0-0') }}
+            </div>
+            <div class="show-balance" (click)="toggleBalance()">
+              <ion-icon [name]="isBalanceHidden ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </div>
+          </div>
+
+          <div class="account-stats">
+            <!-- Límite Disponible -->
+            <div class="stat-item limit-section">
+              <div class="stat-icon">
+                <ion-icon name="wallet-outline"></ion-icon>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Límite Disponible</div>
+                <div class="stat-value">
+                  {{ limite | number:'1.0-0' }}
+                </div>
+                <div class="stat-progress">
+                  <div class="progress-bar"
+                       [style.width]="limite > 0 ? (saldo / limite * 100) + '%' : '0%'">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gastos e Ingresos del mes -->
+            <div class="stats-row">
+              <div class="stat-item monthly-item expenses">
+                <div class="stat-icon">
+                  <ion-icon name="trending-down-outline"></ion-icon>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-label">Gastos del mes</div>
+                  <div class="stat-value">
+                    {{ gastosMes | number:'1.0-0' }}
+                  </div>
+                  <div class="small-text">
+                    {{ (ingresoMes > 0 ? (gastosMes / ingresoMes * 100) : 0) | number:'1.0-0' }}% de ingresos
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-item monthly-item income">
+                <div class="stat-icon">
+                  <ion-icon name="trending-up-outline"></ion-icon>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-label">Ingreso del mes</div>
+                  <div class="stat-value">
+                    {{ ingresoMes | number:'1.0-0' }}
+                  </div>
+                  <div class="small-text">Últimos 30 días</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <ion-button class="action-button add-card" (click)="onAddCard()">
+          <ion-icon name="card-outline" slot="start"></ion-icon>
+          Agregar tarjeta
+        </ion-button>
+
+        <ion-button class="action-button set-limit" (click)="onSetLimit()">
+          <ion-icon name="options-outline" slot="start"></ion-icon>
+          Poner límite
+        </ion-button>
+      </div>
+
+      <!-- Ad Carousel -->
+      <div class="ad-carousel-container">
+        <div class="ad-carousel">
+          <div class="ad-slide active">
+            <div class="ad-content">
+              <div class="ad-icon">
+                <ion-icon name="cash-outline"></ion-icon>
+              </div>
+              <div class="ad-text">
+                <h3>La forma más eficaz de administrar tu dinero.</h3>
+                <p>Tasa preferencial por tiempo limitado</p>
+              </div>
+            </div>
+          </div>
+          <div class="ad-slide">
+            <div class="ad-content">
+              <div class="ad-icon">
+                <ion-icon name="home-outline"></ion-icon>
+              </div>
+              <div class="ad-text">
+                <h3>Crédito hipotecario</h3>
+                <p>Financiamiento hasta 30 años</p>
+              </div>
+            </div>
+          </div>
+          <div class="ad-slide">
+            <div class="ad-content">
+              <div class="ad-icon">
+                <ion-icon name="shield-checkmark-outline"></ion-icon>
+              </div>
+              <div class="ad-text">
+                <h3>Seguro de vida</h3>
+                <p>Protege a los que más quieres</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-indicators">
+          <div class="indicator active"></div>
+          <div class="indicator"></div>
+          <div class="indicator"></div>
+        </div>
+      </div>
+
+      <!-- Transactions List -->
+      <div class="transactions-section">
+        <h2 class="section-title">Transacciones recientes</h2>
+        <ion-list class="transactions-list">
+          <ion-item *ngFor="let mov of movimientos" class="transaction-item">
+            <ion-label>
+              <h3 [ngClass]="mov.tipo">{{ mov.descripcion }}</h3>
+              <p>{{ mov.fecha | date:'short' }}</p>
+            </ion-label>
+            <ion-badge [color]="mov.tipo==='ingreso' ? 'success' : 'danger'">
+              {{ mov.monto | number:'1.0-0' }}
+            </ion-badge>
+          </ion-item>
+          <ion-item *ngIf="!movimientos.length" class="empty-transactions">
+            <div class="empty-message">No hay transacciones recientes disponibles</div>
+          </ion-item>
+        </ion-list>
+      </div>
+    </div>
+
+    <div class="footer"></div>
+  </div>
+</ion-content>
+
+<!-- Bottom Navigation -->
+<ion-footer class="nav-footer">
+  <div class="nav-container">
+    <div class="nav-button active">
+      <ion-icon name="home"></ion-icon>
+      <span class="nav-label">Inicio</span>
+    </div>
+    <div class="nav-button">
+      <ion-icon name="bar-chart"></ion-icon>
+      <span class="nav-label">Gráficos</span>
+    </div>
+    <div class="nav-button">
+      <ion-icon name="chatbubble-ellipses"></ion-icon>
+      <span class="nav-label">ChatBot</span>
+    </div>
+    <div class="nav-button">
+      <ion-icon name="document-text"></ion-icon>
+      <span class="nav-label">Documentos</span>
+    </div>
+  </div>
+</ion-footer>
