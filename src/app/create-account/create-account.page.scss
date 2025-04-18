@@ -23,6 +23,44 @@ ion-content {
   --padding-bottom: 0;
 }
 
+.back-button-container {
+  position: relative;
+  padding: 8px 0;
+  margin-bottom: 8px;
+}
+
+.custom-back-button {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--primary-blue);
+  font-family: 'Flexo', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  ion-icon {
+    font-size: 20px;
+    margin-right: 8px;
+    color: var(--primary-blue);
+  }
+
+  &:hover {
+    background: rgba(38, 86, 191, 0.1);
+    transform: translateX(-2px);
+  }
+
+  &:active {
+    background: rgba(38, 86, 191, 0.2);
+    transform: translateX(-2px) scale(0.98);
+  }
+}
+
 .register-container {
   display: flex;
   flex-direction: column;

@@ -1,16 +1,26 @@
+/* -----------------------------------------------------------------------------
+ * App Global CSS
+ * -----------------------------------------------------------------------------
+ * Estilos globales para toda la aplicación. También puedes usar este archivo
+ * como punto de entrada para importar otros estilos Sass o CSS.
+ * Más info: https://ionicframework.com/docs/layout/global-stylesheets
+ */
 
-/* --------------------------------------------------------------------------
- * App Global CSS (Ionic imports)
- * -------------------------------------------------------------------------- */
+/* Core CSS requerido para Ionic */
 @import "@ionic/angular/css/core.css";
+
+/* Normalización y estructura base */
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";
 @import "@ionic/angular/css/typography.css";
 @import "@ionic/angular/css/display.css";
+
+/* Utilidades opcionales de Ionic */
 @import "@ionic/angular/css/padding.css";
 @import "@ionic/angular/css/float-elements.css";
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
-@import "@ionic/angular/css/palettes/dark.system.css";
 
+/* Paleta de colores para modo oscuro */
+@import "@ionic/angular/css/palettes/dark.system.css";

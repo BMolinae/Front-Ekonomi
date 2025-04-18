@@ -42,11 +42,10 @@ export class ForgotPasswordPage {
     }
   }
 
-  goBack() {
-    this.navCtrl.back();
-  }
-
   goBackToLogin() {
     this.navCtrl.navigateBack('/login');
+  }
+  goBack() {
+    this.navCtrl.back();
   }
 }

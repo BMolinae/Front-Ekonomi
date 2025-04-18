@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, NavController } from '@ionic/angular';
 import { AuthService } from '../services/auth.service'; // Asegúrate de que la ruta sea correcta
 
 @Component({
@@ -17,6 +17,7 @@ export class CreateAccountPage {
   constructor(
     private router: Router, 
     private fb: FormBuilder,
+    private navCtrl: NavController,
     private authService: AuthService // Inyecta el servicio aquí
   ) {
     this.registerForm = this.fb.group({
@@ -44,4 +45,10 @@ export class CreateAccountPage {
       console.log('Formulario inválido');
     }
   }
+
+  goBack() {
+    this.navCtrl.back();
+  }
+
+
 }

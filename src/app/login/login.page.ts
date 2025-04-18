@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, NavController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service'; // Asegúrate de que la ruta sea correcta
@@ -17,6 +17,7 @@ export class LoginPage {
   constructor(
     private router: Router,
     private fb: FormBuilder,
+    private navCtrl: NavController,
     private authService: AuthService // Inyecta solo AuthService
   ) {
     // Crear el formulario con validaciones
@@ -35,6 +36,9 @@ export class LoginPage {
     this.router.navigate(['/forgot-password']);
   }
 
+  goBack() {
+    this.navCtrl.back();
+  }
   // Ejecuta el login
   login() {
     console.log('🧪 Formulario:', this.loginForm.value);
