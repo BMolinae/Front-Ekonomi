@@ -1,11 +1,11 @@
 // src/app/dashboard/dashboard.page.ts
 
-import { Component, OnInit } from '@angular/core';
-import { AlertController, MenuController, IonicModule } from '@ionic/angular';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit }       from '@angular/core';
+import { AlertController, IonicModule } from '@ionic/angular';
+import { CommonModule }            from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { AuthService } from '../services/auth.service';
-import { Router } from '@angular/router';
+import { AuthService }             from '../services/auth.service';
+import { Router }                  from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,24 +15,21 @@ import { Router } from '@angular/router';
   imports: [IonicModule, CommonModule],
 })
 export class DashboardPage implements OnInit {
-  saldo = 0;
-  limite = 0;
-  gastosMes = 0;
-  ingresoMes = 0;
+  saldo           = 0;      // saldo disponible
+  private initialSaldo = 0; // saldo inicial (al agregar tarjeta)
+  limiteMensual   = 0;      // límite mensual fijado
+  limite          = 0;      // límite disponible (actual)
+  gastosMes       = 0;      // total gastos mes
+  ingresoMes      = 0;      // total ingresos mes
   movimientos: any[] = [];
   isBalanceHidden = false;
-  tarjeta: string = '';
-
-  // Control del header al hacer scroll
-  headerHidden = false;
-  private lastScrollTop = 0;
+  tarjeta         = '';     // tarjeta formateada
 
   constructor(
-    private http: HttpClient,
+    private http:       HttpClient,
     private authService: AuthService,
-    private router: Router,
-    private alertCtrl: AlertController,
-    private menu: MenuController
+    private router:     Router,
+    private alertCtrl:  AlertController
   ) {}
 
   ngOnInit() {
@@ -41,16 +38,22 @@ export class DashboardPage implements OnInit {
       return;
     }
 
-    // Obtener saldo y límite
+    // 1) cargo datos de usuario
     this.authService.getCurrentUser().subscribe({
       next: user => {
-        this.saldo = user.saldo;
-        this.limite = user.limite_mensual ?? 0;
+        this.initialSaldo  = user.saldo;
+        this.saldo         = user.saldo;
+        this.limiteMensual = user.limite_mensual ?? 0;
+        // si no hay límite, por ahora lo tratamos igual al saldo
+        this.limite = this.limiteMensual > 0 
+                      ? this.limiteMensual 
+                      : this.initialSaldo;
+        this.ingresoMes = this.initialSaldo;
       },
       error: err => console.error('Error al obtener datos de usuario', err)
     });
 
-    // Obtener movimientos del mes
+    // 2) cargo movimientos y recalculo stats
     this.loadMovimientos();
   }
 
@@ -58,14 +61,8 @@ export class DashboardPage implements OnInit {
     this.isBalanceHidden = !this.isBalanceHidden;
   }
 
-  onScroll(ev: any) {
-    const current = ev.detail.scrollTop;
-    this.headerHidden = current > this.lastScrollTop && current > 80;
-    this.lastScrollTop = current;
-  }
-
   loadMovimientos() {
-    const token = this.authService.getToken();
+    const token   = this.authService.getToken();
     const headers = new HttpHeaders({ Authorization: `Token ${token}` });
 
     this.http.get<any[]>('http://localhost:8000/api/movimientos/', { headers })
@@ -79,42 +76,107 @@ export class DashboardPage implements OnInit {
   }
 
   private computeMonthlyStats(data: any[]) {
-    const now = new Date();
+    const now   = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1);
     const movMes = data.filter(m => new Date(m.fecha) >= start);
 
-    this.gastosMes = movMes
+    // sumar gastos e ingresos del mes
+    this.gastosMes  = movMes
       .filter(m => m.tipo === 'gasto')
       .reduce((sum, m) => sum + +m.monto, 0);
 
     this.ingresoMes = movMes
       .filter(m => m.tipo === 'ingreso')
       .reduce((sum, m) => sum + +m.monto, 0);
+
+    // recalcular saldo y límite
+    this.saldo  = this.initialSaldo - this.gastosMes;
+
+    // si existe límite mensual (>0), lo uso; si no, lo trato igual al saldo inicial
+    const baseLimit = this.limiteMensual > 0 
+                      ? this.limiteMensual 
+                      : this.initialSaldo;
+    this.limite = baseLimit - this.gastosMes;
   }
 
-  async onAddCard() {
+  async onAddExpense() {
     const alert = await this.alertCtrl.create({
-      cssClass: 'custom-alert',
-      header: 'Agregar Tarjeta',
+      header: 'Nuevo Gasto',
       inputs: [
-        { name: 'cardNumber', type: 'text', placeholder: 'Número de 16 dígitos', attributes: { maxlength: 16 } },
-        { name: 'cardName', type: 'text', placeholder: 'Nombre en la tarjeta' },
-        { name: 'expiry', type: 'month', placeholder: 'MM/AA' },
-        { name: 'cvv', type: 'password', placeholder: 'CVV (3 dígitos)', attributes: { maxlength: 3 } }
+        { name: 'descripcion', type: 'text',   placeholder: 'Descripción' },
+        { name: 'monto',       type: 'number', placeholder: 'Monto' }
       ],
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {
           text: 'Guardar',
           handler: data => {
-            const nums = (data.cardNumber || '').replace(/\D/g, '').padEnd(16, '•');
-            this.tarjeta = nums.match(/.{1,4}/g)?.join('-') ?? nums;
+            if (!data.descripcion?.trim() || !data.monto) {
+              return false;
+            }
+            const token   = this.authService.getToken();
+            const headers = new HttpHeaders({ Authorization: `Token ${token}` });
+
+            this.http.post<any>(
+              'http://localhost:8000/api/movimientos/',
+              {
+                tipo:        'gasto',
+                descripcion: data.descripcion.trim(),
+                monto:       Number(data.monto)
+              },
+              { headers }
+            ).subscribe({
+              next: mov => {
+                this.movimientos.push(mov);
+                this.computeMonthlyStats(this.movimientos);
+              },
+              error: err => console.error('Error al guardar gasto', err)
+            });
+            return true;
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async onAddCard() {
+    const alert = await this.alertCtrl.create({
+      header: 'Agregar Tarjeta',
+      inputs: [
+        { name: 'cardNumber', type: 'text',  placeholder: '16 dígitos',  attributes: { maxlength: 16 } },
+        { name: 'cardName',   type: 'text',  placeholder: 'Nombre tarjeta' },
+        { name: 'expiry',     type: 'month', placeholder: 'MM/AA' },
+        { name: 'cvv',        type: 'password', placeholder: 'CVV', attributes: { maxlength: 3 } }
+      ],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Guardar',
+          handler: data => {
+            if (
+              !data.cardNumber?.trim() ||
+              !data.cardName?.trim()   ||
+              !data.expiry            ||
+              !data.cvv?.trim()
+            ) {
+              return false;
+            }
+            // formateo xxxx-xxxx-xxxx-xxxx
+            const raw = data.cardNumber.replace(/\D/g, '').padEnd(16, '•');
+            this.tarjeta = (raw.match(/.{1,4}/g) || []).join('-');
 
             this.authService.addCard().subscribe({
               next: res => {
-                this.saldo = res.saldo;
-                this.ingresoMes = res.saldo;
-                this.gastosMes = 0;
+                this.initialSaldo = res.saldo;
+                this.saldo        = res.saldo;
+                this.ingresoMes   = res.saldo;
+                this.gastosMes    = 0;
+                // baseLimit usa initialSaldo si no hay límiteMensual
+                this.limite = (this.limiteMensual > 0 
+                               ? this.limiteMensual 
+                               : this.initialSaldo)
+                              - this.gastosMes;
               },
               error: err => console.error('Error al agregar tarjeta', err)
             });
@@ -126,30 +188,48 @@ export class DashboardPage implements OnInit {
     await alert.present();
   }
 
-  async onSetLimit() {
-    const alert = await this.alertCtrl.create({
-      cssClass: 'custom-alert',
-      header: 'Poner Límite Mensual',
-      inputs: [
-        { name: 'limite', type: 'number', placeholder: 'Ingresa tu límite', attributes: { min: 1 } }
-      ],
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Guardar',
-          handler: data => {
-            const x = Number(data.limite);
-            if (isNaN(x) || x <= 0) return false;
+// Dentro de tu DashboardPage (dashboard.page.ts)
 
-            this.authService.setLimit(x).subscribe({
-              next: res => { this.limite = res.limite; },
-              error: err => console.error('Error al fijar límite', err)
-            });
-            return true;
+async onSetLimit(): Promise<void> {
+  const alert = await this.alertCtrl.create({
+    header: 'Poner Límite Mensual',
+    inputs: [
+      {
+        name: 'limite',
+        type: 'number',
+        placeholder: 'Ingresa tu límite',
+        value: '',              // siempre inicia vacío
+        attributes: { min: 1 }
+      }
+    ],
+    buttons: [
+      { text: 'Cancelar', role: 'cancel' },
+      {
+        text: 'Guardar',
+        handler: data => {
+          const nuevoLimite = Number(data.limite);
+          if (isNaN(nuevoLimite) || nuevoLimite <= 0) {
+            return false;    // Si no es válido, no cierra el alert
           }
+
+          // Llamamos al backend para fijar el nuevo límite
+          this.authService.setLimit(nuevoLimite).subscribe({
+            next: res => {
+              // Guardamos el límite mensual original
+              this.limiteMensual = res.limite;
+              // Calculamos el límite disponible restando lo ya gastado
+              this.limite = this.limiteMensual - this.gastosMes;
+            },
+            error: err => console.error('Error al fijar límite', err)
+          });
+
+          return true;       // Cierra el alert
         }
-      ]
-    });
-    await alert.present();
-  }
+      }
+    ]
+  });
+
+  await alert.present();
+}
+
 }

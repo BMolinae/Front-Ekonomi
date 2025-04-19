@@ -18,7 +18,7 @@
             <div class="account-label">Cuenta Corriente</div>
             <!-- Muestra la tarjeta formateada o el placeholder -->
             <div class="account-number">
-              {{ tarjeta || '*66578' }}
+              {{ tarjeta || '*' }}
             </div>
           </div>
 
@@ -47,8 +47,9 @@
                   {{ limite | number:'1.0-0' }}
                 </div>
                 <div class="stat-progress">
-                  <div class="progress-bar"
-                       [style.width]="limite > 0 ? (saldo / limite * 100) + '%' : '0%'">
+                  <div
+                    class="progress-bar"
+                    [style.width]="limite > 0 ? (saldo / limite * 100) + '%' : '0%'">
                   </div>
                 </div>
               </div>
@@ -66,7 +67,12 @@
                     {{ gastosMes | number:'1.0-0' }}
                   </div>
                   <div class="small-text">
-                    {{ (ingresoMes > 0 ? (gastosMes / ingresoMes * 100) : 0) | number:'1.0-0' }}% de ingresos
+                    <ng-container *ngIf="limite > 0; else deIngreso">
+                      {{ (gastosMes / limite * 100) | number:'1.0-0' }}% del límite
+                    </ng-container>
+                    <ng-template #deIngreso>
+                      {{ (ingresoMes > 0 ? (gastosMes / ingresoMes * 100) : 0) | number:'1.0-0' }}% de ingresos
+                    </ng-template>
                   </div>
                 </div>
               </div>
@@ -99,6 +105,7 @@
           <ion-icon name="options-outline" slot="start"></ion-icon>
           Poner límite
         </ion-button>
+        
       </div>
 
       <!-- Ad Carousel -->
