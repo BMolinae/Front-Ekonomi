@@ -2,12 +2,57 @@
   <div class="background-gradient"></div>
   <div class="background-circle circle-1"></div>
   <div class="background-circle circle-2"></div>
+  <!-- Panel desplegable de usuario - No cambia -->
+  <div class="expandable-panel user-panel" [class.expanded]="isUserPanelExpanded">
+    <div class="expandable-header" (click)="toggleUserPanel()">
+      <div class="panel-title">
+        <ion-icon name="person-circle-outline"></ion-icon>
+        <span>Hola "USUARIO"</span>
+      </div>
+      <ion-icon [name]="isUserPanelExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"
+        class="toggle-icon"></ion-icon>
+    </div>
+    <div class="expandable-content" [class.expanded]="isUserPanelExpanded">
+      <div class="panel-item" (click)="conoceTuApp()">
+        <div class="item-icon">
+          <ion-icon name="phone-portrait-outline"></ion-icon>
+        </div>
+        <div class="item-content">
+          <div class="item-link">Conoce tu App</div>
+        </div>
+      </div>
+      <div class="panel-item" (click)="politicaUso()">
+        <div class="item-icon">
+          <ion-icon name="document-text-outline"></ion-icon>
+        </div>
+        <div class="item-content">
+          <div class="item-link">Política de uso</div>
+        </div>
+      </div>
+      <div class="panel-item" (click)="contactenos()">
+        <div class="item-icon">
+          <ion-icon name="mail-outline"></ion-icon>
+        </div>
+        <div class="item-content">
+          <div class="item-link">Contáctenos</div>
+        </div>
+      </div>
+      <div class="panel-item" (click)="cerrarSesion()">
+        <div class="item-icon">
+          <ion-icon name="log-out-outline"></ion-icon>
+        </div>
+        <div class="item-content">
+          <div class="item-link">Cerrar sesión</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="content-wrapper">
     <!-- Header -->
     <div class="header-section">
       <div class="logo-text">Ekonomi</div>
-      <ion-icon name="notifications-outline" class="notification-icon"></ion-icon>
+      <ion-icon name="person-outline" class="notification-icon" (click)="toggleUserPanel()"></ion-icon>
     </div>
 
     <!-- Main Section -->
@@ -47,9 +92,7 @@
                   {{ limite | number:'1.0-0' }}
                 </div>
                 <div class="stat-progress">
-                  <div
-                    class="progress-bar"
-                    [style.width]="limite > 0 ? (saldo / limite * 100) + '%' : '0%'">
+                  <div class="progress-bar" [style.width]="limite > 0 ? (saldo / limite * 100) + '%' : '0%'">
                   </div>
                 </div>
               </div>
@@ -105,7 +148,7 @@
           <ion-icon name="options-outline" slot="start"></ion-icon>
           Poner límite
         </ion-button>
-        
+
       </div>
 
       <!-- Ad Carousel -->

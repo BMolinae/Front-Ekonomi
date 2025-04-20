@@ -1,4 +1,3 @@
-/* Variables de colores y fuentes */
 :host {
   --primary-blue: #2656bf;
   --secondary-blue: #4287d6;
@@ -24,31 +23,15 @@
   font-style: normal;
 }
 
-@font-face {
-  font-family: 'Flexo';
-  src: url('/assets/fonts/Flexo-Medium.ttf') format('truetype');
-  font-weight: 500;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Flexo';
-  src: url('/assets/fonts/Flexo-Bold.ttf') format('truetype');
-  font-weight: bold;
-  font-style: normal;
-}
-
-/* Contenedor principal */
 .dashboard-container {
   height: 100%;
   width: 100%;
   position: relative;
   overflow: auto;
   font-family: 'Flexo', sans-serif;
-  padding-bottom: 60px; /* Reducido espacio para la barra de navegación */
+  padding-bottom: 60px; /* Espacio para la barra de navegaciÃ³n */
 }
 
-/* Fondo con gradiente - Corregido para evitar áreas negras */
 .background-gradient {
   position: fixed;
   top: 0;
@@ -59,7 +42,6 @@
   z-index: -2;
 }
 
-/* Círculos decorativos */
 .background-circle {
   position: fixed;
   border-radius: 50%;
@@ -67,7 +49,7 @@
 }
 
 .circle-1 {
-  width: 180px; /* Reducido tamaño */
+  width: 180px;
   height: 180px;
   top: -40px;
   right: -40px;
@@ -76,7 +58,7 @@
 }
 
 .circle-2 {
-  width: 130px; /* Reducido tamaño */
+  width: 130px;
   height: 130px;
   bottom: 25%;
   left: -50px;
@@ -84,53 +66,49 @@
   opacity: 0.2;
 }
 
-/* Contenedor de contenido */
 .content-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 12px 16px; /* Reducido padding */
-  max-width: 720px; /* Reducido ancho máximo */
+  padding: 12px 16px;
+  max-width: 720px;
   margin: 0 auto;
 }
 
-/* Header con logo */
 .header-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 6px 12px; /* Reducido padding */
-  margin-bottom: 8px; /* Reducido margen */
+  padding: 14px 6px 12px;
+  margin-bottom: 8px;
 }
 
 .logo-text {
-  font-size: 22px; /* Reducido tamaño */
+  font-size: 22px;
   font-weight: bold;
   color: var(--accent-turquoise);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .notification-icon {
-  font-size: 22px; /* Reducido tamaño */
+  font-size: 22px;
   color: var(--dark-text);
-  padding: 6px; /* Reducido área de toque */
+  padding: 6px;
 }
 
-/* Sección principal */
 .main-section {
   flex: 1;
   display: flex;
   flex-direction: column;
   margin-top: 8px;
-  padding-bottom: 65px; /* Reducido espacio */
+  padding-bottom: 65px;
 }
 
-/* Tarjeta de cuenta */
 .account-card {
   --background: var(--white);
-  margin: 0 0 20px; /* Reducido margen */
-  border-radius: 16px; /* Reducido border radius */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07); /* Ajustada sombra */
+  margin: 0 0 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
   overflow: visible;
 }
 
@@ -138,49 +116,47 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px; /* Reducido margen */
+  margin-bottom: 12px;
 }
 
 .account-label {
-  font-size: 14px; /* Reducido tamaño */
+  font-size: 14px;
   color: var(--dark-text);
   font-weight: 500;
 }
 
 .account-number {
-  font-size: 14px; /* Reducido tamaño */
+  font-size: 14px;
   color: var(--dark-text);
   opacity: 0.7;
 }
 
-/* Etiqueta de saldo disponible */
 .saldo-label {
   text-align: center;
-  font-size: 14px; /* Reducido tamaño */
+  font-size: 14px;
   color: var(--dark-text);
   opacity: 0.8;
-  margin: 12px 0 6px; /* Reducido margen */
+  margin: 12px 0 6px;
 }
 
-/* Sección de saldo */
 .balance-section {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 10px 0 20px; /* Reducido margen */
+  margin: 10px 0 20px;
   position: relative;
-  height: 44px; /* Reducida altura */
+  height: 44px;
 }
 
 .currency-symbol {
-  font-size: 24px; /* Reducido tamaño */
+  font-size: 24px;
   font-weight: bold;
   color: var(--dark-text);
-  margin-right: 6px; /* Reducido margen */
+  margin-right: 6px;
 }
 
 .balance-amount {
-  font-size: 32px; /* Reducido tamaño */
+  font-size: 32px;
   font-weight: bold;
   color: var(--dark-text);
   letter-spacing: 0.5px;
@@ -188,11 +164,11 @@
 
 .show-balance {
   position: absolute;
-  right: 14px; /* Ajustada posición */
+  right: 14px;
   color: var(--primary-blue);
-  font-size: 20px; /* Reducido tamaño */
+  font-size: 20px;
   cursor: pointer;
-  padding: 8px; /* Reducido área de toque */
+  padding: 8px;
   border-radius: 50%;
   transition: background-color 0.2s;
 }
@@ -205,43 +181,42 @@
   background-color: rgba(38, 86, 191, 0.2);
 }
 
-/* Estadísticas de cuenta */
 .account-stats {
   border-top: 1px solid rgba(0, 0, 0, 0.08);
-  padding-top: 20px; /* Reducido padding */
-  margin-top: 14px; /* Reducido margen */
+  padding-top: 20px;
+  margin-top: 14px;
 }
 
 .stat-item {
-  margin-bottom: 16px; /* Reducido margen */
+  margin-bottom: 16px;
   background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 12px; /* Reducido border radius */
-  padding: 14px; /* Reducido padding */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); /* Ajustada sombra */
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: transform 0.2s, box-shadow 0.2s;
   display: flex;
   align-items: center;
 }
 
 .stat-item:hover {
-  transform: translateY(-2px); /* Reducido efecto hover */
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .stat-icon {
   background-color: rgba(78, 205, 196, 0.15);
   border-radius: 50%;
-  width: 40px; /* Reducido tamaño */
-  height: 40px; /* Reducido tamaño */
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 14px; /* Reducido margen */
+  margin-right: 14px;
   flex-shrink: 0;
 }
 
 .stat-icon ion-icon {
-  font-size: 20px; /* Reducido tamaño */
+  font-size: 20px;
   color: var(--accent-turquoise);
 }
 
@@ -267,23 +242,23 @@
 
 .stat-label {
   font-family: 'Flexo', sans-serif;
-  font-size: 13px; /* Reducido tamaño */
+  font-size: 13px;
   color: var(--dark-text);
   opacity: 0.7;
-  margin-bottom: 6px; /* Reducido margen */
+  margin-bottom: 6px;
 }
 
 .stat-value {
   font-family: 'Flexo', sans-serif;
-  font-size: 17px; /* Reducido tamaño */
+  font-size: 17px;
   font-weight: 600;
   color: var(--dark-text);
-  margin-bottom: 6px; /* Reducido margen */
+  margin-bottom: 6px;
 }
 
 .small-text {
   font-family: 'Flexo', sans-serif;
-  font-size: 11px; /* Reducido tamaño */
+  font-size: 11px;
   color: var(--dark-text);
   opacity: 0.6;
 }
@@ -291,59 +266,58 @@
 .stats-row {
   display: flex;
   justify-content: space-between;
-  gap: 12px; /* Reducido espacio */
+  gap: 12px;
 }
 
 .stats-row .stat-item {
   flex: 1;
-  margin-bottom: 8px; /* Reducido margen */
+  margin-bottom: 8px;
 }
 
 .limit-section {
-  margin-bottom: 16px; /* Reducido margen */
+  margin-bottom: 16px;
 }
 
 .stat-progress {
-  height: 6px; /* Reducida altura */
+  height: 6px;
   background-color: rgba(0, 0, 0, 0.08);
-  border-radius: 3px; /* Reducido border radius */
+  border-radius: 3px;
   overflow: hidden;
-  margin-top: 8px; /* Reducido margen */
+  margin-top: 8px;
 }
 
 .progress-bar {
   height: 100%;
   background: linear-gradient(90deg, var(--accent-turquoise) 0%, var(--secondary-blue) 100%);
-  border-radius: 3px; /* Reducido border radius */
+  border-radius: 3px;
 }
 
-/* Botones de acción */
 .action-buttons {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 22px; /* Reducido margen */
+  margin-bottom: 22px;
 }
 
 .action-button {
   --background: var(--white);
   --color: var(--dark-text);
-  --border-radius: 10px; /* Reducido border radius */
-  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Ajustada sombra */
+  --border-radius: 10px;
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   --ripple-color: rgba(38, 86, 191, 0.1);
   --background-activated: var(--white);
   --background-focused: var(--white);
   --background-hover: var(--white);
   margin: 0;
   flex: 0 0 48%;
-  height: 42px; /* Reducida altura */
-  font-size: 14px; /* Reducido tamaño */
+  height: 42px;
+  font-size: 14px;
   text-transform: none;
   transition: all 0.2s ease;
 }
 
 .action-button ion-icon {
-  margin-right: 6px; /* Reducido margen */
-  font-size: 18px; /* Reducido tamaño */
+  margin-right: 6px;
+  font-size: 18px;
 }
 
 .add-card {
@@ -363,17 +337,16 @@ ion-button.action-button::part(native):active {
   opacity: 0.9;
 }
 
-/* Carrusel de anuncios */
 .ad-carousel-container {
-  margin: 14px 0 24px; /* Reducido margen */
+  margin: 14px 0 24px;
 }
 
 .ad-carousel {
   position: relative;
-  height: 100px; /* Reducida altura */
+  height: 100px;
   overflow: hidden;
-  border-radius: 14px; /* Reducido border radius */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); /* Ajustada sombra */
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
 .ad-slide {
@@ -393,28 +366,28 @@ ion-button.action-button::part(native):active {
   display: flex;
   align-items: center;
   height: 100%;
-  padding: 0 16px; /* Reducido padding */
+  padding: 0 16px;
 }
 
 .ad-icon {
   background-color: rgba(78, 205, 196, 0.15);
   border-radius: 50%;
-  width: 48px; /* Reducido tamaño */
-  height: 48px; /* Reducido tamaño */
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16px; /* Reducido margen */
+  margin-right: 16px;
 }
 
 .ad-icon ion-icon {
-  font-size: 24px; /* Reducido tamaño */
+  font-size: 24px;
   color: var(--accent-turquoise);
 }
 
 .ad-text h3 {
-  margin: 0 0 4px; /* Reducido margen */
-  font-size: 16px; /* Reducido tamaño */
+  margin: 0 0 4px;
+  font-size: 16px;
   color: var(--dark-text);
   font-weight: 600;
   font-family: 'Flexo', sans-serif;
@@ -422,7 +395,7 @@ ion-button.action-button::part(native):active {
 
 .ad-text p {
   margin: 0;
-  font-size: 12px; /* Reducido tamaño */
+  font-size: 12px;
   color: var(--dark-text);
   opacity: 0.7;
   font-family: 'Flexo', sans-serif;
@@ -431,15 +404,15 @@ ion-button.action-button::part(native):active {
 .carousel-indicators {
   display: flex;
   justify-content: center;
-  margin-top: 10px; /* Reducido margen */
+  margin-top: 10px;
 }
 
 .indicator {
-  width: 8px; /* Reducido tamaño */
-  height: 8px; /* Reducido tamaño */
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background-color: var(--light-turquoise);
-  margin: 0 4px; /* Reducido margen */
+  margin: 0 4px;
   opacity: 0.5;
   transition: opacity 0.3s ease;
   cursor: pointer;
@@ -453,15 +426,14 @@ ion-button.action-button::part(native):active {
   opacity: 1;
 }
 
-/* Sección de transacciones recientes */
 .transactions-section {
-  margin-top: 16px; /* Reducido margen */
+  margin-top: 16px;
 }
 
 .section-title {
-  font-size: 17px; /* Reducido tamaño */
+  font-size: 17px;
   color: var(--dark-text);
-  margin-bottom: 12px; /* Reducido margen */
+  margin-bottom: 12px;
   font-weight: 600;
   padding-left: 4px;
   font-family: 'Flexo', sans-serif;
@@ -474,14 +446,14 @@ ion-button.action-button::part(native):active {
 
 .empty-transactions {
   --background: var(--white);
-  --padding-start: 14px; /* Reducido padding */
-  --padding-end: 14px; /* Reducido padding */
-  --padding-top: 16px; /* Reducido padding */
-  --padding-bottom: 16px; /* Reducido padding */
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
   --inner-padding-end: 0;
-  margin-bottom: 8px; /* Reducido margen */
-  border-radius: 10px; /* Reducido border radius */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04); /* Ajustada sombra */
+  margin-bottom: 8px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
 .empty-message {
@@ -489,29 +461,27 @@ ion-button.action-button::part(native):active {
   text-align: center;
   color: var(--dark-text);
   opacity: 0.6;
-  font-size: 13px; /* Reducido tamaño */
+  font-size: 13px;
   font-family: 'Flexo', sans-serif;
 }
 
-/* Footer */
 .footer {
   text-align: center;
-  padding: 16px 0; /* Reducido padding */
+  padding: 16px 0;
   color: var(--primary-blue);
-  font-size: 12px; /* Reducido tamaño */
+  font-size: 12px;
   opacity: 0.8;
-  margin-top: 20px; /* Reducido margen */
+  margin-top: 20px;
   font-family: 'Flexo', sans-serif;
 }
 
-/* Barra de navegación inferior */
 .nav-footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   --background: var(--white);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06); /* Ajustada sombra */
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   z-index: 999;
 }
@@ -520,8 +490,9 @@ ion-button.action-button::part(native):active {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  height: 56px; /* Reducida altura */
-  padding: 0 10px; /* Reducido padding */
+  height: 56px;
+  padding: 0 10px;
+  background-color: white;
 }
 
 .nav-button {
@@ -533,20 +504,20 @@ ion-button.action-button::part(native):active {
   height: 100%;
   cursor: pointer;
   transition: all 0.2s ease;
-  border-radius: 8px; /* Reducido border radius */
-  padding: 6px 0; /* Reducido padding */
+  border-radius: 8px;
+  padding: 6px 0;
 }
 
 .nav-button ion-icon {
-  font-size: 20px; /* Reducido tamaño */
+  font-size: 20px;
   color: var(--dark-text);
   opacity: 0.7;
-  margin-bottom: 4px; /* Reducido margen */
+  margin-bottom: 4px;
   transition: all 0.2s ease;
 }
 
 .nav-label {
-  font-size: 11px; /* Reducido tamaño */
+  font-size: 11px;
   color: var(--dark-text);
   opacity: 0.7;
   font-family: 'Flexo', sans-serif;
@@ -564,10 +535,10 @@ ion-button.action-button::part(native):active {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 28px; /* Reducido ancho */ 
-  height: 3px; /* Reducida altura */
+  width: 28px;
+  height: 3px;
   background: linear-gradient(90deg, var(--accent-turquoise) 0%, var(--secondary-blue) 100%);
-  border-radius: 0 0 10px 10px; /* Reducido border radius */
+  border-radius: 0 0 10px 10px;
 }
 
 .nav-button.active ion-icon {
@@ -586,30 +557,152 @@ ion-button.action-button::part(native):active {
   background-color: rgba(66, 135, 214, 0.1);
 }
 
-/* Media queries para diferentes tamaños */
+ion-button.action-button::part(native) {
+  font-family: 'Flexo', sans-serif !important;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+ion-toolbar.nav-footer {
+  --background: var(--white) !important;
+}
+
+/* Panel desplegable - soluciÃ³n para el problema de sobreposiciÃ³n */
+.expandable-panel {
+  background-color: var(--white);
+  border-radius: 14px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  overflow: hidden; /* Importante para contener el contenido */
+  position: relative; /* Necesario para manejar z-index */
+}
+
+.expandable-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative; /* Importante para el z-index */
+  z-index: 2; /* Mayor que el contenido */
+  background-color: var(--white); /* Asegura que el encabezado tenga fondo */
+}
+
+.expandable-header:hover {
+  background-color: rgba(245, 248, 251, 0.7);
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--dark-text);
+}
+
+.panel-title ion-icon {
+  margin-right: 10px;
+  font-size: 20px;
+  color: var(--accent-turquoise);
+}
+
+.toggle-icon {
+  font-size: 20px;
+  color: var(--dark-text);
+  opacity: 0.7;
+  transition: transform 0.3s;
+}
+
+.expandable-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  position: relative;
+  z-index: 1; /* Menor que el encabezado */
+  background-color: var(--white); /* Asegura que el contenido tenga fondo */
+}
+
+.expandable-content.expanded {
+  max-height: 300px; /* Ajustar segÃºn necesidad */
+}
+
+.panel-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.item-icon {
+  background-color: rgba(78, 205, 196, 0.15);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14px;
+  flex-shrink: 0;
+}
+
+.item-icon ion-icon {
+  font-size: 18px;
+  color: var(--accent-turquoise);
+}
+
+.item-content {
+  flex: 1;
+}
+
+.item-label {
+  font-size: 13px;
+  color: var(--dark-text);
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.item-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dark-text);
+}
+
+/* Transacciones con tarjeta */
+.transaction-item {
+  --background: var(--white);
+  --border-radius: 10px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.transaction-item h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dark-text);
+  margin-bottom: 4px;
+}
+
+.transaction-item p {
+  font-size: 12px;
+  color: var(--dark-text);
+  opacity: 0.6;
+}
+
+.transaction-item ion-badge {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* Media queries corregidas */
 @media (max-height: 700px) {
   .header-section {
     padding: 10px 6px;
-  }
-  
-  .main-section {
-    margin-top: 4px;
-  }
-  
-  .balance-amount {
-    font-size: 28px;
-  }
-  
-  .section-title {
-    margin-bottom: 10px;
-  }
-
-  .ad-carousel {
-    height: 90px;
-  }
-  
-  .nav-container {
-    height: 52px;
   }
 }
 
@@ -617,104 +710,303 @@ ion-button.action-button::part(native):active {
   .header-section {
     padding: 8px 6px;
   }
-  
-  .main-section {
-    margin-top: 3px;
-  }
-  
-  .balance-amount {
-    font-size: 26px;
-  }
-  
-  .section-title {
-    margin-bottom: 8px;
-  }
-
-  .ad-carousel {
-    height: 80px;
-  }
-  
-  .nav-container {
-    height: 48px;
-  }
-  
-  .nav-button ion-icon {
-    font-size: 18px;
-  }
-  
-  .nav-label {
-    font-size: 10px;
-  }
 }
 
-/* Corrección para pantallas pequeñas */
 @media (max-width: 360px) {
   .stats-row {
     flex-direction: column;
     gap: 10px;
   }
-  
-  .stats-row .stat-item {
-    width: 100%;
-    margin-bottom: 0;
-  }
-  
-  .logo-text {
-    font-size: 20px;
-  }
-  
-  .nav-label {
-    font-size: 9px;
-  }
-  
-  .currency-symbol {
-    font-size: 22px;
-  }
-  
-  .balance-amount {
-    font-size: 26px;
-  }
-  
-  .content-wrapper {
-    padding: 10px 14px;
-  }
-  
-  .action-button {
-    height: 40px;
-    font-size: 13px;
-  }
 }
 
-/* Estilos para componentes Ionic */
-ion-button.action-button::part(native) {
-  font-family: 'Flexo', sans-serif !important;
+/* Estilos especÃ­ficos para el panel de usuario */
+.user-panel {
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-panel .panel-title {
+  font-size: 15px;
   font-weight: 500;
-  letter-spacing: 0.3px;
-}
-/* Forzar fondo blanco en la nav-footer */
-.nav-footer {
-  /* sustituye el shorthand ionic por una propiedad estándar */
-  background-color: var(--white) !important;
-  /* opcional: si quieres mantener el degradado, puedes usar esto en su lugar:
-     background: linear-gradient(90deg, var(--accent-turquoise) 0%, var(--secondary-blue) 100%) !important;
-  */
 }
 
-/* En caso de que uses un ion-tab-bar / ion-footer nativo de Ionic */
-ion-tab-bar, 
-ion-footer, 
-ion-toolbar.nav-footer {
-  --background: var(--white) !important;
+.user-panel .panel-title ion-icon {
+  font-size: 22px;
+  color: var(--primary-blue);
 }
 
-/* Asegurar que los botones no hereden transparencia */
-.nav-button {
-  background-color: transparent; /* para no tapar el fondo, solo el footer */
+.user-panel .panel-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-/* Si ves que sigue transparente, puede que venga de aquí: */
-:host {
-  /* cambia esto de transparent a tu color fijo */
-  --ion-background-color: var(--white);
-  --ion-item-background: var(--white);
+.user-panel .panel-item:hover {
+  background-color: rgba(245, 248, 251, 0.9);
+}
+
+.user-panel .item-icon {
+  background-color: rgba(38, 86, 191, 0.12);
+  width: 32px;
+  height: 32px;
+}
+
+.user-panel .item-icon ion-icon {
+  font-size: 16px;
+  color: var(--primary-blue);
+}
+
+.user-panel .item-link {
+  font-size: 14px;
+  color: var(--dark-text);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(0, 0, 0, 0.3);
+}
+/* Panel desplegable - soluciÃ³n para el problema de sobreposiciÃ³n */
+.expandable-panel {
+  background-color: var(--white);
+  border-radius: 14px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  overflow: hidden; /* Importante para contener el contenido */
+  position: relative; /* Necesario para manejar z-index */
+}
+
+.expandable-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative; /* Importante para el z-index */
+  z-index: 2; /* Mayor que el contenido */
+  background-color: var(--white); /* Asegura que el encabezado tenga fondo */
+}
+
+.expandable-header:hover {
+  background-color: rgba(245, 248, 251, 0.7);
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--dark-text);
+}
+
+.panel-title ion-icon {
+  margin-right: 10px;
+  font-size: 20px;
+  color: var(--accent-turquoise);
+}
+
+.toggle-icon {
+  font-size: 20px;
+  color: var(--dark-text);
+  opacity: 0.7;
+  transition: transform 0.3s;
+}
+
+.expandable-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  position: relative;
+  z-index: 1; /* Menor que el encabezado */
+  background-color: var(--white); /* Asegura que el contenido tenga fondo */
+}
+
+.expandable-content.expanded {
+  max-height: 300px; /* Ajustar segÃºn necesidad */
+}
+
+.panel-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.item-icon {
+  background-color: rgba(78, 205, 196, 0.15);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14px;
+  flex-shrink: 0;
+}
+
+.item-icon ion-icon {
+  font-size: 18px;
+  color: var(--accent-turquoise);
+}
+
+.item-content {
+  flex: 1;
+}
+
+.item-label {
+  font-size: 13px;
+  color: var(--dark-text);
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.item-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dark-text);
+}
+
+/* Transacciones con tarjeta */
+.transaction-item {
+  --background: var(--white);
+  --border-radius: 10px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.transaction-item h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dark-text);
+  margin-bottom: 4px;
+}
+
+.transaction-item p {
+  font-size: 12px;
+  color: var(--dark-text);
+  opacity: 0.6;
+}
+
+.transaction-item ion-badge {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* Media queries corregidas */
+@media (max-height: 700px) {
+  .header-section {
+    padding: 10px 6px;
+  }
+}
+
+@media (max-height: 640px) {
+  .header-section {
+    padding: 8px 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .stats-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+/* Estilos especÃ­ficos para el panel de usuario */
+.user-panel {
+  position: fixed;        /* fijo al viewport, no al contenedor */
+  top: 0;                 /* arranca en la parte superior */
+  right: 0;               /* pega al lado derecho */
+  width: 260px;           /* ancho fijo, ajusta a tu gusto */
+  height: 100vh;          /* cubre toda la altura de la ventana */
+  background-color: #fff; /* fondo blanco (o el color que uses) */
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;          /* por encima de todo el contenido */
+  display: none;          /* cerrado por defecto */
+  padding: 0;        /* padding interno arriba/abajo */
+  overflow-y: auto;       /* si el contenido sobrepasa, scroll vertical */
+}
+
+.user-panel.expanded {
+  display: block;
+}
+
+.user-panel .panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 30px;
+ 
+}
+
+.user-panel .panel-title ion-icon {
+  font-size: 24px;
+  color: var(--primary-blue);
+}
+
+.user-panel .panel-item {
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.user-panel .panel-item:hover {
+  background-color: rgba(245, 248, 251, 0.9);
+}
+
+.user-panel .panel-item ion-icon {
+  flex-shrink: 0;
+  font-size: 22px;
+  color: var(--primary-blue);
+ 
+}
+
+.user-panel .item-icon ion-icon {
+  font-size: 16px;
+  color: var(--primary-blue);
+}
+
+.user-panel .panel-item .item-text {
+  font-size: 15px;
+  color: var(--dark-text);
+  font-weight: 500;
+  line-height: 1.4;
+  /* si quieres subrayado ligero: */
+  /* text-decoration: underline;
+     text-underline-offset: 2px;
+     text-decoration-color: rgba(0,0,0,0.2); */
+}
+
+/* Botón/icono en el header para abrir/cerrar */
+.notification-icon,
+.avatar-wrapper {
+  cursor: pointer;
+}
+
+.user-panel .item-link {
+  font-size: 14px;
+  color: var(--dark-text);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Estilo para el icono de usuario en el header */
+.notification-icon {
+  font-size: 24px;
+  color: var(--primary-blue);
+  cursor: pointer;
 }
