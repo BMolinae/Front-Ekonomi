@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule, NavController } from '@ionic/angular';
-import { AuthService } from '../services/auth.service'; // Asegúrate de que la ruta sea correcta
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-create-account',
@@ -15,10 +15,10 @@ export class CreateAccountPage {
   registerForm: FormGroup;
 
   constructor(
-    private router: Router, 
+    private router: Router,
     private fb: FormBuilder,
     private navCtrl: NavController,
-    private authService: AuthService // Inyecta el servicio aquí
+    private authService: AuthService
   ) {
     this.registerForm = this.fb.group({
       username: ['', Validators.required],
@@ -30,15 +30,17 @@ export class CreateAccountPage {
   registerAccount() {
     if (this.registerForm.valid) {
       const userData = this.registerForm.value;
-      
+
       this.authService.register(userData).subscribe(
-        response => {
+        () => {
           console.log('✅ Cuenta creada exitosamente');
-          this.router.navigate(['/login']);
+          // Si todo se guarda bien, redirige
+          this.router.navigate(['/dashboard']);
         },
         error => {
-          console.error('❌ Error al crear cuenta:', error);
-          // Mostrar mensaje de error
+          const errorMsg = error?.error?.error || 'Error al crear cuenta.';
+          console.error('❌', errorMsg);
+          alert(errorMsg); // o muestra un toast
         }
       );
     } else {
@@ -49,6 +51,4 @@ export class CreateAccountPage {
   goBack() {
     this.navCtrl.back();
   }
-
-
 }
