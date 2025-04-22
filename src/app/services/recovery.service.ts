@@ -23,14 +23,14 @@ export class RecoveryService {
 
   async sendRecoveryEmail(email: string, resetLink: string): Promise<EmailJSResponseStatus> {
     return await emailjs.send(
-      'CorreoLogin',
-      'LoginPassword',
+      'Ekonomi_ID',
+      'Ekonomi_TMID',
       {
         to_email: email,
         name: email,
         reset_link: resetLink
       },
-      '0NOvUMPdB6iz0BoOK'
+      'f2k2gBuvEBGJ-kYbe'
     );
   }
 }
