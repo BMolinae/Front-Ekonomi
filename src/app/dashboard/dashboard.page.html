@@ -1,50 +1,39 @@
+<!-- src/app/dashboard/dashboard.page.html -->
+
 <ion-content class="dashboard-container">
+  <!-- Fondo y panel de usuario (idéntico al anterior) -->
   <div class="background-gradient"></div>
   <div class="background-circle circle-1"></div>
   <div class="background-circle circle-2"></div>
-  <!-- Panel desplegable de usuario - No cambia -->
+
+  <!-- Panel desplegable de usuario -->
   <div class="expandable-panel user-panel" [class.expanded]="isUserPanelExpanded">
     <div class="expandable-header" (click)="toggleUserPanel()">
       <div class="panel-title">
         <ion-icon name="person-circle-outline"></ion-icon>
         <span>{{ user?.first_name || user?.username }}</span>
-
       </div>
-      <ion-icon [name]="isUserPanelExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"
-        class="toggle-icon"></ion-icon>
+      <ion-icon
+        [name]="isUserPanelExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"
+        class="toggle-icon">
+      </ion-icon>
     </div>
     <div class="expandable-content" [class.expanded]="isUserPanelExpanded">
       <div class="panel-item" (click)="conoceTuApp()">
-        <div class="item-icon">
-          <ion-icon name="phone-portrait-outline"></ion-icon>
-        </div>
-        <div class="item-content">
-          <div class="item-link">Conoce tu App</div>
-        </div>
+        <div class="item-icon"><ion-icon name="phone-portrait-outline"></ion-icon></div>
+        <div class="item-content"><div class="item-link">Conoce tu App</div></div>
       </div>
       <div class="panel-item" (click)="politicaUso()">
-        <div class="item-icon">
-          <ion-icon name="document-text-outline"></ion-icon>
-        </div>
-        <div class="item-content">
-          <div class="item-link">Política de uso</div>
-        </div>
+        <div class="item-icon"><ion-icon name="document-text-outline"></ion-icon></div>
+        <div class="item-content"><div class="item-link">Política de uso</div></div>
       </div>
       <div class="panel-item" (click)="contactenos()">
-        <div class="item-icon">
-          <ion-icon name="mail-outline"></ion-icon>
-        </div>
-        <div class="item-content">
-          <div class="item-link">Contáctenos</div>
-        </div>
+        <div class="item-icon"><ion-icon name="mail-outline"></ion-icon></div>
+        <div class="item-content"><div class="item-link">Contáctenos</div></div>
       </div>
       <div class="panel-item" (click)="cerrarSesion()">
-        <div class="item-icon">
-          <ion-icon name="log-out-outline"></ion-icon>
-        </div>
-        <div class="item-content">
-          <div class="item-link">Cerrar sesión</div>
-        </div>
+        <div class="item-icon"><ion-icon name="log-out-outline"></ion-icon></div>
+        <div class="item-content"><div class="item-link">Cerrar sesión</div></div>
       </div>
     </div>
   </div>
@@ -60,17 +49,12 @@
     <div class="main-section">
       <ion-card class="account-card">
         <ion-card-content>
+          <!-- Información de cuenta -->
           <div class="account-info">
             <div class="account-label">Cuenta Corriente</div>
-            <!-- Muestra la tarjeta formateada o el placeholder -->
-            <div class="account-number">
-              {{ tarjeta || '*' }}
-            </div>
+            <div class="account-number">{{ tarjeta || '*' }}</div>
           </div>
-
           <div class="saldo-label">Saldo Disponible</div>
-
-          <!-- Balance Toggle -->
           <div class="balance-section">
             <div class="currency-symbol">$</div>
             <div class="balance-amount">
@@ -81,19 +65,18 @@
             </div>
           </div>
 
+          <!-- Estadísticas -->
           <div class="account-stats">
             <!-- Límite Disponible -->
             <div class="stat-item limit-section">
-              <div class="stat-icon">
-                <ion-icon name="wallet-outline"></ion-icon>
-              </div>
+              <div class="stat-icon"><ion-icon name="wallet-outline"></ion-icon></div>
               <div class="stat-content">
                 <div class="stat-label">Límite Disponible</div>
-                <div class="stat-value">
-                  {{ limite | number:'1.0-0' }}
-                </div>
+                <div class="stat-value">{{ limitLeft | number:'1.0-0' }}</div>
                 <div class="stat-progress">
-                  <div class="progress-bar" [style.width]="limite > 0 ? (saldo / limite * 100) + '%' : '0%'">
+                  <div
+                    class="progress-bar"
+                    [style.width]="percentOfLimit + '%'">
                   </div>
                 </div>
               </div>
@@ -102,34 +85,18 @@
             <!-- Gastos e Ingresos del mes -->
             <div class="stats-row">
               <div class="stat-item monthly-item expenses">
-                <div class="stat-icon">
-                  <ion-icon name="trending-down-outline"></ion-icon>
-                </div>
+                <div class="stat-icon"><ion-icon name="trending-down-outline"></ion-icon></div>
                 <div class="stat-content">
                   <div class="stat-label">Gastos del mes</div>
-                  <div class="stat-value">
-                    {{ gastosMes | number:'1.0-0' }}
-                  </div>
-                  <div class="small-text">
-                    <ng-container *ngIf="limite > 0; else deIngreso">
-                      {{ (gastosMes / limite * 100) | number:'1.0-0' }}% del límite
-                    </ng-container>
-                    <ng-template #deIngreso>
-                      {{ (ingresoMes > 0 ? (gastosMes / ingresoMes * 100) : 0) | number:'1.0-0' }}% de ingresos
-                    </ng-template>
-                  </div>
+                  <div class="stat-value">{{ gastosMes | number:'1.0-0' }}</div>
+                  <div class="small-text">{{ percentOfLimit }}% del límite</div>
                 </div>
               </div>
-
               <div class="stat-item monthly-item income">
-                <div class="stat-icon">
-                  <ion-icon name="trending-up-outline"></ion-icon>
-                </div>
+                <div class="stat-icon"><ion-icon name="trending-up-outline"></ion-icon></div>
                 <div class="stat-content">
                   <div class="stat-label">Ingreso del mes</div>
-                  <div class="stat-value">
-                    {{ ingresoMes | number:'1.0-0' }}
-                  </div>
+                  <div class="stat-value">{{ ingresoMes | number:'1.0-0' }}</div>
                   <div class="small-text">Últimos 30 días</div>
                 </div>
               </div>
@@ -138,28 +105,24 @@
         </ion-card-content>
       </ion-card>
 
-      <!-- Action Buttons -->
+      <!-- Botones de acción -->
       <div class="action-buttons">
         <ion-button class="action-button add-card" (click)="onAddCard()">
           <ion-icon name="card-outline" slot="start"></ion-icon>
           Agregar tarjeta
         </ion-button>
-
         <ion-button class="action-button set-limit" (click)="onSetLimit()">
           <ion-icon name="options-outline" slot="start"></ion-icon>
           Poner límite
         </ion-button>
-
       </div>
 
-      <!-- Ad Carousel -->
+      <!-- Carrusel de anuncios -->
       <div class="ad-carousel-container">
         <div class="ad-carousel">
           <div class="ad-slide active">
             <div class="ad-content">
-              <div class="ad-icon">
-                <ion-icon name="cash-outline"></ion-icon>
-              </div>
+              <div class="ad-icon"><ion-icon name="cash-outline"></ion-icon></div>
               <div class="ad-text">
                 <h3>La forma más eficaz de administrar tu dinero.</h3>
                 <p>Tasa preferencial por tiempo limitado</p>
@@ -168,9 +131,7 @@
           </div>
           <div class="ad-slide">
             <div class="ad-content">
-              <div class="ad-icon">
-                <ion-icon name="home-outline"></ion-icon>
-              </div>
+              <div class="ad-icon"><ion-icon name="home-outline"></ion-icon></div>
               <div class="ad-text">
                 <h3>Crédito hipotecario</h3>
                 <p>Financiamiento hasta 30 años</p>
@@ -179,9 +140,7 @@
           </div>
           <div class="ad-slide">
             <div class="ad-content">
-              <div class="ad-icon">
-                <ion-icon name="shield-checkmark-outline"></ion-icon>
-              </div>
+              <div class="ad-icon"><ion-icon name="shield-checkmark-outline"></ion-icon></div>
               <div class="ad-text">
                 <h3>Seguro de vida</h3>
                 <p>Protege a los que más quieres</p>
@@ -196,7 +155,7 @@
         </div>
       </div>
 
-      <!-- Transactions List -->
+      <!-- Lista de transacciones recientes -->
       <div class="transactions-section">
         <h2 class="section-title">Transacciones recientes</h2>
         <ion-list class="transactions-list">
@@ -215,29 +174,23 @@
         </ion-list>
       </div>
     </div>
-
-    <div class="footer"></div>
   </div>
 </ion-content>
 
 <!-- Bottom Navigation -->
 <ion-footer class="nav-footer">
   <div class="nav-container">
-    <div class="nav-button active">
-      <ion-icon name="home"></ion-icon>
-      <span class="nav-label">Inicio</span>
+    <div class="nav-button" (click)="goTo('/dashboard')"      [class.active]="router.url==='/dashboard'">
+      <ion-icon name="home"></ion-icon><span class="nav-label">Inicio</span>
     </div>
-    <div class="nav-button">
-      <ion-icon name="bar-chart"></ion-icon>
-      <span class="nav-label">Gráficos</span>
+    <div class="nav-button" (click)="goTo('/graficos')"      [class.active]="router.url==='/graficos'">
+      <ion-icon name="bar-chart"></ion-icon><span class="nav-label">Gráficos</span>
     </div>
-    <div class="nav-button">
-      <ion-icon name="chatbubble-ellipses"></ion-icon>
-      <span class="nav-label">ChatBot</span>
+    <div class="nav-button" (click)="goTo('/chatbot')"       [class.active]="router.url==='/chatbot'">
+      <ion-icon name="chatbubble-ellipses"></ion-icon><span class="nav-label">ChatBot</span>
     </div>
-    <div class="nav-button">
-      <ion-icon name="document-text"></ion-icon>
-      <span class="nav-label">Documentos</span>
+    <div class="nav-button" (click)="goTo('/documentos')"    [class.active]="router.url==='/documentos'">
+      <ion-icon name="document-text"></ion-icon><span class="nav-label">Documentos</span>
     </div>
   </div>
 </ion-footer>

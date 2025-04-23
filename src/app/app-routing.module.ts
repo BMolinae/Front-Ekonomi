@@ -34,6 +34,18 @@ const routes: Routes = [
   },  {
     path: 'reset-password',
     loadChildren: () => import('./reset-password/reset-password.module').then( m => m.ResetPasswordPageModule)
+  },
+  {
+    path: 'graficos',
+    loadChildren: () => import('./graficos/graficos.module').then( m => m.GraficosPageModule)
+  },
+  {
+    path: 'chatbot',
+    loadChildren: () => import('./chatbot/chatbot.module').then( m => m.ChatbotPageModule)
+  },
+  {
+    path: 'documentos',
+    loadChildren: () => import('./documentos/documentos.module').then( m => m.DocumentosPageModule)
   }
 
 ];
