@@ -11,6 +11,7 @@ import { ChartData, ChartOptions }   from 'chart.js';
 import { NgChartsModule }            from 'ng2-charts';
 import { AuthService }               from '../services/auth.service';
 
+
 @Component({
   selector: 'app-graficos',
   standalone: true,
@@ -78,6 +79,10 @@ export class GraficosPage implements OnInit {
         (evt as NavigationEnd).urlAfterRedirects === '/graficos'
       )
     ).subscribe(() => this.fetchAndBuildCharts());
+  }
+
+  goTo(path: string) {
+    this.router.navigate([path]);
   }
 
   ngOnInit() {}

@@ -35,7 +35,7 @@ export class CreateAccountPage {
         () => {
           console.log('✅ Cuenta creada exitosamente');
           // Si todo se guarda bien, redirige
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/home']);
         },
         error => {
           const errorMsg = error?.error?.error || 'Error al crear cuenta.';
