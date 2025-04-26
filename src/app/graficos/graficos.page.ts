@@ -103,6 +103,10 @@ export class GraficosPage implements OnInit {
         movs => {
           this.computeLimitLeft(movs);
           /* … resto de builds … */
+          this.buildGauge(movs);
+          this.buildPieByCategory(movs);
+          this.buildDoughnut(movs);
+          this.buildLine(movs);
         },
         err => console.error('Error cargando movimientos', err)
       );

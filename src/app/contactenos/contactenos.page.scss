@@ -1,0 +1,235 @@
+/* Variables globales - puede ser mejor moverlas a variables.scss si tu proyecto lo utiliza */
+
+@font-face {
+    font-family: 'Flexo';
+    src: url('/assets/flexo-regular.woff2') format('woff2'),
+         url('/assets/flexo-regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'Flexo';
+    src: url('/assets/flexo-bold.woff2') format('woff2'),
+         url('/assets/flexo-bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'Flexo';
+    src: url('/assets/flexo-medium.woff2') format('woff2'),
+         url('/assets/flexo-medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+  }
+  
+  /* Aplica Flexo a todos los elementos */
+  * {
+    font-family: 'Flexo', sans-serif;
+  }
+
+
+
+:host {
+    --primary-blue: #2656bf;
+    --secondary-blue: #4287d6;
+    --accent-turquoise: #4ecdc4;
+    --light-turquoise: #a9e4e0;
+    --white: #ffffff;
+    --light-gray: #f5f8fb;
+    --dark-text: #333333;
+    --light-text: #ffffff;
+  }
+  .contact-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Fondo con gradiente */
+  .background-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(145deg, var(--white) 0%, var(--light-gray) 40%, var(--secondary-blue) 100%);
+    z-index: 1;
+  }
+  
+  /* Círculos decorativos */
+  .background-circle {
+    position: absolute;
+    border-radius: 50%;
+    z-index: 2;
+  }
+  
+  .circle-1 {
+    width: 180px;
+    height: 180px;
+    top: -40px;
+    right: -40px;
+    background-color: var(--accent-turquoise);
+    opacity: 0.3;
+  }
+  
+  .circle-2 {
+    width: 120px;
+    height: 120px;
+    bottom: 20%;
+    left: -40px;
+    background-color: var(--secondary-blue);
+    opacity: 0.2;
+  }
+  
+  /* Contenedor principal */
+  .content-wrapper {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 16px;
+  }
+  
+  /* Sección superior con logo */
+  .header-section {
+    margin-top: 30px;
+    text-align: center;
+  }
+  
+  .logo-text {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--accent-turquoise);
+    margin-bottom: 5px;
+  }
+  
+  .app-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--primary-blue);
+    margin: 0 0 20px 0;
+  }
+  
+  /* Sección principal */
+  .main-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 16px;
+  }
+  
+  .contact-info {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .section-subtitle {
+    color: var(--dark-text);
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  
+  /* Estilos del formulario */
+  .contact-form {
+    margin-bottom: 30px;
+  }
+  
+  ion-item {
+    --background: rgba(255, 255, 255, 0.6);
+    --border-color: var(--accent-turquoise);
+    --highlight-color-focused: var(--primary-blue);
+    margin-bottom: 16px;
+    border-radius: 8px;
+  }
+  
+  ion-label {
+    --color: var(--dark-text);
+  }
+  
+  ion-button.submit-button {
+    --background: linear-gradient(120deg, var(--primary-blue), var(--accent-turquoise));
+    --background-activated: var(--primary-blue);
+    --background-hover: var(--primary-blue);
+    --border-radius: 25px;
+    --color: var(--light-text);
+    --box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+    font-weight: bold;
+    margin-top: 20px;
+    height: 48px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+  }
+  
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 20px 0;
+    color: var(--primary-blue);
+    font-size: 12px;
+    opacity: 0.8;
+  }
+  
+  /* Media Query para dispositivos más pequeños */
+  @media (max-height: 640px) {
+    .header-section {
+      margin-top: 20px;
+    }
+  
+    .main-section {
+      padding-top: 10px;
+    }
+  
+    .contact-info {
+      margin-bottom: 20px;
+    }
+  }
+  /* Texto en los campos de entrada - color gris como si estuviera inactivo */
+ion-input, ion-textarea {
+    --color: #757575; /* Gris medio que da sensación de inactivo pero es visible */
+    color: #757575;
+  }
+  
+  /* Para los placeholders un poco más claro pero aún visible */
+  ion-input::placeholder, ion-textarea::placeholder {
+    color: #9e9e9e; 
+    opacity: 0.8;
+  }
+  
+  /* Asegúrate que el texto dentro de los ion-item sea visible */
+  ion-item {
+    --color: #757575;
+    color: #757575;
+  }
+  
+  /* Mantener el botón "ENVIAR MENSAJE" exactamente como está */
+  .subtitle {
+  color: var(--dark-text) !important; /* Forzamos el color oscuro para evitar sobrescrituras */
+  font-size: 16px;
+  line-height: 1.5;
+  padding: 0 16px;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Suave para legibilidad */
+}
+ion-toast.custom-toast {
+    --background: linear-gradient(135deg, var(--accent-turquoise), var(--primary-blue));
+    --color: var(--white);
+    --border-radius: 12px;
+    --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    --padding-start: 16px;
+    --padding-end: 16px;
+    font-weight: 500;
+    text-align: center;
+    font-size: 14px;
+  }
+  
+
+  
+  

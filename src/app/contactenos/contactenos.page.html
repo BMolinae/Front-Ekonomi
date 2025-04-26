@@ -1,0 +1,45 @@
+<ion-content>
+  <div class="contact-container">
+    <!-- Fondo decorativo -->
+    <div class="background-gradient"></div>
+    <div class="background-circle circle-1"></div>
+    <div class="background-circle circle-2"></div>
+
+    <div class="content-wrapper">
+      <!-- Encabezado -->
+      <div class="header-section">
+        <div class="logo-text">Ekonomi</div>
+        <h1 class="app-title">Contáctanos</h1>
+        <p class="subtitle">Estamos aquí para ayudarte. Completa el formulario y nos pondremos en contacto contigo lo antes posible.</p>
+      </div>
+
+      <!-- Formulario -->
+      <div class="contact-form">
+        <ion-item class="input-item">
+          <ion-input [(ngModel)]="nombre" placeholder="Nombre completo" type="text" fill="solid"></ion-input>
+        </ion-item>
+
+        <ion-item class="input-item">
+          <ion-input [(ngModel)]="correo" placeholder="Correo electrónico" type="email" fill="solid"></ion-input>
+        </ion-item>
+
+        <ion-item class="input-item">
+          <ion-input [(ngModel)]="asunto" placeholder="Asunto" type="text" fill="solid"></ion-input>
+        </ion-item>
+
+        <ion-item class="input-item textarea">
+          <ion-textarea [(ngModel)]="mensaje" placeholder="Mensaje" rows="4" auto-grow="true"></ion-textarea>
+        </ion-item>
+
+        <ion-button expand="block" class="submit-button" (click)="enviarMensaje()">
+          Enviar mensaje
+        </ion-button>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>© 2025 Mi App. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </div>
+</ion-content>

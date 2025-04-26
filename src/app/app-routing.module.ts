@@ -46,6 +46,18 @@ const routes: Routes = [
   {
     path: 'documentos',
     loadChildren: () => import('./documentos/documentos.module').then( m => m.DocumentosPageModule)
+  },
+  {
+    path: 'conoce-tu-app',
+    loadChildren: () => import('./conoce-tu-app/conoce-tu-app.module').then( m => m.ConoceTuAppPageModule)
+  },
+  {
+    path: 'contactenos',
+    loadChildren: () => import('./contactenos/contactenos.module').then( m => m.ContactenosPageModule)
+  },
+  {
+    path: 'politica-uso',
+    loadChildren: () => import('./politica-uso/politica-uso.module').then( m => m.PoliticaUsoPageModule)
   }
 
 ];

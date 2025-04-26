@@ -1,0 +1,188 @@
+/* Variables globales - puede ser mejor moverlas a variables.scss si tu proyecto lo utiliza */
+
+@font-face {
+    font-family: 'Flexo';
+    src: url('/assets/flexo-regular.woff2') format('woff2'),
+         url('/assets/flexo-regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'Flexo';
+    src: url('/assets/flexo-bold.woff2') format('woff2'),
+         url('/assets/flexo-bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'Flexo';
+    src: url('/assets/flexo-medium.woff2') format('woff2'),
+         url('/assets/flexo-medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+  }
+  
+  /* Aplica Flexo a todos los elementos */
+  * {
+    font-family: 'Flexo', sans-serif;
+  }
+  
+  :host {
+    --primary-blue: #2656bf;
+    --secondary-blue: #4287d6;
+    --accent-turquoise: #4ecdc4;
+    --light-turquoise: #a9e4e0;
+    --white: #ffffff;
+    --light-gray: #f5f8fb;
+    --dark-text: #333333;
+    --light-text: #ffffff;
+  }
+  
+  .policy-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    /* Se eliminó overflow: hidden; para permitir el scroll */
+  }
+  
+  /* Fondo con gradiente */
+  .background-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(145deg, var(--white) 0%, var(--light-gray) 40%, var(--secondary-blue) 100%);
+    z-index: 1;
+  }
+  
+  /* Círculos decorativos */
+  .background-circle {
+    position: absolute;
+    border-radius: 50%;
+    z-index: 2;
+  }
+  
+  .circle-1 {
+    width: 180px;
+    height: 180px;
+    top: -40px;
+    right: -40px;
+    background-color: var(--accent-turquoise);
+    opacity: 0.3;
+  }
+  
+  .circle-2 {
+    width: 120px;
+    height: 120px;
+    bottom: 20%;
+    left: -40px;
+    background-color: var(--secondary-blue);
+    opacity: 0.2;
+  }
+  
+  /* Contenedor principal */
+  .content-wrapper {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 16px;
+  }
+  
+  /* Sección superior con logo */
+  .header-section {
+    margin-top: 30px;
+    text-align: center;
+  }
+  
+  .logo-text {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--accent-turquoise);
+    margin-bottom: 5px;
+  }
+  
+  .app-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--primary-blue);
+    margin: 0 0 20px 0;
+  }
+  
+  /* Sección principal */
+  .main-section {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+  
+  .policy-content {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .policy-section {
+    margin-bottom: 24px;
+  }
+  
+  .section-title {
+    color: var(--primary-blue);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  
+  .policy-section p {
+    color: var(--dark-text);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 20px 0;
+    color: var(--primary-blue);
+    font-size: 12px;
+    opacity: 0.8;
+  }
+  
+  .footer p {
+    margin: 3px 0;
+  }
+  
+  /* Media Query para dispositivos más pequeños */
+  @media (max-height: 640px) {
+    .header-section {
+      margin-top: 20px;
+    }
+  
+    .main-section {
+      padding-top: 10px;
+    }
+  
+    .app-title {
+      margin-bottom: 10px;
+    }
+  
+    .policy-content {
+      padding: 15px;
+    }
+  
+    .policy-section {
+      margin-bottom: 16px;
+    }
+  }
+  
