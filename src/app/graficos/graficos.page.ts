@@ -5,7 +5,7 @@ import { Component, OnInit }        from '@angular/core';
 import { IonicModule }               from '@ionic/angular';
 import { CommonModule }              from '@angular/common';
 import { HttpClient }                from '@angular/common/http';
-import { Router, NavigationEnd }     from '@angular/router';
+import { RouterModule, Router, NavigationEnd }     from '@angular/router';
 import { filter }                    from 'rxjs/operators';
 import { ChartData, ChartOptions }   from 'chart.js';
 import { NgChartsModule }            from 'ng2-charts';
@@ -18,7 +18,8 @@ import { AuthService }               from '../services/auth.service';
   imports: [
     IonicModule,
     CommonModule,
-    NgChartsModule
+    NgChartsModule,
+    RouterModule
   ],
   templateUrl: './graficos.page.html',
   styleUrls: ['./graficos.page.scss'],

@@ -1,10 +1,201 @@
+/* src/app/chatbot/chatbot.page.scss */
+
+/* 0) Asegura que la página sea columna flex y ocupe toda la pantalla */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 1) Ion-content como contenedor flex para la tarjeta */
+.chat-content {
+  --background: transparent !important;
+  background: transparent !important;
+  flex: 1; /* ocupa todo el espacio entre header global y footer global */
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0; /* deja hueco arriba y abajo */
+  box-sizing: border-box;
+}
+
+/* 2) La “chat-card” llena todo el content */
+.chat-card {
+  background: #fff;
+  margin: 0 16px;           /* margen para ver el fondo Ekonomi a los lados */
+  flex: 1;                  /* crece para llenar el content */
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;         /* para que .messages recorte el scroll */
+  height: 90vh;
+  margin-top: 10px;
+}
+
+/* 3) Header interno */
+.chat-card-header {
+  background: var(--ion-color-primary);
+  color: #fff;
+  padding: 16px;
+  font-size: 1.25rem;
+  font-weight: bold;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+/* 4) Mensajes con scroll */
+.messages {
+  flex: 1;                  /* ocupa el hueco entre header y form */
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+/* 5) Burbujas de usuario y bot */
+.user, .bot {
+  max-width: 75%;
+  padding: 10px 16px;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.user {
+  align-self: flex-end;
+  background: var(--ion-color-primary);
+  color: #fff;
+  border-bottom-right-radius: 0;
+}
+.bot {
+  align-self: flex-start;
+  background: #f9f9f9;
+  color: var(--ion-color-dark);
+  border-bottom-left-radius: 0;
+}
+
+/* 6) Form pegado abajo dentro de la tarjeta */
+.chat-form {
+  display: flex;
+  padding: 8px 16px;
+  background: #fff;
+  border-top: 1px solid #eee;
+}
+.chat-form ion-input {
+  flex: 1;
+  --placeholder-color: var(--ion-color-medium);
+  color: black;
+}
+.chat-form ion-button {
+  margin-left: 8px;
+  --background: var(--ion-color-primary);
+  --border-radius: 20px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  height: 36px;
+}
+
+/* 7) Carrusel de sugerencias */
+.suggestions {
+  display: flex;
+  overflow-x: auto;
+  padding: 8px 16px;
+  gap: 8px;
+  background: #fff;
+  margin-bottom: 8px;
+}
+
+ion-chip {
+  --background: #ececec;
+  --color: rgb(28, 39, 70);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 15px;
+  margin-left: 20px;
+  padding: 5px 12px;
+}
+ion-chip:hover {
+  --background: var(--ion-color-primary);
+  --color: #fff;
+}
+
+/* —— Footer de navegación —— */
 .nav-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    --background: var(--white);
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
-    z-index: 999;
-  }
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  --background: var(--white);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  z-index: 999;
+}
+
+.nav-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 56px;
+  padding: 0 10px;
+  background-color: white;
+}
+
+.nav-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 6px 0;
+}
+
+.nav-button ion-icon {
+  font-size: 20px;
+  color: var(--dark-text);
+  opacity: 0.7;
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
+}
+
+.nav-label {
+  font-size: 11px;
+  color: var(--dark-text);
+  opacity: 0.7;
+  font-family: 'Flexo', sans-serif;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.nav-button.active {
+  position: relative;
+}
+.nav-button.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 28px; height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--accent-turquoise) 0%,
+    var(--secondary-blue) 100%
+  );
+  border-radius: 0 0 10px 10px;
+}
+.nav-button.active ion-icon {
+  color: var(--primary-blue);
+  opacity: 1;
+  transform: translateY(-2px);
+}
+.nav-button.active .nav-label {
+  color: var(--primary-blue);
+  opacity: 1;
+  font-weight: 600;
+}
+
+.nav-button:active {
+  background-color: rgba(66, 135, 214, 0.1);
+}
+
+

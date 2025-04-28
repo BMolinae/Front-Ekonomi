@@ -1,36 +1,80 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>chatbot</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content class="chat-content">
+  <div class="chat-card">
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">chatbot</ion-title>
-    </ion-toolbar>
-  </ion-header>
+    <!-- 1) Header interno -->
+    <div class="chat-card-header">Chat</div>
+
+    <!-- 2) Mensajes -->
+    <div class="messages">
+      <div *ngFor="let msg of messages" [ngClass]="msg.from">
+        {{ msg.text }}
+      </div>
+    </div>
+
+    <!-- 3) Sugerencias (debajo de mensajes, encima del form) -->
+    <div class="suggestions-container" *ngIf="suggestions.length">
+      <ion-chip
+        *ngFor="let s of suggestions"
+        (click)="onSuggestion(s)"
+      >
+        {{ s }}
+      </ion-chip>
+    </div>
+
+    <!-- 4) Formulario de entrada -->
+    <form class="chat-form" [formGroup]="chatForm" (ngSubmit)="send()">
+      <ion-input
+        formControlName="message"
+        placeholder="Escribe un mensaje…"
+      ></ion-input>
+      <ion-button
+        type="submit"
+        [disabled]="chatForm.invalid"
+        shape="round"
+      >
+        Enviar
+      </ion-button>
+    </form>
+
+  </div>
 </ion-content>
 
-
-<!-- Bottom Navigation -->
 <ion-footer class="nav-footer">
   <div class="nav-container">
-    <div class="nav-button active">
-      <ion-icon name="home"></ion-icon>
+    <ion-button fill="clear"
+                routerLink="/dashboard"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: true }"
+                class="nav-button">
+      <ion-icon slot="icon-only" name="home"></ion-icon>
       <span class="nav-label">Inicio</span>
-    </div>
-    <div class="nav-button">
-      <ion-icon name="bar-chart"></ion-icon>
+    </ion-button>
+
+    <ion-button fill="clear"
+                routerLink="/graficos"
+                routerLinkActive="active"
+                class="nav-button">
+      <ion-icon slot="icon-only" name="bar-chart"></ion-icon>
       <span class="nav-label">Gráficos</span>
-    </div>
-    <div class="nav-button">
-      <ion-icon name="chatbubble-ellipses"></ion-icon>
+    </ion-button>
+
+    <ion-button fill="clear"
+                routerLink="/chatbot"
+                routerLinkActive="active"
+                class="nav-button">
+      <ion-icon slot="icon-only" name="chatbubble-ellipses"></ion-icon>
       <span class="nav-label">ChatBot</span>
-    </div>
-    <div class="nav-button">
-      <ion-icon name="document-text"></ion-icon>
+    </ion-button>
+
+    <ion-button fill="clear"
+                routerLink="/documentos"
+                routerLinkActive="active"
+                class="nav-button">
+      <ion-icon slot="icon-only" name="document-text"></ion-icon>
       <span class="nav-label">Documentos</span>
-    </div>
+    </ion-button>
   </div>
 </ion-footer>
+
+
+

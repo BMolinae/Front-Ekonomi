@@ -1,16 +1,53 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>documentos</ion-title>
+    <ion-title>Documentos</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">documentos</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="docs-content">
+  <ion-list>
+    <!-- Informe PDF Mensual -->
+    <ion-item>
+      <ion-icon slot="start" name="document-text-outline"></ion-icon>
+      <ion-label>
+        <h3>Informe Mensual (PDF)</h3>
+        <p>Resumen completo con gráficas y transacciones</p>
+      </ion-label>
+      <ion-button slot="end" (click)="downloadReport('monthly')" fill="clear">
+        <ion-icon slot="icon-only" name="download-outline"></ion-icon>
+      </ion-button>
+    </ion-item>
+
+    <!-- Exportar CSV -->
+    <ion-item>
+      <ion-icon slot="start" name="grid-outline"></ion-icon>
+      <ion-label>
+        <h3>Exportar Transacciones (CSV)</h3>
+        <p>Todas tus transacciones en formato CSV</p>
+      </ion-label>
+      <ion-button slot="end" (click)="downloadReport('csv')" fill="clear">
+        <ion-icon slot="icon-only" name="download-outline"></ion-icon>
+      </ion-button>
+    </ion-item>
+
+    <!-- Imágenes de Gráficos -->
+    <ion-item lines="none">
+      <ion-label>
+        <h3>Imágenes de Gráficas</h3>
+        <p>Descarga PNG de cada gráfico</p>
+      </ion-label>
+    </ion-item>
+    <ion-item *ngFor="let chart of charts" lines="none">
+      <ion-label>
+        <p>{{ chart.name }}</p>
+      </ion-label>
+      <ion-button slot="end" (click)="downloadReport(chart.id)" fill="clear">
+        <ion-icon slot="icon-only" name="download-outline"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </ion-list>
 </ion-content>
+
 
 
 <!-- Bottom Navigation -->

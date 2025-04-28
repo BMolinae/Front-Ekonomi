@@ -24,3 +24,15 @@
 
 /* Paleta de colores para modo oscuro */
 @import "@ionic/angular/css/palettes/dark.system.css";
+
+/* src/global.scss */
+
+ion-app, ion-router-outlet, body {
+    /* Ajusta este degradado al que ya usas en el Home */
+    background: linear-gradient(
+      135deg,
+      rgba(224, 252, 249, 1) 0%,
+      rgba(255, 255, 255, 1) 100%
+    ) !important;
+  }
+

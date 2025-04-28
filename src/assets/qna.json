@@ -1,0 +1,71 @@
+[
+    {
+      "question": "hola",
+      "answer": "¡Hola! Bienvenido a Ekonomi. ¿En qué te puedo ayudar hoy?"
+    },
+    {
+      "question": "buenas",
+      "answer": "¡Buenas! ¿Cómo te puedo servir?"
+    },
+    {
+      "question": "¿cuál es mi saldo?",
+      "answer": "Tu saldo disponible es el que aparece en la tarjeta principal. ¿Quieres revisarlo ahora?"
+    },
+    {
+      "question": "saldo disponible",
+      "answer": "Tienes $435.000 disponibles en tu cuenta corriente."
+    },
+    {
+      "question": "¿cómo agrego tarjeta?",
+      "answer": "Para sumar una nueva tarjeta ve a “Agregar tarjeta” en el dashboard y sigue los pasos."
+    },
+    {
+      "question": "agregar tarjeta",
+      "answer": "En la pantalla de inicio haz tap en “Agregar tarjeta” y completa los datos solicitados."
+    },
+    {
+      "question": "poner límite",
+      "answer": "Toca en “Poner límite” y define el monto máximo de gasto mensual que necesites."
+    },
+    {
+      "question": "límite mensual",
+      "answer": "El límite mensual lo puedes actualizar desde “Poner límite” en el dashboard."
+    },
+    {
+      "question": "transacciones recientes",
+      "answer": "En “Transacciones recientes” ves los últimos movimientos, ordenados por fecha."
+    },
+    {
+      "question": "ver transacciones",
+      "answer": "Revisa la sección “Transacciones recientes” justo debajo de tus tarjetas en el home."
+    },
+    {
+      "question": "soporte",
+      "answer": "Si necesitas ayuda, escríbenos a soporte@ekonomi.com o chatea con nosotros aquí."
+    },
+    {
+      "question": "problema",
+      "answer": "¿Qué problema estás experimentando? Dame más detalles y lo revisamos."
+    },
+    {
+      "question": "theme",
+      "answer": "Puedes cambiar el tema desde Ajustes → Temas. ¿Quieres cambiar al tema oscuro?"
+    },
+    {
+      "question": "cambiar tema",
+      "answer": "Entra a Ajustes y elige tu tema favorito (claro u oscuro)."
+    },
+    {
+      "question": "gracias",
+      "answer": "¡De nada! Aquí estoy para lo que necesites."
+    },
+    {
+      "question": "chao",
+      "answer": "¡Nos vemos! Cualquier cosa vuelve cuando quieras."
+    },
+    {
+      "question": "¿cómo funciona ekon...?",
+      "answer": "Ekonomi te ayuda a administrar tus finanzas: revisa tu saldo, gastos, ingresos y limita tus compras."
+    }
+  ]
+  

@@ -1,10 +1,168 @@
+/* src/app/documentos/documents.page.scss */
+
+/* 0) Layout general */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 1) IonContent transparente para heredar fondo global */
+ion-content.docs-content {
+  --background: transparent;
+  background: transparent;
+  flex: 1;
+  padding: 16px 0;           /* espacio arriba y abajo */
+  box-sizing: border-box;
+}
+
+/* 2) Lista de documentos como “cards” */
+ion-list {
+  margin: 0;
+  padding: 0;
+}
+
+ion-item {
+  --background: #fff;
+  border-radius: 12px;
+  margin: 0 16px 12px;       /* separa cada tarjeta */
+  --inner-padding-end: 16px;
+  --inner-padding-start: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.1s ease;
+}
+
+ion-item:hover {
+  transform: translateY(-2px);
+}
+
+/* 3) Iconos en cada ítem */
+ion-item ion-icon {
+  font-size: 24px;
+  color: var(--ion-color-primary);
+  margin-right: 12px;
+}
+
+/* 4) Texto: título y subtítulo */
+ion-item ion-label {
+  display: flex;
+  flex-direction: column;
+}
+
+ion-item ion-label h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+ion-item ion-label p {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--ion-color-medium);
+}
+
+/* 5) Botón de descarga */
+ion-item ion-button {
+  --background: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+ion-item ion-button ion-icon {
+  font-size: 20px;
+  color: var(--ion-color-primary);
+  transition: color 0.2s ease;
+}
+
+ion-item ion-button:hover ion-icon {
+  color: var(--ion-color-secondary);
+}
+
+/* 6) Asegurar espacio para el nav-footer */
+ion-content.docs-content,
+ion-list {
+  padding-bottom: calc(56px + 16px);
+}
+
+/* 7) Footer de navegación se mantiene igual (definido globalmente) */
+/* —— Footer de navegación —— */
 .nav-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    --background: var(--white);
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
-    z-index: 999;
-  }
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  --background: var(--white);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  z-index: 999;
+}
+
+.nav-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 56px;
+  padding: 0 10px;
+  background-color: white;
+}
+
+.nav-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 6px 0;
+}
+
+.nav-button ion-icon {
+  font-size: 20px;
+  color: var(--dark-text);
+  opacity: 0.7;
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
+}
+
+.nav-label {
+  font-size: 11px;
+  color: var(--dark-text);
+  opacity: 0.7;
+  font-family: 'Flexo', sans-serif;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.nav-button.active {
+  position: relative;
+}
+.nav-button.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 28px; height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--accent-turquoise) 0%,
+    var(--secondary-blue) 100%
+  );
+  border-radius: 0 0 10px 10px;
+}
+.nav-button.active ion-icon {
+  color: var(--primary-blue);
+  opacity: 1;
+  transform: translateY(-2px);
+}
+.nav-button.active .nav-label {
+  color: var(--primary-blue);
+  opacity: 1;
+  font-weight: 600;
+}
+
+.nav-button:active {
+  background-color: rgba(66, 135, 214, 0.1);
+}
+

@@ -180,21 +180,40 @@
 <!-- Bottom Navigation -->
 <ion-footer class="nav-footer">
   <div class="nav-container">
-    <div class="nav-button" (click)="goTo('/dashboard')" [class.active]="router.url==='/dashboard'">
-      <ion-icon name="home"></ion-icon>
+    <ion-button fill="clear"
+                routerLink="/dashboard"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: true }"
+                class="nav-button">
+      <ion-icon slot="icon-only" name="home"></ion-icon>
       <span class="nav-label">Inicio</span>
-    </div>
-    <div class="nav-button" (click)="goTo('/graficos')" [class.active]="router.url==='/graficos'">
-      <ion-icon name="bar-chart"></ion-icon>
+    </ion-button>
+
+    <ion-button fill="clear"
+                routerLink="/graficos"
+                routerLinkActive="active"
+                class="nav-button">
+      <ion-icon slot="icon-only" name="bar-chart"></ion-icon>
       <span class="nav-label">Gráficos</span>
-    </div>
-    <div class="nav-button" (click)="goTo('/chatbot')" [class.active]="router.url==='/chatbot'">
-      <ion-icon name="chatbubble-ellipses"></ion-icon>
+    </ion-button>
+
+    <ion-button fill="clear"
+                routerLink="/chatbot"
+                routerLinkActive="active"
+                class="nav-button">
+      <ion-icon slot="icon-only" name="chatbubble-ellipses"></ion-icon>
       <span class="nav-label">ChatBot</span>
-    </div>
-    <div class="nav-button" (click)="goTo('/documentos')" [class.active]="router.url==='/documentos'">
-      <ion-icon name="document-text"></ion-icon>
+    </ion-button>
+
+    <ion-button fill="clear"
+                routerLink="/documentos"
+                routerLinkActive="active"
+                class="nav-button">
+      <ion-icon slot="icon-only" name="document-text"></ion-icon>
       <span class="nav-label">Documentos</span>
-    </div>
+    </ion-button>
   </div>
 </ion-footer>
+
+
+
