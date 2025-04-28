@@ -1,113 +1,138 @@
+<ion-content>
+  <div class="financial-dashboard">
+    <!-- Cabecera -->
+    <div class="dashboard-header">
+      <h1>Panel Financiero</h1>
+      <p>{{ currentMonth }}</p>
+    </div>
 
+    <!-- Tarjetas principales -->
+    <div class="cards-container">
 
-<ion-content class="dashboard-container">
-  <div class="background-gradient"></div>
-  <div class="background-circle circle-1"></div>
-  <div class="background-circle circle-2"></div>
-
-  <div class="content-wrapper">
-    <!-- Límite restante -->
-    <ion-card class="account-card summary-card">
-      <ion-card-header>
-        <ion-card-title>Límite restante</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="balance-panel">
-          <span class="currency">$</span>
-          <span class="balance-amount">{{ limitLeft | number }}</span>
+      <!-- Tarjeta de Límite Restante -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h2>Límite restante</h2>
+          <span class="badge">Débito</span>
         </div>
-        <small class="small-text">{{ limitMessage }}</small>
-      </ion-card-content>
-    </ion-card>
 
-    <!-- Gauge: % de límite usado -->
-    <ion-card class="account-card chart-card">
-      <ion-card-header>
-        <ion-card-title>Uso del límite mensual</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-      <div class="chart-container">
-        <canvas
-          baseChart
-          [data]="gaugeData"
-          [options]="gaugeOpts"
-          [type]="'doughnut'">
-        </canvas>
-      </div>
-      </ion-card-content>
-    </ion-card>
+        <div class="amount-large">${{ limitLeft | number }}</div>
 
-    <!-- Pie Chart: Gastos por categoría -->
-    <ion-card class="account-card chart-card">
-      <ion-card-header>
-        <ion-card-title>Gastos por categoría</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-      <div class="chart-container">
-        <canvas
-          baseChart
-          [data]="pieData"
-          [options]="pieOpts"
-          [type]="'pie'">
-        </canvas>
-      </div>
-      </ion-card-content>
-    </ion-card>
+        <div class="success-message">
+          <ion-icon name="checkmark-circle"></ion-icon>
+          {{ limitMessage }}
+        </div>
 
-    <!-- Doughnut: Gastos vs Ingresos -->
-    <ion-card class="account-card chart-card">
-      <ion-card-header>
-        <ion-card-title>Gastos vs Ingresos (último mes)</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-      <div class="chart-container">
-        <canvas
-          baseChart
-          [data]="doughnutData"
-          [options]="doughnutOpts"
-          [type]="'doughnut'">
-        </canvas>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <p class="stat-label">Límite Total</p>
+            <p class="stat-value">${{ monthlyLimit | number }}</p>
+          </div>
+          <div class="stat-item">
+            <p class="stat-label">Utilizado</p>
+            <p class="stat-value">${{ usedLimit | number }}</p>
+          </div>
+        </div>
       </div>
-      </ion-card-content>
-    </ion-card>
+
+      <!-- Tarjeta de Uso del Límite Mensual -->
+      <div class="dashboard-card">
+        <h2>Uso del límite mensual</h2>
+
+        <!-- Barra de progreso -->
+        <div class="progress-container">
+          <div class="progress-labels">
+            <span>{{ usedPercentage }}% Utilizado</span>
+            <span>{{ availablePercentage }}% Disponible</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="usedPercentage"></div>
+          </div>
+        </div>
+
+        <!-- Gráfico circular -->
+        <div class="chart-container">
+          <svg class="circular-chart" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e0e0e0" stroke-width="12" />
+            <circle 
+              cx="50" cy="50" r="40"
+              fill="transparent"
+              stroke="#e91e63"
+              stroke-width="12"
+              [attr.stroke-dasharray]="strokeCircumference"
+              [attr.stroke-dashoffset]="strokeDashOffset"
+              transform="rotate(-90 50 50)" />
+            <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="bold" fill="#333">
+              {{ usedPercentage }}%
+            </text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Gráfico de Comparación Semanal -->
+      <div class="dashboard-card">
+        <h2>Comparación mensual</h2>
+        <p class="subtitle">Últimos 4 meses</p>
+
+        <div class="bar-chart-container">
+          <div class="chart-grid-lines">
+            <div class="grid-line" style="bottom: 0%"><span class="grid-label">0</span></div>
+            <div class="grid-line" style="bottom: 25%"><span class="grid-label">25</span></div>
+            <div class="grid-line" style="bottom: 50%"><span class="grid-label">50</span></div>
+            <div class="grid-line" style="bottom: 75%"><span class="grid-label">75</span></div>
+            <div class="grid-line" style="bottom: 100%"><span class="grid-label">100</span></div>
+          </div>
+
+          <div class="bar-groups">
+            <div *ngFor="let week of weeklyData" class="bar-group">
+              <div class="bar bar-income" [style.height.%]="week.valueA"></div>
+              <div class="bar bar-expense" [style.height.%]="week.valueB"></div>
+              <div class="bar-label">{{ week.label }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-legend">
+          <div class="legend-item">
+            <div class="legend-color income-color"></div>
+            <span>Variable A</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color expense-color"></div>
+            <span>Variable B</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gastos por Categoría -->
+      <div class="dashboard-card">
+        <h2>Gastos por categoría</h2>
+
+        <div class="chart-container">
+          <svg class="category-chart" viewBox="0 0 200 100">
+            <path d="M 100,100 L 100,20 A 80,80 0 0,1 180,100 Z" fill="#4caf50"></path>
+            <path d="M 100,100 L 20,100 A 80,80 0 0,1 100,20 Z" fill="#e91e63"></path>
+
+            <text x="100" y="60" text-anchor="middle" font-size="12" font-weight="bold" fill="#ffffff">
+              Total de Gastos
+            </text>
+            <text x="100" y="75" text-anchor="middle" font-size="10" fill="#ffffff">
+              ${{ totalExpenses | number }}
+            </text>
+          </svg>
+        </div>
+
+        <div class="category-legend">
+          <div *ngFor="let cat of categoryData" class="category-item">
+            <div class="category-color" [style.backgroundColor]="cat.color"></div>
+            <div class="category-details">
+              <p class="category-name">{{ cat.name }}</p>
+              <p class="category-stats">{{ cat.percent }}% • ${{ cat.amount | number }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </ion-content>
-
-<ion-footer class="nav-footer">
-  <div class="nav-container">
-    <ion-button fill="clear"
-                routerLink="/dashboard"
-                routerLinkActive="active"
-                [routerLinkActiveOptions]="{ exact: true }"
-                class="nav-button">
-      <ion-icon slot="icon-only" name="home"></ion-icon>
-      <span class="nav-label">Inicio</span>
-    </ion-button>
-
-    <ion-button fill="clear"
-                routerLink="/graficos"
-                routerLinkActive="active"
-                class="nav-button">
-      <ion-icon slot="icon-only" name="bar-chart"></ion-icon>
-      <span class="nav-label">Gráficos</span>
-    </ion-button>
-
-    <ion-button fill="clear"
-                routerLink="/chatbot"
-                routerLinkActive="active"
-                class="nav-button">
-      <ion-icon slot="icon-only" name="chatbubble-ellipses"></ion-icon>
-      <span class="nav-label">ChatBot</span>
-    </ion-button>
-
-    <ion-button fill="clear"
-                routerLink="/documentos"
-                routerLinkActive="active"
-                class="nav-button">
-      <ion-icon slot="icon-only" name="document-text"></ion-icon>
-      <span class="nav-label">Documentos</span>
-    </ion-button>
-  </div>
-</ion-footer>
-
-

@@ -1,16 +1,15 @@
 // src/app/graficos/graficos.page.ts
 
 import 'chart.js/auto';
-import { Component, OnInit }        from '@angular/core';
-import { IonicModule }               from '@ionic/angular';
-import { CommonModule }              from '@angular/common';
-import { HttpClient }                from '@angular/common/http';
-import { RouterModule, Router, NavigationEnd }     from '@angular/router';
-import { filter }                    from 'rxjs/operators';
-import { ChartData, ChartOptions }   from 'chart.js';
-import { NgChartsModule }            from 'ng2-charts';
-import { AuthService }               from '../services/auth.service';
-
+import { Component, OnInit } from '@angular/core';
+import { IonicModule } from '@ionic/angular';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { ChartData, ChartOptions } from 'chart.js';
+import { NgChartsModule } from 'ng2-charts';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-graficos',
@@ -27,35 +26,26 @@ import { AuthService }               from '../services/auth.service';
 export class GraficosPage implements OnInit {
 
   public user: any;
-  /** Límite mensual del usuario */
-  private monthlyLimit = 0;
-
-  /** Saldo restante del límite */
+  public monthlyLimit = 0;
   public limitLeft = 0;
-
-  /** Mensaje contextual */
   public limitMessage = '';
 
-  /** Gauge semicircular: % de límite gastado */
   public gaugeData!: ChartData<'doughnut'>;
   public gaugeOpts: ChartOptions<'doughnut'> = {
     responsive: true,
-    cutout: '70%',            // grosor del anillo
+    cutout: '70%',
     plugins: {
       legend: { display: false },
       tooltip: { enabled: false }
     }
   };
 
-  /** Pie Chart: Gastos por categoría */
   public pieData!: ChartData<'pie'>;
   public pieOpts: ChartOptions<'pie'> = { responsive: true, plugins: { legend: { position: 'bottom' } } };
 
-  /** Doughnut: Gastos vs Ingresos */
   public doughnutData!: ChartData<'doughnut'>;
   public doughnutOpts: ChartOptions<'doughnut'> = { responsive: true, plugins: { legend: { position: 'bottom' } } };
 
-  /** Line: Evolución diaria de gastos */
   public lineData!: ChartData<'line'>;
   public lineOpts: ChartOptions<'line'> = {
     responsive: true,
@@ -68,6 +58,18 @@ export class GraficosPage implements OnInit {
   };
 
   private apiUrl = 'http://127.0.0.1:8000/api/movimientos/';
+
+  // Variables dinámicas para el dashboard
+  public currentMonth = '';
+  public usedLimit = 0;
+  public usedPercentage = 0;
+  public availablePercentage = 0;
+  public totalExpenses = 0;
+  public monthlyData: { label: string; incomePercent: number; expensePercent: number; }[] = [];
+  public weeklyData: { label: string; valueA: number; valueB: number; }[] = []; // 🔥 agregado
+  public categoryData: { name: string; percent: number; amount: number; color: string; }[] = [];
+  public strokeCircumference = 251.2;
+  public strokeDashOffset = 0;
 
   constructor(
     private auth: AuthService,
@@ -91,29 +93,25 @@ export class GraficosPage implements OnInit {
   private fetchAndBuildCharts() {
     const token = this.auth.getToken()!;
     const headers = { Authorization: `Token ${token}` };
-  
-    // 1) recarga el perfil
+
     this.auth.getCurrentUser().subscribe(user => {
-      // actualiza localStorage con el perfil fresquito
       localStorage.setItem('user_data', JSON.stringify(user));
-      this.user = user;                // si lo necesitas en este componente
+      this.user = user;
       this.monthlyLimit = Number(user.limite_mensual) || 0;
-  
-      // 2) luego traes los movimientos
+
       this.http.get<any[]>(this.apiUrl, { headers }).subscribe(
         movs => {
           this.computeLimitLeft(movs);
-          /* … resto de builds … */
           this.buildGauge(movs);
           this.buildPieByCategory(movs);
           this.buildDoughnut(movs);
           this.buildLine(movs);
+          this.updateFinancialSummary(movs);
         },
         err => console.error('Error cargando movimientos', err)
       );
     }, err => console.error('No pude refrescar el usuario', err));
   }
-  
 
   private computeLimitLeft(movs: any[]) {
     const start = new Date(); start.setDate(1);
@@ -131,7 +129,6 @@ export class GraficosPage implements OnInit {
     }
   }
 
-  /** Construye el gauge semicircular */
   private buildGauge(movs: any[]) {
     const spent = this.monthlyLimit - this.limitLeft;
     const pct = this.monthlyLimit > 0
@@ -143,8 +140,8 @@ export class GraficosPage implements OnInit {
       datasets: [{
         data: [pct, 100 - pct],
         backgroundColor: [
-          'rgba(239, 71, 111, 0.8)',   // rojo para usado
-          'rgba(200, 200, 200, 0.3)'   // gris suave para restante
+          'rgba(239, 71, 111, 0.8)',
+          'rgba(200, 200, 200, 0.3)'
         ],
         borderWidth: 0
       }]
@@ -219,5 +216,59 @@ export class GraficosPage implements OnInit {
         fill: true
       }]
     };
+  }
+
+  private updateFinancialSummary(movs: any[]) {
+    const start = new Date();
+    start.setDate(1);
+
+    const thisMonth = movs.filter(m => new Date(m.fecha) >= start);
+    const gastos = thisMonth.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + +m.monto, 0);
+    const ingresos = thisMonth.filter(m => m.tipo === 'ingreso').reduce((sum, m) => sum + +m.monto, 0);
+
+    this.usedLimit = gastos;
+    this.totalExpenses = gastos;
+
+    this.usedPercentage = this.monthlyLimit > 0 ? Math.round((this.usedLimit / this.monthlyLimit) * 100) : 0;
+    this.availablePercentage = 100 - this.usedPercentage;
+
+    this.strokeDashOffset = this.strokeCircumference * (1 - (this.usedPercentage / 100));
+
+    this.monthlyData = [
+      { label: 'Febrero', incomePercent: 67.5, expensePercent: 50 },
+      { label: 'Marzo', incomePercent: 90, expensePercent: 35 },
+      { label: 'Abril', incomePercent: 45, expensePercent: 60 },
+      { label: 'Mayo', incomePercent: 72, expensePercent: 65 },
+    ];
+
+    // 🔥 Agregado WeeklyData
+    this.weeklyData = [
+      { label: 'Enero', valueA: 60, valueB: 40 },
+      { label: 'Febrero', valueA: 80, valueB: 30 },
+      { label: 'Marzo', valueA: 50, valueB: 70 },
+      { label: 'Abril', valueA: 90, valueB: 60 }
+    ];
+
+    const gastosPorCategoria = thisMonth
+      .filter(m => m.tipo === 'gasto' && m.categoria_nombre)
+      .reduce((acc: Record<string, number>, m) => {
+        acc[m.categoria_nombre] = (acc[m.categoria_nombre] || 0) + +m.monto;
+        return acc;
+      }, {});
+
+    const totalGastos = Object.values(gastosPorCategoria).reduce((sum, val) => sum + val, 0);
+    const colors = ['#4caf50', '#e91e63', '#3f51b5', '#ff9800'];
+
+    this.categoryData = Object.entries(gastosPorCategoria).map(([cat, amount], idx) => ({
+      name: cat,
+      amount: amount,
+      percent: totalGastos ? Math.round((amount / totalGastos) * 100) : 0,
+      color: colors[idx % colors.length],
+    }));
+
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const now = new Date();
+    this.currentMonth = `${meses[now.getMonth()]} ${now.getFullYear()}`;
   }
 }

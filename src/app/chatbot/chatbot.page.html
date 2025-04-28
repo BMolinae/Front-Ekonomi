@@ -20,7 +20,6 @@
         {{ s }}
       </ion-chip>
     </div>
-
     <!-- 4) Formulario de entrada -->
     <form class="chat-form" [formGroup]="chatForm" (ngSubmit)="send()">
       <ion-input
@@ -38,43 +37,3 @@
 
   </div>
 </ion-content>
-
-<ion-footer class="nav-footer">
-  <div class="nav-container">
-    <ion-button fill="clear"
-                routerLink="/dashboard"
-                routerLinkActive="active"
-                [routerLinkActiveOptions]="{ exact: true }"
-                class="nav-button">
-      <ion-icon slot="icon-only" name="home"></ion-icon>
-      <span class="nav-label">Inicio</span>
-    </ion-button>
-
-    <ion-button fill="clear"
-                routerLink="/graficos"
-                routerLinkActive="active"
-                class="nav-button">
-      <ion-icon slot="icon-only" name="bar-chart"></ion-icon>
-      <span class="nav-label">Gráficos</span>
-    </ion-button>
-
-    <ion-button fill="clear"
-                routerLink="/chatbot"
-                routerLinkActive="active"
-                class="nav-button">
-      <ion-icon slot="icon-only" name="chatbubble-ellipses"></ion-icon>
-      <span class="nav-label">ChatBot</span>
-    </ion-button>
-
-    <ion-button fill="clear"
-                routerLink="/documentos"
-                routerLinkActive="active"
-                class="nav-button">
-      <ion-icon slot="icon-only" name="document-text"></ion-icon>
-      <span class="nav-label">Documentos</span>
-    </ion-button>
-  </div>
-</ion-footer>
-
-
-

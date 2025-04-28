@@ -1,4 +1,5 @@
 // src/app/dashboard/dashboard.page.ts
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AlertController, IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
@@ -17,18 +18,12 @@ import { interval, switchMap, tap, catchError, of, Subscription } from 'rxjs';
 export class DashboardPage implements OnInit, OnDestroy {
   user: any = null;
 
-  /** Límite mensual original */
   public monthlyLimit = 0;
-  /** Límite restante tras gastos del mes */
   public limitLeft = 0;
-  /** % de límite usado */
   public percentOfLimit = 0;
 
-  /** Total ingresado este mes */
   ingresoMes = 0;
-  /** Total gastado este mes */
   gastosMes = 0;
-  /** Saldo disponible (ingresoMes - gastosMes) */
   public saldo = 0;
 
   movimientos: any[] = [];
@@ -36,7 +31,6 @@ export class DashboardPage implements OnInit, OnDestroy {
   tarjeta = '';
   isUserPanelExpanded = false;
 
-  /** Subscripción del refresco */
   private pollSub?: Subscription;
 
   constructor(
@@ -161,6 +155,20 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.percentOfLimit = this.monthlyLimit > 0
       ? Math.min(Math.round((this.gastosMes / this.monthlyLimit) * 100), 100)
       : 0;
+
+    /* 🔥 Aquí guardamos los valores actualizados en localStorage */
+    this.saveFinancialData();
+  }
+
+  /* ------------------------- GUARDAR DATOS FINANCIEROS ------------------------- */
+  private saveFinancialData() {
+    const financialData = {
+      saldo: this.saldo,
+      gastosMes: this.gastosMes,
+      ingresoMes: this.ingresoMes,
+      limitLeft: this.limitLeft
+    };
+    localStorage.setItem('user_financial_data', JSON.stringify(financialData));
   }
 
   /* ------------------------- DIÁLOGOS ------------------------- */
@@ -199,7 +207,6 @@ export class DashboardPage implements OnInit, OnDestroy {
         {
           text: 'Guardar',
           handler: data => {
-            /* -------- VALIDACIÓN BÁSICA -------- */
             const rawNumber = (data.cardNumber || '').replace(/\D/g, '');
             const holder = (data.cardHolder || '').trim();
             const expiry = data.expiryDate || '';
@@ -212,17 +219,14 @@ export class DashboardPage implements OnInit, OnDestroy {
               cvv.length >= 3 && cvv.length <= 4;
 
             if (!isValid) {
-              /* Cancelamos el cierre y mostramos un aviso */
               this.showToast('Completa correctamente todos los campos');
-              return false; // <‑‑ impide que se cierre el alert
+              return false;
             }
 
-            /* Si todo OK, formateamos y enviamos */
             const formatted = rawNumber.match(/.{1,4}/g)!.join('-');
 
             this.authService.addCard(formatted).subscribe({
               next: () => {
-                /* refrescamos datos tras grabar */
                 this.authService.getCurrentUser().subscribe(user => {
                   this.user = user;
                   this.tarjeta = user.tarjeta || '';
@@ -231,7 +235,7 @@ export class DashboardPage implements OnInit, OnDestroy {
               error: err => console.error('Error al guardar tarjeta', err)
             });
 
-            return true; // cierra el alert
+            return true;
           }
         }
       ]

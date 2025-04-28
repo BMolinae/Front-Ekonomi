@@ -1,3 +1,24 @@
 <ion-app>
   <ion-router-outlet></ion-router-outlet>
+
+  <ion-footer class="nav-footer" *ngIf="showFooter">
+    <div class="nav-container">
+      <div class="nav-button" [class.active]="isActive('/dashboard')" (click)="navigateTo('/dashboard')">
+        <ion-icon name="home-outline"></ion-icon>
+        <span class="nav-label">Inicio</span>
+      </div>
+      <div class="nav-button" [class.active]="isActive('/graficos')" (click)="navigateTo('/graficos')">
+        <ion-icon name="bar-chart-outline"></ion-icon>
+        <span class="nav-label">Gráficos</span>
+      </div>
+      <div class="nav-button" [class.active]="isActive('/chatbot')" (click)="navigateTo('/chatbot')">
+        <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+        <span class="nav-label">ChatBot</span>
+      </div>
+      <div class="nav-button" [class.active]="isActive('/documentos')" (click)="navigateTo('/documentos')">
+        <ion-icon name="document-text-outline"></ion-icon>
+        <span class="nav-label">Documentos</span>
+      </div>
+    </div>
+  </ion-footer>
 </ion-app>

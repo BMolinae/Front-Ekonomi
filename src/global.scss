@@ -36,3 +36,101 @@ ion-app, ion-router-outlet, body {
     ) !important;
   }
 
+  .nav-footer {
+    background-color: #ffffff;
+    border-top: 1px solid #a9e4e0;
+    padding: 8px 0;
+    box-shadow: 0 -2px 8px rgba(78, 205, 196, 0.15);
+    border-radius: 20px 20px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+  
+  .nav-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px;
+  }
+  
+  .nav-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(51, 51, 51, 0.6);
+    font-size: 12px;
+    transition: all 0.3s ease;
+    padding: 8px 0;
+    position: relative;
+    width: 20%;
+  }
+  
+  .nav-button ion-icon {
+    font-size: 22px;
+    margin-bottom: 4px;
+    transition: transform 0.2s ease;
+  }
+  
+  .nav-button .nav-label {
+    font-family: 'Flexo', 'Segoe UI', sans-serif;
+    font-weight: 500;
+    transition: opacity 0.3s ease;
+  }
+  
+  .nav-button.active {
+    color: #2656bf;
+  }
+  
+  .nav-button.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 3px;
+    background: linear-gradient(to right, #2656bf, #4ecdc4);
+    border-radius: 3px;
+  }
+  
+  .nav-button.active ion-icon {
+    transform: translateY(-2px);
+  }
+  
+  /* Quito el estilo especial para el tercer botón para que todos sean iguales */
+  /* .nav-button:nth-child(3) ion-icon {
+    font-size: 32px;
+    color: #4ecdc4;
+    margin-top: -10px;
+    margin-bottom: 0;
+  }
+  
+  .nav-button:nth-child(3).active ion-icon {
+    color: #2656bf;
+  } */
+  
+  @media (hover: hover) {
+    .nav-button:hover:not(.active) {
+      color: #4287d6;
+    }
+    
+    .nav-button:active {
+      transform: scale(0.95);
+    }
+  }
+  
+  @media (max-width: 320px) {
+    .nav-button ion-icon {
+      font-size: 20px;
+    }
+    
+    .nav-button .nav-label {
+      font-size: 10px;
+    }
+  }
+  
+  
