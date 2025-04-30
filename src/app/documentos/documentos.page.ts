@@ -20,9 +20,8 @@ import { environment }                 from '../../environments/environment';
 export class DocumentosPage implements OnInit {
   charts = [
     { id: 'gauge', name: 'Uso del Límite' },
-    { id: 'pie',   name: 'Gastos por Categoría' },
-    { id: 'line',  name: 'Evolución de Gastos' },
-    // puedes añadir más si lo necesitas
+    { id: 'pie',   name: 'Comparación Mensual' },
+    { id: 'line',  name: 'Gastos por Categorías' },
   ];
 
   constructor(

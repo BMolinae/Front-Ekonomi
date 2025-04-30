@@ -29,7 +29,7 @@ export class ChatbotPage implements OnInit, OnDestroy {
   private suggestionFlows: string[][] = [
     ['👋 ¡Hola!', '¿Cómo te encuentras hoy? 😊', '¡Gracias por tu confianza! 🙏', '👋 ¡Hasta pronto!'],
     ['💳 Consultar mi saldo', '📄 Ver mis últimos movimientos', '📉 ¿Cuánto he gastado este mes?'],
-    ['➕ Agregar nueva tarjeta', '📈 Ajustar mi límite de gastos', '🔔 Configurar alertas y notificaciones'],
+    ['➕ Agregar nueva tarjeta', '📈 Ajustar mi límite de gastos'],
     ['🛠️ Necesito ayuda de soporte', '🚨 Reportar un problema técnico', '🔒 Recuperar acceso a mi cuenta'],
     ['🔍 Revisar historial de transacciones',],
    
