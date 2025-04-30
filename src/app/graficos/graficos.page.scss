@@ -115,14 +115,39 @@
 
 /* Circular Chart */
 .chart-container {
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+  padding: 16px 0;
   display: flex;
   justify-content: center;
-  margin-top: 16px;
 }
 
-.circular-chart {
-  width: 120px;
-  height: 120px;
+canvas {
+  width: 120% !important;
+  height: 100% !important;
+  display: block;
+  margin-top: 10px;
+  margin-left: -50px;
+}
+
+.total-expenses-label {
+  text-align: center;
+  margin-top: -20px;
+  margin-bottom: 8px;
+
+  .label-title {
+    font-weight: bold;
+    font-size: 15px;
+    color: #333333;
+  }
+
+  .label-amount {
+    font-size: 17px;
+    color: #2656bf;
+    font-weight: 600;
+  }
 }
 
 /* Bar Chart */
@@ -184,15 +209,15 @@
   border-radius: 4px;
   min-height: 2px;
   background-color: #cccccc;
-  transition: all 0.3s ease; /* Para animación suave */
+  transition: all 0.3s ease;
 }
 
 .bar-income {
-  background-color: #4287d6; /* Azul para Variable A */
+  background-color: #4287d6;
 }
 
 .bar-expense {
-  background-color: #4ecdc4; /* Turquesa para Variable B */
+  background-color: #4ecdc4;
   margin-top: 4px;
 }
 
@@ -200,14 +225,13 @@
   border: 2px solid #00000033;
 }
 
-/* Animaciones al hacer hover en barras */
 .bar-income:hover {
-  background-color: #3366cc; /* Azul más oscuro */
-  transform: scaleY(1.1); /* Hace que crezca en altura un 10% */
+  background-color: #3366cc;
+  transform: scaleY(1.1);
 }
 
 .bar-expense:hover {
-  background-color: #3cbcb3; /* Turquesa más oscuro */
+  background-color: #3cbcb3;
   transform: scaleY(1.1);
 }
 
@@ -217,12 +241,15 @@
   color: rgba(51, 51, 51, 0.75);
 }
 
-/* Leyenda */
+/* Leyenda de gráfico */
 .chart-legend {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 24px;
-  margin-top: 12px;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #444;
 }
 
 .legend-item {
@@ -239,19 +266,20 @@
 }
 
 .income-color {
-  background-color: #4287d6; /* Azul para Variable A */
+  background-color: #4287d6;
 }
 
 .expense-color {
-  background-color: #4ecdc4; /* Turquesa para Variable B */
+  background-color: #4ecdc4;
 }
 
 /* Categorías */
 .category-legend {
-  margin-top: 16px;
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  padding: 0 16px;
 }
 
 .category-item {
@@ -261,20 +289,27 @@
 }
 
 .category-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
 }
 
-.category-details .category-name {
-  font-weight: 500;
-  margin: 0;
-}
+.category-details {
+  display: flex;
+  flex-direction: column;
 
-.category-details .category-stats {
-  font-size: 13px;
-  color: rgba(51, 51, 51, 0.75);
-  margin: 0;
+  .category-name {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #444;
+  }
+
+  .category-stats {
+    margin: 0;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.55);
+  }
 }
 
 /* Botón */
@@ -300,4 +335,33 @@
   src: url('/assets/fonts/Flexo-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+}
+
+.chart-note {
+  text-align: center;
+  font-size: 12px;
+  color: #777;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.chart-bar-large {
+  width: 100%;
+  height: 320px;
+  padding: 0 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.chart-bar-large canvas{
+  padding: 10px;
+  margin: 10px 5px 5px -50px;
+}
+
+.chart-note {
+  text-align: center;
+  font-size: 12px;
+  font-style: italic;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 8px;
 }

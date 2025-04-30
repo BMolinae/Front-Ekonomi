@@ -7,6 +7,12 @@
     
     <!-- Contenido principal -->
     <div class="content-wrapper">
+      <div class="back-button-container">
+        <button class="custom-back-button" (click)="goBack()">
+          <ion-icon name="arrow-back-outline"></ion-icon>
+          <span>Atrás</span>
+        </button>
+      </div>
       <!-- Cabecera -->
       <div class="header-section">
         <div class="logo-text">Ekonomi</div>
@@ -56,7 +62,7 @@
         
         <!-- Botón para comenzar a explorar -->
         <div class="action-container">
-          <ion-button class="explore-button" expand="block">
+          <ion-button class="explore-button" expand="block" routerLink="/dashboard">
             Comenzar a explorar
           </ion-button>
         </div>

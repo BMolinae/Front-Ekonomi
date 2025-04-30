@@ -25,7 +25,7 @@
     },
     {
       "question": "poner límite",
-      "answer": "Toca en “Poner límite” y define el monto máximo de gasto mensual que necesites."
+      "answer": "En la pantalla de inicio toca en “Poner límite” y define el monto máximo de gasto mensual que necesites."
     },
     {
       "question": "límite mensual",
@@ -48,14 +48,6 @@
       "answer": "¿Qué problema estás experimentando? Dame más detalles y lo revisamos."
     },
     {
-      "question": "theme",
-      "answer": "Puedes cambiar el tema desde Ajustes → Temas. ¿Quieres cambiar al tema oscuro?"
-    },
-    {
-      "question": "cambiar tema",
-      "answer": "Entra a Ajustes y elige tu tema favorito (claro u oscuro)."
-    },
-    {
       "question": "gracias",
       "answer": "¡De nada! Aquí estoy para lo que necesites."
     },
@@ -64,7 +56,7 @@
       "answer": "¡Nos vemos! Cualquier cosa vuelve cuando quieras."
     },
     {
-      "question": "¿cómo funciona ekon...?",
+      "question": "¿cómo funciona ekonomi?",
       "answer": "Ekonomi te ayuda a administrar tus finanzas: revisa tu saldo, gastos, ingresos y limita tus compras."
     }
   ]

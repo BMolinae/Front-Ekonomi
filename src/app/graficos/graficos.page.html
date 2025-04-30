@@ -54,83 +54,47 @@
         <div class="chart-container">
           <svg class="circular-chart" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e0e0e0" stroke-width="12" />
-            <circle 
-              cx="50" cy="50" r="40"
-              fill="transparent"
-              stroke="#e91e63"
-              stroke-width="12"
-              [attr.stroke-dasharray]="strokeCircumference"
-              [attr.stroke-dashoffset]="strokeDashOffset"
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e91e63" stroke-width="12"
+              [attr.stroke-dasharray]="strokeCircumference" [attr.stroke-dashoffset]="strokeDashOffset"
               transform="rotate(-90 50 50)" />
-            <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="bold" fill="#333">
+            <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="bold"
+              fill="#333">
               {{ usedPercentage }}%
             </text>
           </svg>
         </div>
       </div>
 
-      <!-- Gráfico de Comparación Semanal -->
+      <!-- Gráfico de Comparación Mensual -->
       <div class="dashboard-card">
         <h2>Comparación mensual</h2>
         <p class="subtitle">Últimos 4 meses</p>
 
-        <div class="bar-chart-container">
-          <div class="chart-grid-lines">
-            <div class="grid-line" style="bottom: 0%"><span class="grid-label">0</span></div>
-            <div class="grid-line" style="bottom: 25%"><span class="grid-label">25</span></div>
-            <div class="grid-line" style="bottom: 50%"><span class="grid-label">50</span></div>
-            <div class="grid-line" style="bottom: 75%"><span class="grid-label">75</span></div>
-            <div class="grid-line" style="bottom: 100%"><span class="grid-label">100</span></div>
-          </div>
-
-          <div class="bar-groups">
-            <div *ngFor="let week of weeklyData" class="bar-group">
-              <div class="bar bar-income" [style.height.%]="week.valueA"></div>
-              <div class="bar bar-expense" [style.height.%]="week.valueB"></div>
-              <div class="bar-label">{{ week.label }}</div>
-            </div>
-          </div>
+        <div class="chart-container chart-bar-large">
+          <canvas baseChart
+          [data]="barData"
+          [options]="barOpts"
+          [type]="'line'">
+  </canvas>
         </div>
 
-        <div class="chart-legend">
-          <div class="legend-item">
-            <div class="legend-color income-color"></div>
-            <span>Variable A</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color expense-color"></div>
-            <span>Variable B</span>
-          </div>
-        </div>
+        <p class="chart-note">* El mes actual está resaltado con un borde más grueso.</p>
       </div>
+
+
 
       <!-- Gastos por Categoría -->
       <div class="dashboard-card">
-        <h2>Gastos por categoría</h2>
-
         <div class="chart-container">
-          <svg class="category-chart" viewBox="0 0 200 100">
-            <path d="M 100,100 L 100,20 A 80,80 0 0,1 180,100 Z" fill="#4caf50"></path>
-            <path d="M 100,100 L 20,100 A 80,80 0 0,1 100,20 Z" fill="#e91e63"></path>
-
-            <text x="100" y="60" text-anchor="middle" font-size="12" font-weight="bold" fill="#ffffff">
-              Total de Gastos
-            </text>
-            <text x="100" y="75" text-anchor="middle" font-size="10" fill="#ffffff">
-              ${{ totalExpenses | number }}
-            </text>
-          </svg>
+          <canvas baseChart [data]="pieData" [options]="pieOpts" [type]="'pie'">
+          </canvas>
         </div>
 
-        <div class="category-legend">
-          <div *ngFor="let cat of categoryData" class="category-item">
-            <div class="category-color" [style.backgroundColor]="cat.color"></div>
-            <div class="category-details">
-              <p class="category-name">{{ cat.name }}</p>
-              <p class="category-stats">{{ cat.percent }}% • ${{ cat.amount | number }}</p>
-            </div>
-          </div>
+        <div class="total-expenses-label">
+          <p class="label-title">Total de Gastos</p>
+          <p class="label-amount">${{ totalExpenses | number }}</p>
         </div>
+
       </div>
 
     </div>

@@ -111,7 +111,7 @@
   color: black !important;
 }
 
-/* 8) Carrusel de sugerencias */
+/* Carrusel de sugerencias */
 .suggestions {
   display: flex;
   overflow-x: auto;
@@ -136,7 +136,7 @@ ion-chip:hover {
   --color: #fff;
 }
 
-/* 9) Buttons en la parte inferior */
+/* Buttons en la parte inferior */
 .button-container {
   display: flex;
   padding: 8px 16px;
@@ -159,7 +159,6 @@ ion-chip:hover {
   background-color: #e0e0e0;
 }
 
-/* Ensure the button text is visible */
 .chat-form ion-button {
   margin-left: 8px;
   --background: var(--ion-color-primary);

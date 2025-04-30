@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-politica-uso',
@@ -14,7 +14,11 @@ import { IonicModule } from '@ionic/angular';
 })
 export class PoliticaUsoPage {
 
-  constructor() { }
+  constructor( private navCtrl: NavController) { }
+
+  goBack() {
+    this.navCtrl.back();
+  }
 
   ngOnInit() {
   }

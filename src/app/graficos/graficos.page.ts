@@ -1,5 +1,3 @@
-// src/app/graficos/graficos.page.ts
-
 import 'chart.js/auto';
 import { Component, OnInit } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
@@ -10,6 +8,8 @@ import { filter } from 'rxjs/operators';
 import { ChartData, ChartOptions } from 'chart.js';
 import { NgChartsModule } from 'ng2-charts';
 import { AuthService } from '../services/auth.service';
+
+
 
 @Component({
   selector: 'app-graficos',
@@ -57,16 +57,39 @@ export class GraficosPage implements OnInit {
     elements: { line: { tension: 0.4, borderWidth: 3 }, point: { radius: 4, hoverRadius: 6 } }
   };
 
+  public barData!: ChartData<'line'>;
+  public barOpts: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        title: { display: true, text: 'Mes' },
+        ticks: { font: { size: 14 }, maxRotation: 0, minRotation: 0 }
+      },
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: 'Monto (CLP)' },
+        ticks: { font: { size: 14 } }
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { font: { size: 14 } }
+      }
+    }
+  };
+  
+  
+
   private apiUrl = 'http://127.0.0.1:8000/api/movimientos/';
 
-  // Variables dinámicas para el dashboard
   public currentMonth = '';
   public usedLimit = 0;
   public usedPercentage = 0;
   public availablePercentage = 0;
   public totalExpenses = 0;
-  public monthlyData: { label: string; incomePercent: number; expensePercent: number; }[] = [];
-  public weeklyData: { label: string; valueA: number; valueB: number; }[] = []; // 🔥 agregado
+
   public categoryData: { name: string; percent: number; amount: number; color: string; }[] = [];
   public strokeCircumference = 251.2;
   public strokeDashOffset = 0;
@@ -106,6 +129,7 @@ export class GraficosPage implements OnInit {
           this.buildPieByCategory(movs);
           this.buildDoughnut(movs);
           this.buildLine(movs);
+          this.buildMonthlyComparison(movs);
           this.updateFinancialSummary(movs);
         },
         err => console.error('Error cargando movimientos', err)
@@ -149,24 +173,41 @@ export class GraficosPage implements OnInit {
   }
 
   private buildPieByCategory(movs: any[]) {
-    const gastos = movs.filter(m => m.tipo === 'gasto' && m.categoria_nombre);
+    const start = new Date(); start.setDate(1);
+    const thisMonth = movs.filter(m => new Date(m.fecha) >= start);
+
+    const gastos = thisMonth.filter(m => m.tipo === 'gasto' && m.categoria_nombre);
     const byCat = gastos.reduce((acc: Record<string, number>, m) => {
       acc[m.categoria_nombre] = (acc[m.categoria_nombre] || 0) + +m.monto;
       return acc;
     }, {});
 
+    const categoryColors: Record<string, string> = {
+      Transporte: '#2196f3',
+      Comida: '#ff9800',
+      Extras: '#9c27b0'
+    };
+
+    const labels = Object.keys(byCat);
+    const data = Object.values(byCat);
+    const backgroundColor = labels.map(cat => categoryColors[cat] || '#607d8b');
+
     this.pieData = {
-      labels: Object.keys(byCat),
+      labels,
       datasets: [{
-        data: Object.values(byCat),
-        backgroundColor: Object.keys(byCat).map((_, i) =>
-          i % 2 === 0
-            ? 'rgba(239, 71, 111, 0.8)'
-            : 'rgba(66, 163, 77, 0.8)'
-        ),
+        data,
+        backgroundColor,
         hoverOffset: 8
       }]
     };
+
+    const totalGastos = data.reduce((sum, val) => sum + val, 0);
+    this.categoryData = labels.map((cat, idx) => ({
+      name: cat,
+      amount: data[idx],
+      percent: totalGastos ? Math.round((data[idx] / totalGastos) * 100) : 0,
+      color: backgroundColor[idx]
+    }));
   }
 
   private buildDoughnut(movs: any[]) {
@@ -218,9 +259,70 @@ export class GraficosPage implements OnInit {
     };
   }
 
+  private buildMonthlyComparison(movs: any[]) {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+  
+    const months = [...Array(4)].map((_, i) => {
+      const d = new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() - 3 + i);
+      return {
+        label: d.toLocaleString('default', { month: 'long' }),
+        month: d.getMonth(),
+        year: d.getFullYear()
+      };
+    });
+  
+    const ingresos = Array(4).fill(0);
+    const gastos = Array(4).fill(0);
+  
+    movs.forEach(m => {
+      const fecha = new Date(m.fecha);
+      months.forEach((month, idx) => {
+        if (fecha.getMonth() === month.month && fecha.getFullYear() === month.year) {
+          if (m.tipo === 'ingreso') ingresos[idx] += +m.monto;
+          if (m.tipo === 'gasto') gastos[idx] += +m.monto;
+        }
+      });
+    });
+  
+    const labels = months.map(m => m.label[0].toUpperCase() + m.label.slice(1));
+  
+    this.barData = {
+      labels,
+      datasets: [
+        {
+          label: 'Ingresos',
+          data: ingresos,
+          fill: false,
+          borderColor: '#4ecdc4',
+          backgroundColor: '#4ecdc4',
+          tension: 0.3,
+          pointRadius: 5,
+          pointHoverRadius: 7
+        },
+        {
+          label: 'Gastos',
+          data: gastos,
+          fill: false,
+          borderColor: '#ff6b6b',
+          backgroundColor: '#ff6b6b',
+          tension: 0.3,
+          pointRadius: 5,
+          pointHoverRadius: 7
+        }
+      ]
+    };
+  }
+  
+  
+  
+  
+
   private updateFinancialSummary(movs: any[]) {
-    const start = new Date();
-    start.setDate(1);
+    const start = new Date(); start.setDate(1);
 
     const thisMonth = movs.filter(m => new Date(m.fecha) >= start);
     const gastos = thisMonth.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + +m.monto, 0);
@@ -233,38 +335,6 @@ export class GraficosPage implements OnInit {
     this.availablePercentage = 100 - this.usedPercentage;
 
     this.strokeDashOffset = this.strokeCircumference * (1 - (this.usedPercentage / 100));
-
-    this.monthlyData = [
-      { label: 'Febrero', incomePercent: 67.5, expensePercent: 50 },
-      { label: 'Marzo', incomePercent: 90, expensePercent: 35 },
-      { label: 'Abril', incomePercent: 45, expensePercent: 60 },
-      { label: 'Mayo', incomePercent: 72, expensePercent: 65 },
-    ];
-
-    // 🔥 Agregado WeeklyData
-    this.weeklyData = [
-      { label: 'Enero', valueA: 60, valueB: 40 },
-      { label: 'Febrero', valueA: 80, valueB: 30 },
-      { label: 'Marzo', valueA: 50, valueB: 70 },
-      { label: 'Abril', valueA: 90, valueB: 60 }
-    ];
-
-    const gastosPorCategoria = thisMonth
-      .filter(m => m.tipo === 'gasto' && m.categoria_nombre)
-      .reduce((acc: Record<string, number>, m) => {
-        acc[m.categoria_nombre] = (acc[m.categoria_nombre] || 0) + +m.monto;
-        return acc;
-      }, {});
-
-    const totalGastos = Object.values(gastosPorCategoria).reduce((sum, val) => sum + val, 0);
-    const colors = ['#4caf50', '#e91e63', '#3f51b5', '#ff9800'];
-
-    this.categoryData = Object.entries(gastosPorCategoria).map(([cat, amount], idx) => ({
-      name: cat,
-      amount: amount,
-      percent: totalGastos ? Math.round((amount / totalGastos) * 100) : 0,
-      color: colors[idx % colors.length],
-    }));
 
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];

@@ -132,6 +132,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   cerrarSesion() {
     this.authService.logout();
+    this.router.navigate(['/home']);
   }
 
   /* ------------------------- CÁLCULO DE ESTADÍSTICAS ------------------------- */

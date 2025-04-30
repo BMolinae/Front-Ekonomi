@@ -230,6 +230,28 @@ ion-toast.custom-toast {
     font-size: 14px;
   }
   
+  .back-button-container {
+    position: relative;
+    padding: 8px 0;
+    margin-bottom: -20px ;
+  }
+  
+  .custom-back-button {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: var(--primary-blue);
+    font-family: 'Flexo', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  
+  }
 
   
   

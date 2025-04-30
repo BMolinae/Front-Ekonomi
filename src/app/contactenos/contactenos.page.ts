@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
-import { IonicModule, ToastController } from '@ionic/angular';
+import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms'; // Necesario para [(ngModel)]
 
 @Component({
@@ -21,7 +21,15 @@ export class ContactenosPage {
   asunto: string = '';
   mensaje: string = '';
 
-  constructor(private toastController: ToastController) {}
+  constructor(private toastController: ToastController,
+              private navCtrl : NavController,
+              
+  ) {}
+
+  goBack() {
+    this.navCtrl.back();
+  }
+
 
   async enviarMensaje() {
     if (!this.nombre || !this.correo || !this.asunto || !this.mensaje) {
