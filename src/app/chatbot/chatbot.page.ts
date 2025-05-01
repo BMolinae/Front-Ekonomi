@@ -28,11 +28,8 @@ export class ChatbotPage implements OnInit, OnDestroy {
 
   private suggestionFlows: string[][] = [
     ['👋 ¡Hola!', '¿Cómo te encuentras hoy? 😊', '¡Gracias por tu confianza! 🙏', '👋 ¡Hasta pronto!'],
-    ['💳 Consultar mi saldo', '📄 Ver mis últimos movimientos', '📉 ¿Cuánto he gastado este mes?'],
-    ['➕ Agregar nueva tarjeta', '📈 Ajustar mi límite de gastos'],
+    ['💳 Consultar mi saldo','📉 ¿Cuánto he gastado este mes?','📈 Ajustar mi límite de gastos','➕ Agregar nueva tarjeta',],
     ['🛠️ Necesito ayuda de soporte', '🚨 Reportar un problema técnico', '🔒 Recuperar acceso a mi cuenta'],
-    ['🔍 Revisar historial de transacciones',],
-   
   ];
   
   private currentStage = 0;
@@ -103,7 +100,6 @@ export class ChatbotPage implements OnInit, OnDestroy {
     }
   }
   
-
   onSuggestion(q: string) {
     this.chatForm.setValue({ message: q });
     this.send();
@@ -164,45 +160,73 @@ export class ChatbotPage implements OnInit, OnDestroy {
       }
     }
 
-    if (msg.includes('hola') || msg.includes('buenas') || msg.includes('cómo estás')) {
+    // Flujo 1: Saludos y despedida
+    if (msg.includes('👋 ¡hola!') || msg.includes('hola') || msg.includes('buenas')) {
       return '¡Hola! 😃 ¿En qué puedo ayudarte hoy?';
     }
-    if (msg.includes('gracias')) {
+    
+    if (msg.includes('¿cómo te encuentras hoy?') || msg.includes('cómo estás')) {
+      return '¡Estoy muy bien, gracias por preguntar! 😊 Listo para ayudarte con tu gestión financiera. ¿En qué puedo asistirte?';
+    }
+    
+    if (msg.includes('¡gracias por tu confianza!') || msg.includes('gracias')) {
       return this.userMood === 'positive' ? 
-        '¡Me alegra haberte ayudado! 🌟 ¿Algo más en que pueda asistirte?' :
-        '¡Siempre estoy aquí para ayudarte! 🙌';
+        '¡Me alegra haberte ayudado! 🌟 Trabajamos cada día para ofrecerte el mejor servicio. ¿Algo más en que pueda asistirte?' :
+        '¡Siempre estoy aquí para ayudarte! 🙌 Tu satisfacción es nuestra prioridad.';
     }
-    if (msg.includes('chao') || msg.includes('adiós')) {
-      return '¡Hasta luego! 👋 Espero verte pronto.';
+    
+    if (msg.includes('👋 ¡hasta pronto!') || msg.includes('hasta pronto') || msg.includes('chao') || msg.includes('adiós')) {
+      return '¡Hasta luego! 👋 Que tengas un excelente día. Recuerda que estamos disponibles 24/7 para cualquier consulta.';
     }
-    if (msg.includes('saldo')) {
-      return `💳 Tu saldo disponible es de $${this.saldo.toLocaleString('es-CL')}.`;
+    
+    // Flujo 2: Consultas financieras
+    if (msg.includes('💳 consultar mi saldo') || msg.includes('saldo')) {
+      return `💳 Tu saldo disponible es de ${this.saldo.toLocaleString('es-CL')}. ¿Necesitas realizar alguna operación con este saldo?`;
     }
-    if (msg.includes('gasto') || msg.includes('gasté')) {
-      return `📉 Este mes has gastado $${this.gastosMes.toLocaleString('es-CL')}.`;
+    
+    if (msg.includes('📉 ¿cuánto he gastado este mes?') || msg.includes('gasto') || msg.includes('gasté') || msg.includes('cuánto he gastado')) {
+      return `📉 Este mes has gastado ${this.gastosMes.toLocaleString('es-CL')}. Si quieres ver el detalle de tus gastos, puedes revisar la sección "Movimientos".`;
     }
+    
+    if (msg.includes('📈 ajustar mi límite de gastos') || msg.includes('límite') || msg.includes('ajustar mi límite')) {
+      return `🏦 Tu límite de gastos actual es de ${this.limitLeft.toLocaleString('es-CL')}. Para ajustarlo, ve a la sección "Configuración" > "Límites de gastos" y establece el nuevo valor que desees.`;
+    }
+    
+    if (msg.includes('➕ agregar nueva tarjeta') || msg.includes('agregar tarjeta') || msg.includes('nueva tarjeta') || msg.includes('tarjeta')) {
+      return '💳 Para agregar una nueva tarjeta, sigue estos pasos: 1) Ve a la sección "Métodos de pago" 2) Pulsa en "Agregar nueva tarjeta" 3) Ingresa los datos solicitados y confirma la operación. ¿Necesitas ayuda con algo más?';
+    }
+    
+    // Flujo 3: Soporte y resolución de problemas
+    if (msg.includes('🛠️ necesito ayuda de soporte') || msg.includes('ayuda de soporte')) {
+      return '🛠️ Estoy aquí para ayudarte. Puedes contactar a nuestro equipo de soporte escribiendo a soporte@ekonomi.com o llamando al 800-123-456. Nuestro horario de atención es de lunes a viernes de 9:00 a 18:00 hrs.';
+    }
+    
+    if (msg.includes('🚨 reportar un problema técnico') || msg.includes('problema técnico') || msg.includes('reportar problema')) {
+      return '🚨 Lamento que estés experimentando dificultades. Para reportar un problema técnico, por favor describe el error con el mayor detalle posible y nuestro equipo lo resolverá a la brevedad. ¿Puedes contarme qué problema estás enfrentando?';
+    }
+    
+    if (msg.includes('🔒 recuperar acceso a mi cuenta') || msg.includes('recuperar acceso') || msg.includes('recuperar')) {
+      return '🔒 Para recuperar el acceso a tu cuenta: 1) En la pantalla de inicio, selecciona "¿Olvidaste tu contraseña?" 2) Ingresa tu correo electrónico registrado 3) Recibirás un enlace para restablecer tu contraseña. Si necesitas asistencia adicional, contacta a soporte@ekonomi.com.';
+    }
+    
+    // Otras consultas financieras
     if (msg.includes('ingreso')) {
-      return `📈 Tus ingresos recientes son $${this.ingresoMes.toLocaleString('es-CL')}.`;
+      return `📈 Tus ingresos recientes son ${this.ingresoMes.toLocaleString('es-CL')}. ¿Te gustaría ver un desglose de tus fuentes de ingreso?`;
     }
+    
     if (msg.includes('movimiento') || msg.includes('transacción')) {
       return this.formatMovimientos();
     }
-    if (msg.includes('tarjeta')) {
-      return '💳 Para agregar una tarjeta, accede a la sección "Inicio" de la app.';
-    }
-    if (msg.includes('límite')) {
-      return `🏦 Tu límite restante es de $${this.limitLeft.toLocaleString('es-CL')}.`;
-    }
+    
     if (msg.includes('alertas')) {
-      return '🔔 Puedes configurar alertas en la sección "Notificaciones" de la app.';
+      return '🔔 Puedes configurar alertas personalizadas en la sección "Notificaciones" de la app. Allí podrás activar avisos para: pagos próximos, gastos inusuales, depósitos recibidos y mucho más.';
     }
+    
     if (msg.includes('soporte') || msg.includes('problema')) {
-      return '🛠️ Puedes contactar a nuestro equipo de soporte escribiendo a soporte@ekonomi.com.';
-    }
-    if (msg.includes('recuperar')) {
-      return '🔒 Puedes recuperar tu cuenta desde la pantalla de inicio de sesión, opción "¿Olvidaste tu contraseña?"';
+      return '🛠️ Puedes contactar a nuestro equipo de soporte escribiendo a soporte@ekonomi.com o a través del chat en vivo disponible de lunes a viernes de 9:00 a 18:00 hrs.';
     }
 
+    // Si no reconoce el mensaje, pide confirmación para reiniciar
     this.awaitingResetConfirmation = true;
     return '🤔 No entendí muy bien tu mensaje... ¿Deseas reiniciar el chat para empezar de nuevo? (Sí / No)';
   }
@@ -239,7 +263,6 @@ export class ChatbotPage implements OnInit, OnDestroy {
     return respuesta;
   }
   
-
   private scrollToBottom() {
     setTimeout(() => this.content.scrollToBottom(300), 100);
   }
