@@ -1,9 +1,10 @@
-import type { CapacitorConfig } from '@capacitor/cli';
 
-const config: CapacitorConfig = {
+const config={ 
   appId: 'io.ionic.starter',
   appName: 'ekonomi-frontend',
-  webDir: 'www'
+  webDir: 'www',
+  bundledWebRuntime: false
+
 };
 
 export default config;

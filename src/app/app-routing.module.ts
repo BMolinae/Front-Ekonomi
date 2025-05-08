@@ -31,13 +31,14 @@ const routes: Routes = [
     path: 'forgot-password',
     loadComponent: () =>
       import('./forgot-password/forgot-password.page').then(m => m.ForgotPasswordPage),
-  },  {
+  },
+  {
     path: 'reset-password',
     loadChildren: () => import('./reset-password/reset-password.module').then( m => m.ResetPasswordPageModule)
   },
   {
     path: 'graficos',
-    loadChildren: () => import('./graficos/graficos.module').then( m => m.GraficosPageModule)
+    loadComponent: () => import('./graficos/graficos.page').then(m => m.GraficosPage)
   },
   {
     path: 'chatbot',
@@ -58,7 +59,7 @@ const routes: Routes = [
   {
     path: 'politica-uso',
     loadChildren: () => import('./politica-uso/politica-uso.module').then( m => m.PoliticaUsoPageModule)
-  }
+  },
 
 ];
 

@@ -13,6 +13,7 @@
           <span>Atrás</span>
         </button>
       </div>
+
       <!-- Logo y título en la parte superior -->
       <div class="header-section">
         <div class="logo-text">CB&J</div>
@@ -30,15 +31,23 @@
         <form [formGroup]="loginForm" (ngSubmit)="login()" class="login-form">
           <div class="form-group">
             <div class="input-wrapper">
-              <ion-icon name="person-outline"></ion-icon>
-              <ion-input formControlName="username" placeholder="Nombre de Usuario" type="text"></ion-input>
+              <ion-icon name="mail-outline"></ion-icon>
+              <ion-input
+                formControlName="email"
+                placeholder="Correo electrónico"
+                type="email"
+              ></ion-input>
             </div>
           </div>
 
           <div class="form-group">
             <div class="input-wrapper">
               <ion-icon name="lock-closed-outline"></ion-icon>
-              <ion-input formControlName="password" placeholder="Contraseña" type="password"></ion-input>
+              <ion-input
+                formControlName="password"
+                placeholder="Contraseña"
+                type="password"
+              ></ion-input>
             </div>
             <div class="forgot-password">
               <a (click)="goToForgotPassword()" class="create-link">¿Olvidaste tu contraseña?</a>

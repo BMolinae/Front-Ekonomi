@@ -13,27 +13,33 @@
         <ion-icon name="person-circle-outline"></ion-icon>
         <span>{{ user?.first_name || user?.username }}</span>
       </div>
-      <ion-icon
-        [name]="isUserPanelExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"
-        class="toggle-icon">
+      <ion-icon [name]="isUserPanelExpanded ? 'chevron-up-outline' : 'chevron-down-outline'" class="toggle-icon">
       </ion-icon>
     </div>
     <div class="expandable-content" [class.expanded]="isUserPanelExpanded">
       <div class="panel-item" (click)="conoceTuApp()">
         <div class="item-icon"><ion-icon name="phone-portrait-outline"></ion-icon></div>
-        <div class="item-content"><div class="item-link">Conoce tu App</div></div>
+        <div class="item-content">
+          <div class="item-link">Conoce tu App</div>
+        </div>
       </div>
       <div class="panel-item" (click)="politicaUso()">
         <div class="item-icon"><ion-icon name="document-text-outline"></ion-icon></div>
-        <div class="item-content"><div class="item-link">Política de uso</div></div>
+        <div class="item-content">
+          <div class="item-link">Política de uso</div>
+        </div>
       </div>
       <div class="panel-item" (click)="contactenos()">
         <div class="item-icon"><ion-icon name="mail-outline"></ion-icon></div>
-        <div class="item-content"><div class="item-link">Contáctenos</div></div>
+        <div class="item-content">
+          <div class="item-link">Contáctenos</div>
+        </div>
       </div>
       <div class="panel-item" (click)="cerrarSesion()">
         <div class="item-icon"><ion-icon name="log-out-outline"></ion-icon></div>
-        <div class="item-content"><div class="item-link">Cerrar sesión</div></div>
+        <div class="item-content">
+          <div class="item-link">Cerrar sesión</div>
+        </div>
       </div>
     </div>
   </div>
@@ -161,8 +167,12 @@
           <ion-item *ngFor="let mov of movimientos" class="transaction-item">
             <ion-label>
               <h3 [ngClass]="mov.tipo">{{ mov.descripcion }}</h3>
-              <p>{{ mov.fecha | date:'short' }}</p>
+              <p>{{ mov.fecha | date:'short' }}
+                <ion-icon [name]="getCategoriaIcono(mov.categoria)" slot="start"></ion-icon>
+                {{ mov.categoria }}
+              </p>
             </ion-label>
+            
             <ion-badge [color]="mov.tipo==='ingreso' ? 'success' : 'danger'">
               {{ mov.monto | number:'1.0-0' }}
             </ion-badge>
@@ -176,8 +186,3 @@
     </div><!-- fin main-section -->
   </div><!-- fin content-wrapper -->
 </ion-content>
-
-
-
-
-

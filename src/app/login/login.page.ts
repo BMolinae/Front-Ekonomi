@@ -2,14 +2,14 @@ import { Component } from '@angular/core';
 import { IonicModule, NavController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { AuthService } from '../services/auth.service'; // Asegúrate de que la ruta sea correcta
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
   standalone: true,
-  imports: [IonicModule, ReactiveFormsModule], // Elimina HttpClientModule si ya lo has importado correctamente en un módulo superior
+  imports: [IonicModule, ReactiveFormsModule]
 })
 export class LoginPage {
   loginForm: FormGroup;
@@ -18,16 +18,15 @@ export class LoginPage {
     private router: Router,
     private fb: FormBuilder,
     private navCtrl: NavController,
-    private authService: AuthService // Inyecta solo AuthService
+    private authService: AuthService
   ) {
     // Crear el formulario con validaciones
     this.loginForm = this.fb.group({
-      username: ['', Validators.required],
-      password: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required]
     });
   }
 
-  // Redirige a la vista de crear cuenta
   goToCreateAccount() {
     this.router.navigate(['/create-account']);
   }
@@ -39,24 +38,20 @@ export class LoginPage {
   goBack() {
     this.navCtrl.back();
   }
-  // Ejecuta el login
-  login() {
-    console.log('🧪 Formulario:', this.loginForm.value);
-    console.log('🧪 Estado de validación:', this.loginForm.valid);
-    console.log('🧪 Errores:', this.loginForm.controls);
 
+  login() {
     if (this.loginForm.valid) {
-      const { username, password } = this.loginForm.value;
-      this.authService.login(username, password).subscribe(
-        response => {
-          console.log('✅ Autenticado:', response);
+      const { email, password } = this.loginForm.value;
+
+      this.authService.login(email, password)
+        .then(() => {
+          console.log('✅ Autenticado');
           this.router.navigate(['/dashboard']);
-        },
-        error => {
-          console.error('❌ Error al iniciar sesión:', error);
-          console.warn('response body:', error.error);
-        }
-      );
+        })
+        .catch(error => {
+          console.error('❌ Error al iniciar sesión:', error.message);
+        });
+
     } else {
       console.warn('⚠️ Formulario inválido');
     }

@@ -12,7 +12,7 @@ import { AuthService } from '../services/auth.service';
   imports: [IonicModule, ReactiveFormsModule],
 })
 export class CreateAccountPage {
-  registerForm: FormGroup;
+  registerForm!: FormGroup;
 
   constructor(
     private router: Router,
@@ -29,24 +29,23 @@ export class CreateAccountPage {
 
   registerAccount() {
     if (this.registerForm.valid) {
-      const userData = this.registerForm.value;
-
-      this.authService.register(userData).subscribe(
-        () => {
+      const { email, password, username }: { email: string, password: string, username: string } = this.registerForm.value;
+  
+      this.authService.register(email, password, username)
+        .then(() => {
           console.log('✅ Cuenta creada exitosamente');
-          // Si todo se guarda bien, redirige
           this.router.navigate(['/home']);
-        },
-        error => {
+        })
+        .catch(error => {
           const errorMsg = error?.error?.error || 'Error al crear cuenta.';
           console.error('❌', errorMsg);
-          alert(errorMsg); // o muestra un toast
-        }
-      );
+          alert(errorMsg);
+        });
     } else {
       console.log('Formulario inválido');
     }
   }
+  
 
   goBack() {
     this.navCtrl.back();

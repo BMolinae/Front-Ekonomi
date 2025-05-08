@@ -3,10 +3,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AlertController, IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { AuthService } from '../services/auth.service';
 import { Router, RouterModule } from '@angular/router';
-import { interval, switchMap, tap, catchError, of, Subscription } from 'rxjs';
+import { Subscription, interval, switchMap, tap, of, catchError } from 'rxjs';
+
+import { AuthService } from '../services/auth.service';
+import { MovimientosService } from '../services/movimientos.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,52 +18,39 @@ import { interval, switchMap, tap, catchError, of, Subscription } from 'rxjs';
 })
 export class DashboardPage implements OnInit, OnDestroy {
   user: any = null;
+  movimientos: any[] = [];
 
-  public monthlyLimit = 0;
-  public limitLeft = 0;
-  public percentOfLimit = 0;
-
+  saldo = 0;
+  tarjeta = '';
   ingresoMes = 0;
   gastosMes = 0;
-  public saldo = 0;
+  limitLeft = 0;
+  percentOfLimit = 0;
+  monthlyLimit = 0;
 
-  movimientos: any[] = [];
   isBalanceHidden = false;
-  tarjeta = '';
   isUserPanelExpanded = false;
 
   private pollSub?: Subscription;
 
   constructor(
-    private http: HttpClient,
+    private router: Router,
+    private alertCtrl: AlertController,
     private authService: AuthService,
-    public router: Router,
-    private alertCtrl: AlertController
+    private movimientosService: MovimientosService
   ) {}
 
-  /* ------------------------- CICLO DE VIDA ------------------------- */
   ngOnInit() {
-    if (!this.authService.isAuthenticated()) {
-      this.router.navigate(['/login']);
-      return;
-    }
-
-    this.authService.user$.subscribe(u => (this.user = u));
-
-    this.authService.getCurrentUser().subscribe({
-      next: user => {
-        this.user = user;
-        this.monthlyLimit = user.limite_mensual ?? 0;
+    this.authService.user$.subscribe(user => {
+      this.user = user;
+      if (user) {
         this.tarjeta = user.tarjeta || '';
-        this.ingresoMes = 0;
-        this.gastosMes = 0;
-        this.limitLeft = this.monthlyLimit;
-        this.percentOfLimit = 0;
-        this.saldo = user.saldo;
+        this.monthlyLimit = user.limite_mensual || 0;
         this.loadMovimientos();
         this.startAutoRefresh();
-      },
-      error: err => console.error('Error al obtener perfil', err),
+      } else {
+        this.router.navigate(['/login']);
+      }
     });
   }
 
@@ -70,42 +58,78 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.pollSub?.unsubscribe();
   }
 
-  /* ------------------------- AUTO‑REFRESH ------------------------- */
   private startAutoRefresh() {
-    this.pollSub = interval(5_000)
+    this.pollSub = interval(5000)
       .pipe(
         switchMap(() => this.authService.getCurrentUser()),
         tap(user => {
           this.user = user;
-          this.monthlyLimit = user.limite_mensual ?? 0;
           this.tarjeta = user.tarjeta || '';
-          this.saldo = user.saldo;
+          this.monthlyLimit = user.limite_mensual || 0;
         }),
-        switchMap(() => this.fetchMovimientos())
+        switchMap(() => this.movimientosService.obtenerMovimientos()),
+        tap(movs => {
+          this.movimientos = movs;
+          this.computeMonthlyStats();
+        }),
+        catchError(err => {
+          console.error('Error en auto-refresh', err);
+          return of([]);
+        })
       )
       .subscribe();
   }
 
-  /** Encapsula la petición HTTP y recalcula estadísticas */
-  private fetchMovimientos() {
-    const headers = { Authorization: `Token ${this.authService.getToken()}` };
-    return this.http.get<any[]>('http://localhost:8000/api/movimientos/', { headers }).pipe(
-      tap(data => {
-        this.movimientos = data;
-        this.computeMonthlyStats();
-      }),
-      catchError(err => {
-        console.error('Error al obtener movimientos', err);
-        return of([]);
-      })
-    );
-  }
-
   private loadMovimientos() {
-    this.fetchMovimientos().subscribe();
+    this.movimientosService.obtenerMovimientos().then(movs => {
+      this.movimientos = movs;
+      this.computeMonthlyStats();
+    }).catch(err => console.error('Error al cargar movimientos', err));
   }
 
-  /* ------------------------- ACCIONES DE UI ------------------------- */
+  private computeMonthlyStats() {
+    const now = new Date();
+    const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+    const movMes = this.movimientos.filter(m => new Date(m.fecha) >= inicioMes);
+  
+    const ingresos = movMes
+      .filter(m => m.tipo === 'ingreso')
+      .reduce((sum, m) => sum + +m.monto, 0);
+  
+    const gastos = movMes
+      .filter(m => m.tipo === 'gasto')
+      .reduce((sum, m) => sum + +m.monto, 0);
+  
+    const nuevoSaldo = ingresos - gastos;
+    const nuevoLimite = this.monthlyLimit - gastos;
+  
+    this.ingresoMes = ingresos;
+    this.gastosMes = gastos;
+    this.saldo = nuevoSaldo;
+    this.limitLeft = nuevoLimite;
+  
+    this.percentOfLimit = this.monthlyLimit > 0
+      ? Math.min(Math.round((gastos / this.monthlyLimit) * 100), 100)
+      : 0;
+  
+    this.saveFinancialData();
+  
+    // ✅ Solo actualizar si el saldo realmente cambió
+    if (this.user && this.user.saldo !== nuevoSaldo) {
+      this.authService.updateSaldo(nuevoSaldo);
+    }
+  }
+  
+  private saveFinancialData() {
+    const data = {
+      saldo: this.saldo,
+      gastosMes: this.gastosMes,
+      ingresoMes: this.ingresoMes,
+      limitLeft: this.limitLeft,
+    };
+    localStorage.setItem('user_financial_data', JSON.stringify(data));
+  }
+
   goTo(path: string) {
     this.router.navigate([path]);
   }
@@ -135,90 +159,39 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.router.navigate(['/home']);
   }
 
-  /* ------------------------- CÁLCULO DE ESTADÍSTICAS ------------------------- */
-  private computeMonthlyStats() {
-    const now = new Date();
-    const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    const movMes = this.movimientos.filter(m => new Date(m.fecha) >= inicioMes);
-
-    this.ingresoMes = movMes
-      .filter(m => m.tipo === 'ingreso')
-      .reduce((sum, m) => sum + +m.monto, 0);
-
-    this.gastosMes = movMes
-      .filter(m => m.tipo === 'gasto')
-      .reduce((sum, m) => sum + +m.monto, 0);
-
-    this.saldo = this.ingresoMes - this.gastosMes;
-    this.limitLeft = this.monthlyLimit - this.gastosMes;
-
-    this.percentOfLimit = this.monthlyLimit > 0
-      ? Math.min(Math.round((this.gastosMes / this.monthlyLimit) * 100), 100)
-      : 0;
-
-    /* 🔥 Aquí guardamos los valores actualizados en localStorage */
-    this.saveFinancialData();
-  }
-
-  /* ------------------------- GUARDAR DATOS FINANCIEROS ------------------------- */
-  private saveFinancialData() {
-    const financialData = {
-      saldo: this.saldo,
-      gastosMes: this.gastosMes,
-      ingresoMes: this.ingresoMes,
-      limitLeft: this.limitLeft
+  getCategoriaIcono(nombreCategoria: string): string {
+    const iconos: any = {
+      Transporte: 'bus-outline',
+      Alimentacion: 'restaurant-outline',
+      Salud: 'medkit-outline',
+      Educacion: 'book-outline',
+      Entretenimiento: 'game-controller-outline',
+      Hogar: 'home-outline',
+      Otros: 'ellipsis-horizontal-outline',
     };
-    localStorage.setItem('user_financial_data', JSON.stringify(financialData));
+    return iconos[nombreCategoria] || 'pricetag-outline';
   }
 
-  /* ------------------------- DIÁLOGOS ------------------------- */
   async onAddCard() {
     const alert = await this.alertCtrl.create({
       header: 'Agregar Tarjeta',
       inputs: [
-        {
-          name: 'cardNumber',
-          type: 'text',
-          placeholder: 'Número 16 dígitos',
-          attributes: { maxlength: 16 }
-        },
-        {
-          name: 'cardHolder',
-          type: 'text',
-          placeholder: 'Nombre del Titular',
-          value: ''
-        },
-        {
-          name: 'expiryDate',
-          type: 'month',
-          placeholder: 'Fecha de Vencimiento (MM/AA)',
-          value: ''
-        },
-        {
-          name: 'cvv',
-          type: 'password',
-          placeholder: 'CVV',
-          attributes: { maxlength: 4 },
-          value: ''
-        }
+        { name: 'cardNumber', type: 'text', placeholder: 'Número 16 dígitos', attributes: { maxlength: 16 } },
+        { name: 'cardHolder', type: 'text', placeholder: 'Nombre del Titular' },
+        { name: 'expiryDate', type: 'month', placeholder: 'Fecha de Vencimiento' },
+        { name: 'cvv', type: 'password', placeholder: 'CVV', attributes: { maxlength: 3 } }
       ],
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {
           text: 'Guardar',
-          handler: data => {
+          handler: async data => {
             const rawNumber = (data.cardNumber || '').replace(/\D/g, '');
             const holder = (data.cardHolder || '').trim();
             const expiry = data.expiryDate || '';
             const cvv = (data.cvv || '').trim();
 
-            const isValid =
-              rawNumber.length === 16 &&
-              holder.length > 0 &&
-              expiry.length > 0 &&
-              cvv.length >= 3 && cvv.length <= 4;
-
+            const isValid = rawNumber.length === 16 && holder && expiry && cvv.length >= 3;
             if (!isValid) {
               this.showToast('Completa correctamente todos los campos');
               return false;
@@ -226,31 +199,27 @@ export class DashboardPage implements OnInit, OnDestroy {
 
             const formatted = rawNumber.match(/.{1,4}/g)!.join('-');
 
-            this.authService.addCard(formatted).subscribe({
-              next: () => {
-                this.authService.getCurrentUser().subscribe(user => {
-                  this.user = user;
-                  this.tarjeta = user.tarjeta || '';
-                });
-              },
-              error: err => console.error('Error al guardar tarjeta', err)
-            });
+            try {
+              // Solo guarda la tarjeta. Movimiento ya se crea en AuthService
+              await this.authService.addCard(formatted);
+
+              // Refresca datos
+              const updated = await this.authService.getCurrentUser();
+              this.user = updated;
+              this.tarjeta = updated.tarjeta || '';
+              await this.loadMovimientos();
+            } catch (err) {
+              console.error('Error al guardar tarjeta o crear movimiento', err);
+              this.showToast('Hubo un error al guardar la tarjeta');
+            }
 
             return true;
           }
         }
       ]
     });
-    await alert.present();
-  }
 
-  private async showToast(message: string) {
-    const toast = await this.alertCtrl.create({
-      header: 'Aviso',
-      message,
-      buttons: [{ text: 'OK', role: 'cancel' }],
-    });
-    await toast.present();
+    await alert.present();
   }
 
   async onSetLimit() {
@@ -261,18 +230,30 @@ export class DashboardPage implements OnInit, OnDestroy {
         { text: 'Cancelar', role: 'cancel' },
         {
           text: 'Guardar',
-          handler: data => {
+          handler: async data => {
             const x = Number(data.limite);
             if (x > 0) {
-              this.authService.setLimit(x).subscribe(() => this.loadMovimientos());
+              await this.authService.setLimit(x);
+              await this.loadMovimientos();
               return true;
+            } else {
+              this.showToast('Ingresa un número mayor a 0');
+              return false;
             }
-            this.showToast('Ingresa un número mayor a 0');
-            return false;
           }
         }
       ]
     });
+
     await alert.present();
+  }
+
+  private async showToast(message: string) {
+    const toast = await this.alertCtrl.create({
+      header: 'Aviso',
+      message,
+      buttons: [{ text: 'OK', role: 'cancel' }],
+    });
+    await toast.present();
   }
 }

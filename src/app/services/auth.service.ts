@@ -1,111 +1,137 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User} from '@angular/fire/auth';
+import { Firestore, doc, addDoc, setDoc, getDoc, getDocs, collection} from '@angular/fire/firestore';
 import { Router } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://127.0.0.1:8000/api/';
-  private tokenKey = 'auth_token';
-  private userSubject = new BehaviorSubject<any>(this.getUserFromStorage());
-
+  private currentUser: User | null = null;
+  private userSubject = new BehaviorSubject<any>(null);
   public user$ = this.userSubject.asObservable();
 
   constructor(
-    private http: HttpClient,
+    private auth: Auth,
+    private firestore: Firestore,
     private router: Router
-  ) {}
-
-  // Iniciar sesión
-  login(email: string, password: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}token-auth/`, {
-      username: email, // email actúa como username aquí
-      password
-    }).pipe(
-      tap(response => {
-        if (response && response.token) {
-          this.storeToken(response.token);
-          this.getCurrentUser().subscribe(); // cargar y guardar datos de usuario
-        }
-      })
-    );
+  ) {
+    onAuthStateChanged(this.auth, user => {
+      this.currentUser = user;
+      if (user) {
+        this.getCurrentUser().then(data => {
+          this.userSubject.next(data);
+          localStorage.setItem('userEmail', user.email || '');
+          localStorage.setItem('userUid', user.uid);
+          localStorage.setItem('username', data?.username || '');
+        });
+      } else {
+        this.userSubject.next(null);
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userUid');
+        localStorage.removeItem('username');
+      }
+    });
   }
 
-  // Registrar nuevo usuario
-  register(userData: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}register/`, userData).pipe(
-      tap(response => {
-        if (response && response.token && response.user) {
-          this.storeToken(response.token);
-          this.userSubject.next(response.user);
-          localStorage.setItem('user_data', JSON.stringify(response.user));
-        }
-      })
-    );
+  login(email: string, password: string): Promise<void> {
+    return signInWithEmailAndPassword(this.auth, email, password)
+      .then((cred) => {
+        this.currentUser = cred.user;
+        return this.getCurrentUser().then(data => {
+          this.userSubject.next(data);
+          localStorage.setItem('userEmail', cred.user.email || '');
+          localStorage.setItem('userUid', cred.user.uid);
+          localStorage.setItem('username', data?.username || '');
+          this.router.navigate(['/dashboard']);
+        });
+      });
   }
 
-  // Cerrar sesión
-  logout(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem('user_data');
-    this.userSubject.next(null);
-    this.router.navigate(['/login']);
+  register(email: string, password: string, username: string): Promise<void> {
+    return createUserWithEmailAndPassword(this.auth, email, password)
+  .then(cred => {
+    const userRef = doc(this.firestore, `users/${cred.user.uid}`);
+    return setDoc(userRef, {
+      email,
+      username,
+      saldo: 500000,
+      limiteMensual: 0,
+      tarjeta: ''
+    });
+  })
+  .catch(error => {
+    let errorMsg = 'Error al crear cuenta.';
+    if (error.code === 'auth/email-already-in-use') {
+      errorMsg = 'Este correo ya está registrado.';
+    }
+    console.error('❌', errorMsg);
+    alert(errorMsg);
+  });
+  
+
   }
 
-  // Obtener el token actual
-  getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+  logout(): Promise<void> {
+    localStorage.clear();
+    return signOut(this.auth).then(() => {
+      this.router.navigate(['/login']);
+    });
   }
 
-  // Guardar token
-  private storeToken(token: string): void {
-    localStorage.setItem(this.tokenKey, token);
+  getCurrentUser(): Promise<any> {
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) return Promise.reject('No user');
+    const ref = doc(this.firestore, `users/${uid}`);
+    return getDoc(ref).then(snapshot => {
+      const data = snapshot.data();
+      this.userSubject.next(data);
+      return data;
+    });
   }
 
-  // Verificar si el usuario está autenticado
-  isAuthenticated(): boolean {
-    return this.getToken() !== null;
+  addCard(cardNumber: string): Promise<void> {
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) return Promise.reject('No user');
+  
+    const userRef = doc(this.firestore, `users/${uid}`);
+    const movRef = collection(this.firestore, `users/${uid}/movimientos`);
+  
+    const movimiento = {
+      tipo: 'ingreso',
+      descripcion: 'Saldo inicial al agregar tarjeta',
+      monto: 500000,
+      fecha: new Date()
+    };
+  
+    return Promise.all([
+      setDoc(userRef, { tarjeta: cardNumber, saldo: 500000 }, { merge: true }),
+      addDoc(movRef, movimiento)
+    ]).then(() => {
+      return;
+    });
+  }
+  
+  setLimit(limit: number): Promise<void> {
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) return Promise.reject('No user');
+    const ref = doc(this.firestore, `users/${uid}`);
+    return setDoc(ref, { limite_mensual: limit }, { merge: true });
   }
 
-  // Obtener datos del usuario autenticado
-  getCurrentUser(): Observable<any> {
-    const token = this.getToken();
-    const headers = { Authorization: `Token ${token}` };
-
-    return this.http.get<any>(`${this.apiUrl}user/`, { headers }).pipe(
-      tap(user => {
-        this.userSubject.next(user);
-        localStorage.setItem('user_data', JSON.stringify(user));
-      })
-    );
+  updateSaldo(nuevoSaldo: number): Promise<void> {
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) return Promise.reject('No user');
+    const ref = doc(this.firestore, `users/${uid}`);
+    return setDoc(ref, { saldo: nuevoSaldo }, { merge: true });
   }
 
-  // Obtener usuario guardado localmente
-  private getUserFromStorage(): any {
-    const userData = localStorage.getItem('user_data');
-    return userData ? JSON.parse(userData) : null;
-  }
-
-  // Agregar tarjeta
-  addCard(cardNumber: string): Observable<{ saldo: number, tarjeta: string}> {
-    const token = this.getToken();
-    return this.http.post<{ saldo: number, tarjeta: string }>(
-      `${this.apiUrl}add-card/`,
-      {cardNumber},
-      { headers: { Authorization: `Token ${token}` } }
-    );
-  }
-
-  // Establecer límite mensual
-  setLimit(limite: number): Observable<{ limite: number }> {
-    const token = this.getToken();
-    return this.http.post<{ limite: number }>(
-      `${this.apiUrl}set-limit/`,
-      { limite },
-      { headers: { Authorization: `Token ${token}` } }
+  getMovimientos(): Promise<any[]> {
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) return Promise.reject('No user');
+    const ref = collection(this.firestore, `users/${uid}/movimientos`);
+    return getDocs(ref).then(snapshot =>
+      snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
     );
   }
 }
+
