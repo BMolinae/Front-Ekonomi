@@ -57,6 +57,17 @@
   opacity: 0.3;
 }
 
+.overlay-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.2); // o transparent si prefieres
+  z-index: 999;
+}
+
+
 .circle-2 {
   width: 130px;
   height: 130px;
@@ -521,7 +532,7 @@ ion-button.action-button::part(native):active {
   width: 100%;
   max-width: 320px;
   height: 100vh;
-  z-index: 1000;
+  z-index: 2000;
   display: none;
   box-shadow: -4px 0 20px rgba(38, 86, 191, 0.15);
   transform: translateX(100%);

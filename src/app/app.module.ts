@@ -12,6 +12,8 @@ import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { getApp } from 'firebase/app';
 import { firebaseConfig } from '../environments/firebase-config';
+import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
+
 
 
 
@@ -23,6 +25,7 @@ import { firebaseConfig } from '../environments/firebase-config';
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    FileOpener
   ],
   
     bootstrap: [AppComponent],

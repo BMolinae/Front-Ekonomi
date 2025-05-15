@@ -1,6 +1,6 @@
 
 const config={ 
-  appId: 'io.ionic.starter',
+  appId: 'com.ekonomi.finanzas',
   appName: 'ekonomi-frontend',
   webDir: 'www',
   bundledWebRuntime: false

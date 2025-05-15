@@ -7,6 +7,10 @@ import { Chart, registerables } from 'chart.js';
 import { PdfService } from '../services/pdf.service'; 
 import { AuthService } from '../services/auth.service';
 import { Movimiento } from '../services/movimiento.model';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
+import { Platform } from '@ionic/angular';
+
 
 Chart.register(...registerables);
 
@@ -30,7 +34,9 @@ export class DocumentosPage implements OnInit {
   constructor(
     private firestore: Firestore,
     private auth: AuthService,
-    private pdfService: PdfService
+    private pdfService: PdfService,
+    private fileOpener: FileOpener,
+    private platform: Platform
   ) {}
 
   ngOnInit(): void {}
@@ -45,36 +51,88 @@ export class DocumentosPage implements OnInit {
     }
   }
 
-  private async generateCSV() {
+  async generateCSV(): Promise<void> {
     const snapshot = await getDocs(collection(this.firestore, 'users'));
     let csv = 'username,email,saldo,limite_mensual\n';
-
+  
     snapshot.forEach(doc => {
       const d: any = doc.data();
       csv += `${d.username},${d.email},${d.saldo},${d.limite_mensual}\n`;
     });
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    saveAs(blob, `ekonomi_usuarios.csv`);
+  
+    const base64data = btoa(unescape(encodeURIComponent(csv)));
+    const fileName = 'ekonomi_usuarios.csv';
+  
+    await Filesystem.writeFile({
+      path: fileName,
+      data: base64data,
+      directory: Directory.Documents,
+      encoding: 'base64' as Encoding
+    });
+  
+    console.log('📁 CSV guardado en:', fileName);
+  
+    // 📂 Abrir CSV automáticamente en Android
+    if (this.platform.is('android')) {
+      const uri = await Filesystem.getUri({
+        directory: Directory.Documents,
+        path: fileName
+      });
+  
+      this.fileOpener.open(uri.uri, 'text/csv')
+        .then(() => console.log('✅ CSV abierto correctamente'))
+        .catch(err => console.error('❌ Error al abrir CSV', err));
+    }
   }
+  
+  
 
-  private async generatePNG(type: string) {
+  async generatePNG(type: string): Promise<void> {
     const canvas = document.getElementById(`${type}-chart`) as HTMLCanvasElement;
     if (!canvas) {
       console.error(`No se encontró el canvas para el gráfico ${type}`);
       return;
     }
-
+  
     const blob = await new Promise<Blob | null>(resolve => {
       canvas.toBlob(b => resolve(b), 'image/png');
     });
-
-    if (blob) {
-      saveAs(blob, `ekonomi_${type}.png`);
-    } else {
+  
+    if (!blob) {
       console.error('No se pudo generar la imagen');
+      return;
     }
+  
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64data = (reader.result as string).split(',')[1];
+      const fileName = `ekonomi_${type}.png`;
+  
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64data,
+        directory: Directory.Documents,
+        encoding: 'base64' as Encoding,
+      });
+  
+      console.log('📁 PNG guardado en:', fileName);
+  
+      if (this.platform.is('android')) {
+        const uri = await Filesystem.getUri({
+          directory: Directory.Documents,
+          path: fileName
+        });
+  
+        this.fileOpener.open(uri.uri, 'image/png')
+          .then(() => console.log('✅ PNG abierto correctamente'))
+          .catch(err => console.error('❌ Error al abrir PNG', err));
+      }
+    };
+  
+    reader.readAsDataURL(blob);
   }
+  
+  
 
   private async generatePDF() {
     const user = await this.auth.getCurrentUser();

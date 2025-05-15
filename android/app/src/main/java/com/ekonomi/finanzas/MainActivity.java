@@ -1,4 +1,4 @@
-package io.ionic.starter;
+package com.ekonomi.finanzas;
 
 import com.getcapacitor.BridgeActivity;
 

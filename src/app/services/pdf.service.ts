@@ -1,10 +1,19 @@
 import { Injectable } from '@angular/core';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Movimiento } from './movimiento.model';
+import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
+import { Platform } from '@ionic/angular';
 
 @Injectable({ providedIn: 'root' })
 export class PdfService {
+
+  constructor(
+    private fileOpener: FileOpener,
+    private platform: Platform
+  ) {}
+
   async generarPDF(
     usuario: any,
     movimientos: Movimiento[],
@@ -17,11 +26,6 @@ export class PdfService {
   ) {
     const doc = new jsPDF();
 
-    // 🖼️ Insertar LOGO de la empresa (reemplaza el base64 por el tuyo si cambia)
-    const logoBase64 = 'src\assets\img\logoEmpresa.jpeg'; // <- aquí va el base64 completo
-    doc.addImage(logoBase64, 'JPEG', 15, 10, 45, 15);
-
-    // ENCABEZADO
     doc.setFontSize(18);
     doc.text('Resumen Financiero Mensual', 70, 25);
 
@@ -31,7 +35,6 @@ export class PdfService {
     doc.text(`Saldo: $${resumen.saldo.toLocaleString()}`, 14, 54);
     doc.text(`Límite mensual: $${resumen.limite.toLocaleString()}`, 14, 61);
 
-    // TABLA DE MOVIMIENTOS
     const data = movimientos.map(m => [
       new Date((m.fecha as any).seconds * 1000).toLocaleDateString(),
       m.tipo,
@@ -47,6 +50,35 @@ export class PdfService {
       styles: { fontSize: 10 }
     });
 
-    doc.save(`ekonomi_${usuario.username}_reporte.pdf`);
+    const pdfOutput = doc.output('blob');
+    const reader = new FileReader();
+
+    reader.onloadend = async () => {
+      const base64data = (reader.result as string).split(',')[1];
+      const fileName = `ekonomi_${usuario.username}_reporte.pdf`;
+
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64data,
+        directory: Directory.Documents,
+        encoding: 'base64' as Encoding,
+      });
+
+      console.log('📁 PDF guardado en:', fileName);
+
+      // 🔓 Abrir el archivo directamente en Android
+      if (this.platform.is('android')) {
+        const uri = await Filesystem.getUri({
+          directory: Directory.Documents,
+          path: fileName
+        });
+
+        this.fileOpener.open(uri.uri, 'application/pdf')
+          .then(() => console.log('✅ Archivo abierto correctamente'))
+          .catch(err => console.error('❌ Error al abrir archivo', err));
+      }
+    };
+
+    reader.readAsDataURL(pdfOutput);
   }
 }

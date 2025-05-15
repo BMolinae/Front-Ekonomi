@@ -44,6 +44,11 @@
     </div>
   </div>
 
+  <!-- Fondo transparente para cerrar el panel al hacer clic fuera -->
+  <div class="overlay-backdrop" *ngIf="isUserPanelExpanded" (click)="toggleUserPanel()">
+  </div>
+
+
   <div class="content-wrapper">
     <!-- Header -->
     <div class="header-section">
@@ -172,7 +177,7 @@
                 {{ mov.categoria }}
               </p>
             </ion-label>
-            
+
             <ion-badge [color]="mov.tipo==='ingreso' ? 'success' : 'danger'">
               {{ mov.monto | number:'1.0-0' }}
             </ion-badge>
