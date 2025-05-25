@@ -3,6 +3,8 @@ import { IonicModule, NavController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
+import { ToastController } from '@ionic/angular';
+
 
 @Component({
   selector: 'app-login',
@@ -18,12 +20,13 @@ export class LoginPage {
     private router: Router,
     private fb: FormBuilder,
     private navCtrl: NavController,
-    private authService: AuthService
+    private authService: AuthService,
+    private toastController: ToastController
   ) {
     // Crear el formulario con validaciones
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
 
@@ -50,10 +53,23 @@ export class LoginPage {
         })
         .catch(error => {
           console.error('❌ Error al iniciar sesión:', error.message);
+          this.presentToast(error);
         });
 
     } else {
-      console.warn('⚠️ Formulario inválido');
+      this.presentToast('Por favor completa todos los campos correctamente');
     }
   }
+
+
+  async presentToast(message: string, color: string = 'danger') {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      position: 'bottom',
+      color,
+    });
+    await toast.present();
+  }
+
 }

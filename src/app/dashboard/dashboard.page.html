@@ -1,6 +1,13 @@
 <!-- src/app/dashboard/dashboard.page.html -->
 
 <ion-content class="dashboard-container">
+
+  <ion-refresher slot="fixed" #refresher (ionRefresh)="actualizarTodo($event)">
+    <ion-refresher-content pullingIcon="arrow-down" pullingText="Desliza para actualizar" refreshingSpinner="circles" refreshingText="Actualizando...">
+    </ion-refresher-content>
+  </ion-refresher>
+
+
   <!-- Fondo y panel de usuario (idéntico al anterior) -->
   <div class="background-gradient"></div>
   <div class="background-circle circle-1"></div>
@@ -38,7 +45,7 @@
       <div class="panel-item" (click)="cerrarSesion()">
         <div class="item-icon"><ion-icon name="log-out-outline"></ion-icon></div>
         <div class="item-content">
-          <div class="item-link">Cerrar sesión</div>
+          <div class="item-link">Cerrar Sesión</div>
         </div>
       </div>
     </div>

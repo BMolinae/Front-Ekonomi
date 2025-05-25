@@ -70,6 +70,48 @@ ion-content {
   overflow: hidden;
   padding: 24px;
   margin: 0;
+  
+}
+
+ion-item.valid-password {
+  --highlight-color-focused: var(--ion-color-success); /* cambia el color del borde cuando está enfocado */
+  --border-color: var(--ion-color-success); /* borde verde */
+}
+
+
+.password-requirements {
+  margin-top: 8px;
+  padding-left: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.password-item {
+  background: #f0e8e8; /* Blanco */
+  border-radius: 12px;
+  margin-top: 15px;
+  --padding-start: 10px;
+  --inner-padding-end: 10px;
+  --background: transparent; /* Asegura que el fondo externo sea transparente */
+  --color: black; /* Color del texto */
+  --highlight-color-focused: transparent; /* Quita el borde azul al hacer focus */
+}
+
+
+.input-icon {
+  color: #555;
+  font-size: 20px;
+}
+
+.validation-list {
+  font-size: 14px;
+  margin-top: 10px;
+  margin-left: 15px;
+}
+
+.validation-list ion-icon {
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
 .background-gradient {

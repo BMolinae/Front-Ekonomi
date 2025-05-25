@@ -28,21 +28,59 @@
         <ion-icon name="person-outline" slot="start" aria-hidden="true"></ion-icon>
         <ion-input type="text" formControlName="username" placeholder="Nombre de usuario"></ion-input>
       </ion-item>
+      <ion-text color="danger"
+        *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.hasError('required')">
+        <p>El nombre de usuario es obligatorio.</p>
+      </ion-text>
 
       <!-- Correo electrónico -->
       <ion-item class="input-item">
         <ion-icon name="mail-outline" slot="start" aria-hidden="true"></ion-icon>
         <ion-input type="email" formControlName="email" placeholder="Correo electrónico"></ion-input>
       </ion-item>
+      <ion-text color="danger"
+        *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.hasError('required')">
+        <p>El correo es obligatorio.</p>
+      </ion-text>
+      <ion-text color="danger"
+        *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.hasError('email')">
+        <p>Formato de correo inválido.</p>
+      </ion-text>
 
       <!-- Contraseña -->
-      <ion-item class="input-item">
-        <ion-icon name="lock-closed-outline" slot="start" aria-hidden="true"></ion-icon>
-        <ion-input type="password" formControlName="password" placeholder="Contraseña"></ion-input>
+      <ion-item lines="none" class="input-item">
+        <ion-icon name="lock-closed-outline" slot="start" class="input-icon"></ion-icon>
+
+        <ion-input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Contraseña"></ion-input>
+
+        <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" slot="end" class="input-icon"
+          (click)="togglePasswordVisibility()"></ion-icon>
       </ion-item>
 
+
+      <div class="password-requirements">
+        <ion-text [color]="hasMinLength ? 'success' : 'medium'">
+          <ion-icon [name]="hasMinLength ? 'checkmark-circle' : 'ellipse-outline'"></ion-icon>
+          Mínimo 6 caracteres
+        </ion-text><br />
+        <ion-text [color]="hasUppercase ? 'success' : 'medium'">
+          <ion-icon [name]="hasUppercase ? 'checkmark-circle' : 'ellipse-outline'"></ion-icon>
+          Al menos una mayúscula
+        </ion-text><br />
+        <ion-text [color]="hasNumber ? 'success' : 'medium'">
+          <ion-icon [name]="hasNumber ? 'checkmark-circle' : 'ellipse-outline'"></ion-icon>
+          Al menos un número
+        </ion-text><br />
+        <ion-text [color]="hasSymbol ? 'success' : 'medium'">
+          <ion-icon [name]="hasSymbol ? 'checkmark-circle' : 'ellipse-outline'"></ion-icon>
+          Al menos un símbolo (., *, _, &#64;, etc.)
+
+        </ion-text>
+      </div>
+
+
       <!-- Botón registrar -->
-      <ion-button expand="block" class="register-button" type="submit" [disabled]="registerForm.invalid">
+      <ion-button expand="block" class="register-button" type="submit">
         Registrarse
       </ion-button>
 

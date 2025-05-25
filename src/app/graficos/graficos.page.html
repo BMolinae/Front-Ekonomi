@@ -42,51 +42,46 @@
         <!-- Barra de progreso -->
         <div class="progress-container">
           <div class="progress-labels">
-            <span>{{ usedPercentage }}% Utilizado</span>
-            <span>{{ availablePercentage }}% Disponible</span>
+            <span>{{ usedPercentage | number: '1.0-0' }}% Utilizado</span>
+            <span>{{ availablePercentage | number: '1.0-0' }}% Disponible</span>
           </div>
           <div class="progress-bar">
             <div class="progress-fill" [style.width.%]="usedPercentage"></div>
           </div>
         </div>
 
-        <!-- Gráfico circular -->
-        <div class="chart-container">
-          <svg class="circular-chart" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e0e0e0" stroke-width="12" />
-            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#e91e63" stroke-width="12"
-              [attr.stroke-dasharray]="strokeCircumference" [attr.stroke-dashoffset]="strokeDashOffset"
-              transform="rotate(-90 50 50)" />
-            <text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="bold"
-              fill="#333">
-              {{ usedPercentage }}%
-            </text>
-          </svg>
+        <!-- Gráfico circular (Doughnut) -->
+        <div class="chart-container chart-doughnut">
+          <canvas baseChart
+            [data]="doughnutData"
+            [options]="doughnutOpts"
+            [type]="'doughnut'">
+          </canvas>
         </div>
       </div>
 
-      <!-- Gráfico de Comparación Mensual -->
+      <!-- Gráfico de Comparación Mensual (línea) -->
       <div class="dashboard-card">
-        <h2>Comparación mensual</h2>
-        <p class="subtitle">Últimos 4 meses</p>
+        <h2>Gastos por día</h2>
+        <p class="subtitle">Del mes actual</p>
 
         <div class="chart-container chart-bar-large">
           <canvas baseChart
-          [data]="barData"
-          [options]="barOpts"
-          [type]="'line'">
-  </canvas>
+            [data]="lineData"
+            [options]="lineOpts"
+            [type]="'line'">
+          </canvas>
         </div>
-
-        <p class="chart-note">* El mes actual está resaltado con un borde más grueso.</p>
       </div>
 
-
-
-      <!-- Gastos por Categoría -->
+      <!-- Gastos por Categoría (Pie) -->
       <div class="dashboard-card">
+        <h2>Gastos por categoría</h2>
         <div class="chart-container">
-          <canvas baseChart [data]="pieData" [options]="pieOpts" [type]="'pie'">
+          <canvas baseChart
+            [data]="pieData"
+            [options]="pieOpts"
+            [type]="'pie'">
           </canvas>
         </div>
 
@@ -94,7 +89,6 @@
           <p class="label-title">Total de Gastos</p>
           <p class="label-amount">${{ totalExpenses | number }}</p>
         </div>
-
       </div>
 
     </div>

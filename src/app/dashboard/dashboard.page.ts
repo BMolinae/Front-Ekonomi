@@ -1,13 +1,17 @@
 // src/app/dashboard/dashboard.page.ts
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AlertController, IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Subscription, interval, switchMap, tap, of, catchError } from 'rxjs';
-
 import { AuthService } from '../services/auth.service';
 import { MovimientosService } from '../services/movimientos.service';
+import { FirestoreService } from '../services/firestore.service';
+import { ViewChild } from '@angular/core';
+import { IonRefresher, LoadingController } from '@ionic/angular';
+import { createAnimation } from '@ionic/angular';
+
+
 
 @Component({
   selector: 'app-dashboard',
@@ -17,6 +21,10 @@ import { MovimientosService } from '../services/movimientos.service';
   styleUrls: ['./dashboard.page.scss'],
 })
 export class DashboardPage implements OnInit, OnDestroy {
+
+  @ViewChild('refresher', { static: false }) refresher!: IonRefresher;
+
+
   user: any = null;
   movimientos: any[] = [];
 
@@ -37,89 +45,179 @@ export class DashboardPage implements OnInit, OnDestroy {
     private router: Router,
     private alertCtrl: AlertController,
     private authService: AuthService,
-    private movimientosService: MovimientosService
-  ) {}
+    private movimientosService: MovimientosService,
+    private firestoreService: FirestoreService,
+    private loadingController: LoadingController
+  ) { }
+
+  async doRefresh(event: any) {
+    // Mostrar el loading mientras actualiza
+    const loading = await this.loadingController.create({
+      message: 'Actualizando app...',
+      spinner: 'crescent',
+      duration: 3000 // auto-dismiss tras 1.5s
+    });
+    await loading.present();
+
+    // Simular actualización (ejecuta tu lógica real aquí)
+    this.actualizarTodo();
+
+    // Espera mínimo 1 segundo antes de cerrar refresher
+    setTimeout(() => {
+      event.target.complete(); // o this.refresher.complete() si no pasas el $event
+    }, 3000);
+  }
 
   ngOnInit() {
+    this.actualizarTodo();
+
+    window.addEventListener('refreshDashboard', () => {
+      console.log('Actualizando desde botón de home');
+
+      setTimeout(() => {
+        this.refresher?.complete();
+      }, 1000);
+
+      this.actualizarTodo();
+    });
     this.authService.user$.subscribe(user => {
       this.user = user;
+
       if (user) {
-        this.tarjeta = user.tarjeta || '';
-        this.monthlyLimit = user.limite_mensual || 0;
+        this.firestoreService.getUserDataObservable()?.subscribe(userData => {
+          if (userData) {
+            this.tarjeta = userData.tarjeta || '';
+            this.monthlyLimit = userData.limite_mensual || 0;
+          }
+        });
+
         this.loadMovimientos();
-        this.startAutoRefresh();
       } else {
         this.router.navigate(['/login']);
       }
     });
   }
 
+  actualizarTodo(event?: any) {
+    this.authService.getCurrentUser()
+      .then(user => {
+        this.user = user;
+        this.tarjeta = user?.tarjeta || '';
+        this.monthlyLimit = user?.limite_mensual || 0;
+        return this.movimientosService.obtenerMovimientos();
+      })
+      .then(movs => {
+        this.movimientos = movs;
+        this.computeMonthlyStats();
+        if (event) event.target.complete();
+      })
+      .catch(err => {
+        console.error('Error al actualizar datos', err);
+        if (event) event.target.complete();
+      });
+    Promise.all([
+      this.authService.getCurrentUser(),
+      this.movimientosService.obtenerMovimientos()
+    ]).then(() => {
+      event?.target?.complete();
+    });
+
+  }
+
+  private customEnterAnimation(baseEl: any) {
+    const backdropAnimation = createAnimation()
+      .addElement(baseEl.querySelector('ion-backdrop'))
+      .fromTo('opacity', '0.01', 'var(--backdrop-opacity)');
+
+    const wrapperAnimation = createAnimation()
+      .addElement(baseEl.querySelector('.loading-wrapper'))
+      .keyframes([
+        { offset: 0, opacity: '0', transform: 'scale(0.9)' },
+        { offset: 1, opacity: '1', transform: 'scale(1)' }
+      ])
+      .beforeStyles({
+        'color': 'black',
+        'background': 'white'
+      });
+
+    return createAnimation()
+      .addElement(baseEl)
+      .easing('ease-in-out')
+      .duration(300)
+      .addAnimation([backdropAnimation, wrapperAnimation]);
+  }
+
+  private customLeaveAnimation(baseEl: any) {
+    return this.customEnterAnimation(baseEl).direction('reverse');
+  }
+
+  ngAfterViewInit() {
+    window.addEventListener('refreshDashboard', this.handleRefreshEvent);
+  }
+
   ngOnDestroy() {
-    this.pollSub?.unsubscribe();
+    window.removeEventListener('refreshDashboard', () => this.actualizarTodo());
   }
 
-  private startAutoRefresh() {
-    this.pollSub = interval(5000)
-      .pipe(
-        switchMap(() => this.authService.getCurrentUser()),
-        tap(user => {
-          this.user = user;
-          this.tarjeta = user.tarjeta || '';
-          this.monthlyLimit = user.limite_mensual || 0;
-        }),
-        switchMap(() => this.movimientosService.obtenerMovimientos()),
-        tap(movs => {
-          this.movimientos = movs;
-          this.computeMonthlyStats();
-        }),
-        catchError(err => {
-          console.error('Error en auto-refresh', err);
-          return of([]);
-        })
-      )
-      .subscribe();
-  }
+  private handleRefreshEvent = () => {
+    console.log('Actualizando desde botón de home');
+    setTimeout(() => {
+      this.refresher?.complete();
+    }, 1000);
+    this.actualizarTodo();
+  };
 
-  private loadMovimientos() {
-    this.movimientosService.obtenerMovimientos().then(movs => {
-      this.movimientos = movs;
+
+  private async loadMovimientos() {
+    const loading = await this.loadingController.create({
+      message: 'Cargando movimientos...',
+      spinner: 'bubbles',
+    });
+    await loading.present();
+
+    try {
+      this.movimientos = await this.movimientosService.obtenerMovimientos();
       this.computeMonthlyStats();
-    }).catch(err => console.error('Error al cargar movimientos', err));
+    } catch (err) {
+      console.error('Error al cargar movimientos', err);
+    } finally {
+      await loading.dismiss();
+    }
   }
+
 
   private computeMonthlyStats() {
     const now = new Date();
     const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
     const movMes = this.movimientos.filter(m => new Date(m.fecha) >= inicioMes);
-  
+
     const ingresos = movMes
       .filter(m => m.tipo === 'ingreso')
       .reduce((sum, m) => sum + +m.monto, 0);
-  
+
     const gastos = movMes
       .filter(m => m.tipo === 'gasto')
       .reduce((sum, m) => sum + +m.monto, 0);
-  
+
     const nuevoSaldo = ingresos - gastos;
     const nuevoLimite = this.monthlyLimit - gastos;
-  
+
     this.ingresoMes = ingresos;
     this.gastosMes = gastos;
     this.saldo = nuevoSaldo;
     this.limitLeft = nuevoLimite;
-  
+
     this.percentOfLimit = this.monthlyLimit > 0
       ? Math.min(Math.round((gastos / this.monthlyLimit) * 100), 100)
       : 0;
-  
+
     this.saveFinancialData();
-  
-    // ✅ Solo actualizar si el saldo realmente cambió
+
     if (this.user && this.user.saldo !== nuevoSaldo) {
       this.authService.updateSaldo(nuevoSaldo);
     }
   }
-  
+
   private saveFinancialData() {
     const data = {
       saldo: this.saldo,
@@ -200,10 +298,8 @@ export class DashboardPage implements OnInit, OnDestroy {
             const formatted = rawNumber.match(/.{1,4}/g)!.join('-');
 
             try {
-              // Solo guarda la tarjeta. Movimiento ya se crea en AuthService
               await this.authService.addCard(formatted);
 
-              // Refresca datos
               const updated = await this.authService.getCurrentUser();
               this.user = updated;
               this.tarjeta = updated.tarjeta || '';
@@ -248,11 +344,11 @@ export class DashboardPage implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  private async showToast(message: string) {
+  private async showToast(msg: string) {
     const toast = await this.alertCtrl.create({
-      header: 'Aviso',
-      message,
-      buttons: [{ text: 'OK', role: 'cancel' }],
+      header: 'Atención',
+      message: msg,
+      buttons: ['OK']
     });
     await toast.present();
   }

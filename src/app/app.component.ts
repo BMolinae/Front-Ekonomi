@@ -26,6 +26,14 @@ export class AppComponent {
   }
 
   navigateTo(path: string) {
-    this.router.navigateByUrl(path);
+    const currentPath = this.router.url;
+
+    if (currentPath === path) {
+      const event = new CustomEvent('refreshDashboard');
+      window.dispatchEvent(event);
+    } else {
+      this.router.navigateByUrl(path);
+    }
   }
+
 }

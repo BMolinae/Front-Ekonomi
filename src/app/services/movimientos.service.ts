@@ -16,6 +16,7 @@ export class MovimientosService {
     categoria: string
   ): Promise<void> {
     const uid = this.auth.currentUser?.uid;
+    console.log('1');
     if (!uid) throw new Error('Usuario no autenticado');
 
     const ref = collection(this.firestore, `users/${uid}/movimientos`);
@@ -31,6 +32,7 @@ export class MovimientosService {
 
   async obtenerMovimientos(): Promise<any[]> {
     const uid = this.auth.currentUser?.uid;
+    console.log('2');
     if (!uid) throw new Error('Usuario no autenticado');
 
     const ref = collection(this.firestore, `users/${uid}/movimientos`);

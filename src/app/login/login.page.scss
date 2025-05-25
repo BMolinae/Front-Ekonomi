@@ -58,6 +58,18 @@
     }
   }
 
+.input-wrapper.invalid {
+  border: 1px solid red;
+  border-radius: 8px;
+}
+
+.error {
+  color: red;
+  font-size: 0.75rem;
+  margin-left: 8px;
+}
+
+
 .login-container {
     display: flex;
     flex-direction: column;

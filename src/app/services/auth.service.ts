@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User} from '@angular/fire/auth';
-import { Firestore, doc, addDoc, setDoc, getDoc, getDocs, collection} from '@angular/fire/firestore';
+import { Auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User } from '@angular/fire/auth';
+import { Firestore, doc, addDoc, setDoc, getDoc, getDocs, collection } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 
@@ -9,6 +9,7 @@ export class AuthService {
   private currentUser: User | null = null;
   private userSubject = new BehaviorSubject<any>(null);
   public user$ = this.userSubject.asObservable();
+  private userCache: any = null;
 
   constructor(
     private auth: Auth,
@@ -44,30 +45,35 @@ export class AuthService {
           localStorage.setItem('username', data?.username || '');
           this.router.navigate(['/dashboard']);
         });
+      })
+      .catch(error => {
+        console.error('Error de inicio de sesión:', error);
+        return Promise.reject('Credenciales inválidas. Intentelo Nuevamente');
       });
+
   }
 
   register(email: string, password: string, username: string): Promise<void> {
     return createUserWithEmailAndPassword(this.auth, email, password)
-  .then(cred => {
-    const userRef = doc(this.firestore, `users/${cred.user.uid}`);
-    return setDoc(userRef, {
-      email,
-      username,
-      saldo: 500000,
-      limiteMensual: 0,
-      tarjeta: ''
-    });
-  })
-  .catch(error => {
-    let errorMsg = 'Error al crear cuenta.';
-    if (error.code === 'auth/email-already-in-use') {
-      errorMsg = 'Este correo ya está registrado.';
-    }
-    console.error('❌', errorMsg);
-    alert(errorMsg);
-  });
-  
+      .then(cred => {
+        const userRef = doc(this.firestore, `users/${cred.user.uid}`);
+        return setDoc(userRef, {
+          email,
+          username,
+          saldo: 500000,
+          limiteMensual: 0,
+          tarjeta: ''
+        });
+      })
+      .catch(error => {
+        let errorMsg = 'Error al crear cuenta.';
+        if (error.code === 'auth/email-already-in-use') {
+          errorMsg = 'Este correo ya está registrado.';
+        }
+        return Promise.reject(errorMsg);
+      });
+
+
 
   }
 
@@ -79,30 +85,43 @@ export class AuthService {
   }
 
   getCurrentUser(): Promise<any> {
+    if (this.userCache) {
+      return Promise.resolve(this.userCache); // devuelve desde memoria
+    }
+
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
     if (!uid) return Promise.reject('No user');
+
     const ref = doc(this.firestore, `users/${uid}`);
     return getDoc(ref).then(snapshot => {
       const data = snapshot.data();
       this.userSubject.next(data);
+      this.userCache = data; 
       return data;
     });
   }
 
+  refreshUserData(): Promise<any> {
+  this.userCache = null; 
+  return this.getCurrentUser();
+}
+
+
   addCard(cardNumber: string): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
     if (!uid) return Promise.reject('No user');
-  
+
     const userRef = doc(this.firestore, `users/${uid}`);
     const movRef = collection(this.firestore, `users/${uid}/movimientos`);
-  
+    console.log('prueba 4');
+
     const movimiento = {
       tipo: 'ingreso',
       descripcion: 'Saldo inicial al agregar tarjeta',
       monto: 500000,
       fecha: new Date()
     };
-  
+
     return Promise.all([
       setDoc(userRef, { tarjeta: cardNumber, saldo: 500000 }, { merge: true }),
       addDoc(movRef, movimiento)
@@ -110,11 +129,12 @@ export class AuthService {
       return;
     });
   }
-  
+
   setLimit(limit: number): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
     if (!uid) return Promise.reject('No user');
     const ref = doc(this.firestore, `users/${uid}`);
+    console.log('prueba 1');
     return setDoc(ref, { limite_mensual: limit }, { merge: true });
   }
 
@@ -122,16 +142,19 @@ export class AuthService {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
     if (!uid) return Promise.reject('No user');
     const ref = doc(this.firestore, `users/${uid}`);
+    console.log('prueba 2');
     return setDoc(ref, { saldo: nuevoSaldo }, { merge: true });
   }
 
   getMovimientos(): Promise<any[]> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    console.log('prueba 3');
     if (!uid) return Promise.reject('No user');
     const ref = collection(this.firestore, `users/${uid}/movimientos`);
     return getDocs(ref).then(snapshot =>
       snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
     );
+
   }
 }
 

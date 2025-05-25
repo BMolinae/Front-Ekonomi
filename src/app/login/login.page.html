@@ -30,29 +30,40 @@
         <!-- Formulario de inicio de sesión -->
         <form [formGroup]="loginForm" (ngSubmit)="login()" class="login-form">
           <div class="form-group">
-            <div class="input-wrapper">
+            <div class="input-wrapper"
+              [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
               <ion-icon name="mail-outline"></ion-icon>
-              <ion-input
-                formControlName="email"
-                placeholder="Correo electrónico"
-                type="email"
-              ></ion-input>
+              <ion-input formControlName="email" placeholder="Correo electrónico" type="email"></ion-input>
             </div>
+            <small class="error"
+              *ngIf="loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched">
+              El correo es obligatorio.
+            </small>
+            <small class="error" *ngIf="loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched">
+              El formato del correo no es válido.
+            </small>
           </div>
 
+
           <div class="form-group">
-            <div class="input-wrapper">
+            <div class="input-wrapper"
+              [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
               <ion-icon name="lock-closed-outline"></ion-icon>
-              <ion-input
-                formControlName="password"
-                placeholder="Contraseña"
-                type="password"
-              ></ion-input>
+              <ion-input formControlName="password" placeholder="Contraseña" type="password"></ion-input>
             </div>
+            <small class="error"
+              *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
+              La contraseña es obligatoria.
+            </small>
+            <small class="error"
+              *ngIf="loginForm.get('password')?.hasError('minlength') && loginForm.get('password')?.touched">
+              La contraseña debe tener al menos 6 caracteres.
+            </small>
             <div class="forgot-password">
               <a (click)="goToForgotPassword()" class="create-link">¿Olvidaste tu contraseña?</a>
             </div>
           </div>
+
 
           <ion-button expand="block" class="login-button" type="submit">
             INGRESAR

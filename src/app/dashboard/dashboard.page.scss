@@ -847,4 +847,9 @@ ion-button.action-button::part(native):active {
   }
 }
 
+ion-loading .loading-wrapper {
+  color: black; /* Cambia el color del texto */
+  font-weight: 500; /* Opcional, para mejor visibilidad */
+}
+
 
