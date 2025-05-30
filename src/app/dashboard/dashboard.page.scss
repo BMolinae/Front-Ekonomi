@@ -852,4 +852,311 @@ ion-loading .loading-wrapper {
   font-weight: 500; /* Opcional, para mejor visibilidad */
 }
 
+/* Sección de Transacciones - Estilos Mejorados */
+.transactions-section {
+  margin: 20px 0;
+}
 
+.transactions-section ion-card {
+  --background: var(--white);
+  margin: 0;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(38, 86, 191, 0.12);
+  overflow: hidden;
+  border: 1px solid rgba(245, 248, 251, 0.8);
+  transition: all 0.3s ease;
+}
+
+.transactions-section ion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(38, 86, 191, 0.15);
+}
+
+/* Header de la tarjeta */
+.transactions-section ion-card-header {
+  --background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
+  --padding-top: 20px;
+  --padding-bottom: 16px;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  border-bottom: 1px solid rgba(78, 205, 196, 0.1);
+  position: relative;
+}
+
+.transactions-section ion-card-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-turquoise) 0%, var(--secondary-blue) 100%);
+  border-radius: 1px;
+}
+
+.transactions-section ion-card-header h2 {
+  font-family: 'Flexo', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--dark-text);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* Botón de agregar mejorado */
+.transactions-section ion-buttons {
+  background-color: transparent !important;
+}
+
+.transactions-section ion-button {
+  --background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  --background-activated: var(--primary-blue);
+  --background-focused: var(--primary-blue);
+  --background-hover: var(--primary-blue);
+  --color: var(--white);
+  --border-radius: 12px;
+  --box-shadow: 0 4px 12px rgba(38, 86, 191, 0.3);
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  transition: all 0.3s ease;
+}
+
+.transactions-section ion-button:hover {
+  --box-shadow: 0 6px 16px rgba(38, 86, 191, 0.4);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.transactions-section ion-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.transactions-section ion-button ion-icon {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* Lista de transacciones mejorada */
+.transactions-section .transactions-list {
+  --background: transparent;
+  --ion-item-background: transparent;
+  padding: 0;
+}
+
+.transactions-section .transaction-item {
+  --background: var(--white);
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  --border-color: rgba(78, 205, 196, 0.08);
+  --inner-padding-end: 0;
+  margin: 8px 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.transactions-section .transaction-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(135deg, var(--accent-turquoise) 0%, var(--secondary-blue) 100%);
+  transition: width 0.3s ease;
+  z-index: 1;
+}
+
+.transactions-section .transaction-item:hover::before {
+  width: 4px;
+}
+
+.transactions-section .transaction-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 15px rgba(78, 205, 196, 0.15);
+  --background: rgba(245, 248, 251, 0.7);
+}
+
+/* Contenido del item de transacción */
+.transactions-section .transaction-item ion-label {
+  margin: 0;
+}
+
+.transactions-section .transaction-item ion-label h3 {
+  font-family: 'Flexo', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dark-text);
+  margin: 0 0 6px 0;
+  letter-spacing: 0.01em;
+  transition: color 0.3s ease;
+}
+
+.transactions-section .transaction-item:hover ion-label h3 {
+  color: var(--primary-blue);
+}
+
+/* Estilos específicos por tipo de transacción */
+.transactions-section .transaction-item ion-label h3.ingreso {
+  color: var(--income-green);
+}
+
+.transactions-section .transaction-item ion-label h3.gasto {
+  color: var(--expense-red);
+}
+
+.transactions-section .transaction-item ion-label p {
+  font-family: 'Flexo', sans-serif;
+  font-size: 13px;
+  color: var(--dark-text);
+  opacity: 0.7;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.01em;
+}
+
+.transactions-section .transaction-item ion-label p ion-icon {
+  font-size: 16px;
+  color: var(--accent-turquoise);
+  margin-right: 4px;
+}
+
+/* Badge de monto mejorado */
+.transactions-section .transaction-item ion-badge {
+  --background: transparent;
+  --color: var(--dark-text);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  border-radius: 20px;
+  font-family: 'Flexo', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.transactions-section .transaction-item ion-badge[color="success"] {
+  --background: rgba(66, 163, 77, 0.15);
+  --color: var(--income-green);
+  border: 1px solid rgba(66, 163, 77, 0.2);
+}
+
+.transactions-section .transaction-item ion-badge[color="success"]::before {
+  content: '+$';
+  margin-right: 2px;
+  font-weight: bold;
+}
+
+.transactions-section .transaction-item ion-badge[color="danger"] {
+  --background: rgba(239, 71, 111, 0.15);
+  --color: var(--expense-red);
+  border: 1px solid rgba(239, 71, 111, 0.2);
+}
+
+.transactions-section .transaction-item ion-badge[color="danger"]::before {
+  content: '-$';
+  margin-right: 2px;
+  font-weight: bold;
+}
+
+.transactions-section .transaction-item:hover ion-badge {
+  transform: scale(1.05);
+}
+
+/* Estado vacío mejorado */
+.transactions-section .empty-transactions {
+  --background: var(--white);
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --padding-top: 40px;
+  --padding-bottom: 40px;
+  margin: 12px;
+  border-radius: 12px;
+  border: 2px dashed rgba(78, 205, 196, 0.3);
+  transition: all 0.3s ease;
+}
+
+.transactions-section .empty-transactions:hover {
+  border-color: rgba(78, 205, 196, 0.5);
+  --background: rgba(245, 248, 251, 0.5);
+}
+
+.transactions-section .empty-message {
+  width: 100%;
+  text-align: center;
+  color: var(--dark-text);
+  opacity: 0.6;
+  font-size: 15px;
+  font-family: 'Flexo', sans-serif;
+  font-weight: 500;
+  position: relative;
+  padding-top: 20px;
+}
+
+.transactions-section .empty-message::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--light-turquoise), var(--accent-turquoise));
+  border-radius: 50%;
+  opacity: 0.3;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z'/%3E%3Cpath d='M12 8v4l2 2'/%3E%3C/svg%3E") center/60% no-repeat;
+}
+
+/* Animaciones de entrada */
+.transactions-section .transaction-item {
+  animation: slideInUp 0.4s ease-out forwards;
+  animation-delay: calc(var(--item-index, 0) * 0.1s);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .transactions-section ion-card-header h2 {
+    font-size: 16px;
+  }
+  
+  .transactions-section .transaction-item {
+    --padding-start: 16px;
+    --padding-end: 16px;
+    margin: 6px 8px;
+  }
+  
+  .transactions-section .transaction-item ion-label h3 {
+    font-size: 15px;
+  }
+  
+  .transactions-section .transaction-item ion-label p {
+    font-size: 12px;
+  }
+  
+  .transactions-section .transaction-item ion-badge {
+    font-size: 13px;
+    --padding-start: 10px;
+    --padding-end: 10px;
+  }
+}

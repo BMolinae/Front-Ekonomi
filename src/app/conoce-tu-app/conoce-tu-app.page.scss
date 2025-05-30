@@ -1,6 +1,4 @@
-/* Variables globales - puede ser mejor moverlas a variables.scss si tu proyecto lo utiliza */
-/* Variables globales - puede ser mejor moverlas a variables.scss si tu proyecto lo utiliza */
-
+/* Variables globales - mover a variables.scss si el proyecto lo utiliza */
 @font-face {
   font-family: 'Flexo';
   src: url('/assets/flexo-regular.woff2') format('woff2'),
@@ -43,9 +41,10 @@
 
 /* Asegurar que ion-content permita el scroll adecuadamente */
 ion-content {
-  --overflow: hidden;
+  --background: transparent;
 }
 
+/* Contenedor principal con scroll */
 .learn-container {
   display: flex;
   flex-direction: column;
@@ -53,13 +52,11 @@ ion-content {
   width: 100%;
   position: relative;
   overflow-y: auto;
-  /* Permitir scroll en el contenedor principal */
 }
 
 /* Fondo con gradiente */
 .background-gradient {
   position: fixed;
-  /* Cambio a fixed para que permanezca en su lugar */
   top: 0;
   left: 0;
   right: 0;
@@ -71,7 +68,6 @@ ion-content {
 /* Círculos decorativos */
 .background-circle {
   position: fixed;
-  /* Cambio a fixed para mantenerlos visibles */
   border-radius: 50%;
   z-index: 2;
 }
@@ -101,7 +97,6 @@ ion-content {
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  /* Cambio a min-height para permitir que crezca */
   padding: 16px;
 }
 
@@ -131,7 +126,6 @@ ion-content {
   display: flex;
   flex-direction: column;
   padding: 0 16px;
-  /* Eliminar overflow aquí ya que ahora está en learn-container */
   position: relative;
 }
 
@@ -161,6 +155,7 @@ ion-content {
   text-align: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
+  will-change: transform;
 }
 
 .feature-card:hover {
@@ -197,30 +192,6 @@ ion-content {
   margin: 0;
 }
 
-/* Arreglando el contenedor de acción para que no se pierda */
-.action-container {
-  width: 100%;
-  padding: 0 16px;
-  margin: 20px 0;
-  /* Simplificar los márgenes */
-}
-
-ion-button.explore-button {
-  --background: linear-gradient(120deg, var(--primary-blue), var(--accent-turquoise));
-  --background-activated: var(--primary-blue);
-  --background-hover: var(--primary-blue);
-  --border-radius: 25px;
-  --color: var(--light-text);
-  --box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
-  font-weight: bold;
-  height: 48px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.3s ease;
-  width: 100%;
-  /* Asegurar que ocupe todo el ancho */
-}
-
 /* Footer */
 .footer {
   text-align: center;
@@ -228,11 +199,42 @@ ion-button.explore-button {
   color: var(--primary-blue);
   font-size: 12px;
   opacity: 0.8;
-  /* Asegurar que el footer siempre sea visible */
   margin-top: auto;
 }
 
-/* Media Query para dispositivos más pequeños */
+/* Botón Atrás */
+.back-button-container {
+  position: relative;
+  padding: 8px 0;
+  margin-bottom: -20px;
+}
+
+.custom-back-button {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--primary-blue);
+  font-family: 'Flexo', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.custom-back-button:hover {
+  background: rgba(78, 205, 196, 0.1);
+}
+
+.custom-back-button:focus {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+/* Media Queries */
 @media (max-height: 640px) {
   .header-section {
     margin-top: 20px;
@@ -264,27 +266,4 @@ ion-button.explore-button {
   .features-container {
     grid-template-columns: 1fr;
   }
-}
-
-.back-button-container {
-  position: relative;
-  padding: 8px 0;
-  margin-bottom: -20px ;
-}
-
-.custom-back-button {
-  display: flex;
-  align-items: center;
-  background: transparent;
-  border: none;
-  color: var(--primary-blue);
-  font-family: 'Flexo', sans-serif;
-  font-weight: 500;
-  font-size: 16px;
-  letter-spacing: 0.5px;
-  padding: 8px 12px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
 }
