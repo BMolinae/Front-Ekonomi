@@ -3,7 +3,8 @@
 <ion-content class="dashboard-container">
 
   <ion-refresher slot="fixed" #refresher (ionRefresh)="actualizarTodo($event)">
-    <ion-refresher-content pullingIcon="arrow-down" pullingText="Desliza para actualizar" refreshingSpinner="circles" refreshingText="Actualizando...">
+    <ion-refresher-content pullingIcon="arrow-down" pullingText="Desliza para actualizar" refreshingSpinner="circles"
+      refreshingText="Actualizando...">
     </ion-refresher-content>
   </ion-refresher>
 
@@ -174,25 +175,45 @@
 
       <!-- Transactions List -->
       <div class="transactions-section">
-        <h2 class="section-title">Transacciones recientes</h2>
-        <ion-list class="transactions-list">
-          <ion-item *ngFor="let mov of movimientos" class="transaction-item">
-            <ion-label>
-              <h3 [ngClass]="mov.tipo">{{ mov.descripcion }}</h3>
-              <p>{{ mov.fecha | date:'short' }}
-                <ion-icon [name]="getCategoriaIcono(mov.categoria)" slot="start"></ion-icon>
-                {{ mov.categoria }}
-              </p>
-            </ion-label>
+        <ion-card>
+          <ion-card-header class="ion-no-padding ion-padding-horizontal">
+            <ion-grid>
+              <ion-row class="ion-align-items-center">
+                <ion-col>
+                  <h2>Transacciones Recientes</h2>
+                </ion-col>
+                <ion-col size="auto">
+                  <ion-buttons fill="solid" style="background-color: red; z-index: 999;">
+                    <ion-button fill="solid" color="primary" (click)="abrirModalAgregar()">
+                      <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+                    </ion-button>
+                  </ion-buttons>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-header>
 
-            <ion-badge [color]="mov.tipo==='ingreso' ? 'success' : 'danger'">
-              {{ mov.monto | number:'1.0-0' }}
-            </ion-badge>
-          </ion-item>
-          <ion-item *ngIf="!movimientos.length" class="empty-transactions">
-            <div class="empty-message">No hay transacciones recientes disponibles</div>
-          </ion-item>
-        </ion-list>
+          <ion-list class="transactions-list">
+            <ion-item *ngFor="let mov of movimientos" class="transaction-item">
+              <ion-label>
+                <h3 [ngClass]="mov.tipo">{{ mov.descripcion }}</h3>
+                <p>
+                  {{ mov.fecha | date:'short' }}
+                  <ion-icon [name]="getCategoriaIcono(mov.categoria)" slot="start"></ion-icon>
+                  {{ mov.categoria }}
+                </p>
+              </ion-label>
+
+              <ion-badge [color]="mov.tipo==='ingreso' ? 'success' : 'danger'">
+                {{ mov.monto | number:'1.0-0' }}
+              </ion-badge>
+            </ion-item>
+
+            <ion-item *ngIf="!movimientos.length" class="empty-transactions">
+              <div class="empty-message">No hay transacciones recientes disponibles</div>
+            </ion-item>
+          </ion-list>
+        </ion-card>
       </div>
 
     </div><!-- fin main-section -->

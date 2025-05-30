@@ -10,6 +10,9 @@ import { FirestoreService } from '../services/firestore.service';
 import { ViewChild } from '@angular/core';
 import { IonRefresher, LoadingController } from '@ionic/angular';
 import { createAnimation } from '@ionic/angular';
+import { ModalController } from '@ionic/angular';
+import { AgregarMovimientoPage } from '../modals/agregar-movimiento/agregar-movimiento.page';
+
 
 
 
@@ -47,7 +50,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private authService: AuthService,
     private movimientosService: MovimientosService,
     private firestoreService: FirestoreService,
-    private loadingController: LoadingController
+    private loadingController: LoadingController,
+    private modalCtrl: ModalController
   ) { }
 
   async doRefresh(event: any) {
@@ -352,4 +356,18 @@ export class DashboardPage implements OnInit, OnDestroy {
     });
     await toast.present();
   }
+
+  async abrirModalAgregar() {
+    const modal = await this.modalCtrl.create({
+      component: AgregarMovimientoPage,
+    });
+    modal.onDidDismiss().then((res) => {
+      if (res.data) {
+        this.loadMovimientos(); // refresca la lista
+      }
+    });
+    await modal.present();
+  }
+
 }
+

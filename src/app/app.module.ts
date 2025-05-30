@@ -11,7 +11,8 @@ import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { getApp } from 'firebase/app';
-import { firebaseConfig } from '../environments/firebase-config';
+import { environment } from '../environments/environment';
+
 import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
 
 
@@ -21,7 +22,7 @@ import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
   declarations: [AppComponent],
   imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule, HttpClientModule], // Agregado HttpClientModule aquí
   providers: [
-    provideFirebaseApp(() => initializeApp(firebaseConfig)),
+    provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
