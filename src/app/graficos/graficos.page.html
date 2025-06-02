@@ -15,14 +15,11 @@
           <h2>Límite restante</h2>
           <span class="badge">Débito</span>
         </div>
-
         <div class="amount-large">${{ limitLeft | number }}</div>
-
         <div class="success-message">
           <ion-icon name="checkmark-circle"></ion-icon>
           {{ limitMessage }}
         </div>
-
         <div class="stat-grid">
           <div class="stat-item">
             <p class="stat-label">Límite Total</p>
@@ -35,43 +32,56 @@
         </div>
       </div>
 
-      <!-- Tarjeta de Uso del Límite Mensual -->
-      <div class="dashboard-card">
-        <h2>Uso del límite mensual</h2>
-
-        <!-- Barra de progreso -->
-        <div class="progress-container">
-          <div class="progress-labels">
-            <span>{{ usedPercentage | number: '1.0-0' }}% Utilizado</span>
-            <span>{{ availablePercentage | number: '1.0-0' }}% Disponible</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" [style.width.%]="usedPercentage"></div>
-          </div>
-        </div>
-
-        <!-- Gráfico circular (Doughnut) -->
-        <div class="chart-container chart-doughnut">
-          <canvas baseChart
-            [data]="doughnutData"
-            [options]="doughnutOpts"
-            [type]="'doughnut'">
-          </canvas>
-        </div>
-      </div>
+<!-- Tarjeta de Uso del Límite Mensual -->
+<div class="dashboard-card">
+  <h2>Uso del límite mensual</h2>
+  <div class="progress-container">
+    <div class="progress-labels">
+      <span>{{ usedPercentage | number: '1.0-0' }}% Utilizado</span>
+      <span>{{ availablePercentage | number: '1.0-0' }}% Disponible</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="usedPercentage"></div>
+    </div>
+  </div>
+  <div class="chart-container chart-doughnut">
+    <canvas baseChart
+      [data]="doughnutData"
+      [options]="doughnutOpts"
+      [type]="'doughnut'"
+      #doughnutChart>
+    </canvas>
+    <!-- Texto centrado en el doughnut -->
+    <div class="doughnut-center-text">
+      <div class="doughnut-percentage">{{ usedPercentage | number: '1.0-0' }}%</div>
+      <div class="doughnut-label">Utilizado</div>
+    </div>
+  </div>
+</div>
 
       <!-- Gráfico de Comparación Mensual (línea) -->
       <div class="dashboard-card">
-        <h2>Gastos por día</h2>
-        <p class="subtitle">Del mes actual</p>
-
-        <div class="chart-container chart-bar-large">
+        <h2>Comparación mensual</h2>
+        <p class="subtitle">Últimos 4 meses</p>
+        <div class="chart-container chart-line-large">
           <canvas baseChart
             [data]="lineData"
             [options]="lineOpts"
-            [type]="'line'">
+            [type]="'line'"
+            #lineChart>
           </canvas>
         </div>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <div class="legend-color income-color"></div>
+            <span>Ingresos</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color expense-color"></div>
+            <span>Gastos</span>
+          </div>
+        </div>
+        <p class="chart-note">* El mes actual está resaltado con un borde más grueso.</p>
       </div>
 
       <!-- Gastos por Categoría (Pie) -->
@@ -81,13 +91,18 @@
           <canvas baseChart
             [data]="pieData"
             [options]="pieOpts"
-            [type]="'pie'">
+            [type]="'pie'"
+            #pieChart>
           </canvas>
         </div>
-
-        <div class="total-expenses-label">
-          <p class="label-title">Total de Gastos</p>
-          <p class="label-amount">${{ totalExpenses | number }}</p>
+        <div class="category-legend" *ngIf="categoryDetails && categoryDetails.length > 0">
+          <div class="category-item" *ngFor="let category of categoryDetails">
+            <div class="category-color" [style.background-color]="category.color"></div>
+            <div class="category-details">
+              <p class="category-name">{{ category.name }}</p>
+              <p class="category-stats">${{ category.amount | number }} ({{ category.percentage }}%)</p>
+            </div>
+          </div>
         </div>
       </div>
 
