@@ -12,6 +12,8 @@ import { IonRefresher, LoadingController } from '@ionic/angular';
 import { createAnimation } from '@ionic/angular';
 import { ModalController } from '@ionic/angular';
 import { AgregarMovimientoPage } from '../modals/agregar-movimiento/agregar-movimiento.page';
+import { CardService } from '../services/card.service';
+
 
 
 
@@ -24,25 +26,30 @@ import { AgregarMovimientoPage } from '../modals/agregar-movimiento/agregar-movi
   styleUrls: ['./dashboard.page.scss'],
 })
 export class DashboardPage implements OnInit, OnDestroy {
-
   @ViewChild('refresher', { static: false }) refresher!: IonRefresher;
+  private subscription?: Subscription;
 
+  userData: any;
 
   user: any = null;
   movimientos: any[] = [];
 
   saldo = 0;
   tarjeta = '';
+  tarjetas: any[] = [];
+  tarjetaActiva: any = null;
+
   ingresoMes = 0;
   gastosMes = 0;
   limitLeft = 0;
   percentOfLimit = 0;
   monthlyLimit = 0;
 
+  limiteMensual: number = 0;
+
+
   isBalanceHidden = false;
   isUserPanelExpanded = false;
-
-  private pollSub?: Subscription;
 
   constructor(
     private router: Router,
@@ -51,7 +58,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private movimientosService: MovimientosService,
     private firestoreService: FirestoreService,
     private loadingController: LoadingController,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private cardService: CardService
   ) { }
 
   async doRefresh(event: any) {
@@ -73,6 +81,16 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.authService.currentUser$.subscribe(user => {
+      if (user?.limiteMensual != null) {
+        this.monthlyLimit = user.limiteMensual;
+        this.limitLeft = user.limiteMensual - this.gastosMes;
+        this.percentOfLimit = user.limiteMensual > 0
+          ? Math.min(Math.round((this.gastosMes / user.limiteMensual) * 100), 100)
+          : 0;
+      }
+    });
+
     this.actualizarTodo();
 
     window.addEventListener('refreshDashboard', () => {
@@ -100,6 +118,22 @@ export class DashboardPage implements OnInit, OnDestroy {
         this.router.navigate(['/login']);
       }
     });
+
+    this.subscription = this.cardService.cardLimitUpdated$.subscribe(updated => {
+      if (updated) {
+        this.loadUserData(); // 👈 recargamos la info
+        this.cardService.resetNotification();
+      }
+    });
+
+    this.loadUserData();
+  }
+
+  loadUserData() {
+    this.authService.getCurrentUser().then(data => {
+      this.userData = data;
+      this.monthlyLimit = data?.limiteMensual || 0;
+    });
   }
 
   actualizarTodo(event?: any) {
@@ -119,14 +153,9 @@ export class DashboardPage implements OnInit, OnDestroy {
         console.error('Error al actualizar datos', err);
         if (event) event.target.complete();
       });
-    Promise.all([
-      this.authService.getCurrentUser(),
-      this.movimientosService.obtenerMovimientos()
-    ]).then(() => {
-      event?.target?.complete();
-    });
-
   }
+
+  
 
   private customEnterAnimation(baseEl: any) {
     const backdropAnimation = createAnimation()
@@ -161,6 +190,10 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     window.removeEventListener('refreshDashboard', () => this.actualizarTodo());
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+
   }
 
   private handleRefreshEvent = () => {
@@ -257,9 +290,15 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   cerrarSesion() {
-    this.authService.logout();
-    this.router.navigate(['/home']);
+    this.authService.logout().then(() => {
+      this.authService.reset(); // ✅ Limpia el estado en memoria
+      this.router.navigate(['/login']);
+    }).catch(error => {
+      console.error('Error al cerrar sesión:', error);
+    });
   }
+
+
 
   getCategoriaIcono(nombreCategoria: string): string {
     const iconos: any = {
@@ -334,7 +373,9 @@ export class DashboardPage implements OnInit, OnDestroy {
             const x = Number(data.limite);
             if (x > 0) {
               await this.authService.setLimit(x);
-              await this.loadMovimientos();
+              // Ya no es necesario: const updated = await this.authService.getCurrentUser()
+              // Ya no es necesario: this.monthlyLimit = updated.limiteMensual;
+              this.loadMovimientos(); // sigue siendo útil
               return true;
             } else {
               this.showToast('Ingresa un número mayor a 0');
@@ -347,6 +388,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     await alert.present();
   }
+
 
   private async showToast(msg: string) {
     const toast = await this.alertCtrl.create({
@@ -368,6 +410,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     });
     await modal.present();
   }
+
+
 
 }
 

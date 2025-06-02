@@ -6,6 +6,7 @@ import { FirestoreService } from 'src/app/services/firestore.service';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NavParams } from '@ionic/angular';
 
 @Component({
   selector: 'app-agregar-movimiento',
@@ -21,12 +22,14 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 export class AgregarMovimientoPage implements OnInit {
   form: FormGroup;
   categorias: any[] = [];
+  idTarjeta!: string;
 
   constructor(
     private modalCtrl: ModalController,
     private fb: FormBuilder,
     private movimientosService: MovimientosService,
-    private firestoreService: FirestoreService
+    private firestoreService: FirestoreService,
+    private navParams: NavParams
   ) {
     this.form = this.fb.group({
       descripcion: ['', Validators.required],
@@ -38,6 +41,7 @@ export class AgregarMovimientoPage implements OnInit {
   }
 
   ngOnInit() {
+    this.idTarjeta = this.navParams.get('idTarjeta');
     this.firestoreService.getCategorias().subscribe(cats => {
       this.categorias = cats;
     });
@@ -62,7 +66,7 @@ export class AgregarMovimientoPage implements OnInit {
         descripcion,
         monto,
         categoria,
-         
+        this.idTarjeta
       );
       this.modalCtrl.dismiss(true);
     } catch (error) {

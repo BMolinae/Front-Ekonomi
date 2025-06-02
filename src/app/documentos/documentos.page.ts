@@ -88,49 +88,48 @@ export class DocumentosPage implements OnInit {
   
 
   async generatePNG(type: string): Promise<void> {
-    const canvas = document.getElementById(`${type}-chart`) as HTMLCanvasElement;
-    if (!canvas) {
-      console.error(`No se encontró el canvas para el gráfico ${type}`);
-      return;
-    }
-  
-    const blob = await new Promise<Blob | null>(resolve => {
-      canvas.toBlob(b => resolve(b), 'image/png');
-    });
-  
-    if (!blob) {
-      console.error('No se pudo generar la imagen');
-      return;
-    }
-  
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64data = (reader.result as string).split(',')[1];
-      const fileName = `ekonomi_${type}.png`;
-  
-      await Filesystem.writeFile({
-        path: fileName,
-        data: base64data,
-        directory: Directory.Documents,
-        encoding: 'base64' as Encoding,
-      });
-  
-      console.log('📁 PNG guardado en:', fileName);
-  
-      if (this.platform.is('android')) {
-        const uri = await Filesystem.getUri({
-          directory: Directory.Documents,
-          path: fileName
-        });
-  
-        this.fileOpener.open(uri.uri, 'image/png')
-          .then(() => console.log('✅ PNG abierto correctamente'))
-          .catch(err => console.error('❌ Error al abrir PNG', err));
-      }
-    };
-  
-    reader.readAsDataURL(blob);
+  const canvas = document.getElementById(`${type}-chart`) as HTMLCanvasElement;
+  if (!canvas) {
+    console.error(`No se encontró el canvas para el gráfico ${type}`);
+    return;
   }
+
+  let base64data: string;
+
+  try {
+    // Método más compatible para obtener base64 del canvas
+    base64data = canvas.toDataURL('image/png').split(',')[1];
+  } catch (error) {
+    console.error('❌ Error al convertir canvas a base64:', error);
+    return;
+  }
+
+  const fileName = `ekonomi_${type}.png`;
+
+  await Filesystem.writeFile({
+    path: fileName,
+    data: base64data,
+    directory: Directory.Documents,
+    encoding: Encoding.UTF8,
+  });
+
+  console.log('📁 PNG guardado en:', fileName);
+
+  try {
+    const uriResult = await Filesystem.getUri({
+      directory: Directory.Documents,
+      path: fileName
+    });
+
+    const mimeType = 'image/png';
+
+    await this.fileOpener.open(uriResult.uri, mimeType);
+    console.log('✅ PNG abierto correctamente');
+  } catch (error) {
+    console.error('❌ Error al abrir imagen PNG:', error);
+  }
+}
+
   
   
 

@@ -3,6 +3,7 @@ import { Auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEma
 import { Firestore, doc, addDoc, setDoc, getDoc, getDocs, collection } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
+import { CardService } from '../services/card.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -10,11 +11,14 @@ export class AuthService {
   private userSubject = new BehaviorSubject<any>(null);
   public user$ = this.userSubject.asObservable();
   private userCache: any = null;
+  private currentUserSubject = new BehaviorSubject<any>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(
     private auth: Auth,
     private firestore: Firestore,
-    private router: Router
+    private router: Router,
+    private cardService: CardService
   ) {
     onAuthStateChanged(this.auth, user => {
       this.currentUser = user;
@@ -79,9 +83,7 @@ export class AuthService {
 
   logout(): Promise<void> {
     localStorage.clear();
-    return signOut(this.auth).then(() => {
-      this.router.navigate(['/login']);
-    });
+    return signOut(this.auth);
   }
 
   getCurrentUser(): Promise<any> {
@@ -96,15 +98,23 @@ export class AuthService {
     return getDoc(ref).then(snapshot => {
       const data = snapshot.data();
       this.userSubject.next(data);
-      this.userCache = data; 
+      this.userCache = data;
       return data;
     });
   }
 
-  refreshUserData(): Promise<any> {
-  this.userCache = null; 
-  return this.getCurrentUser();
-}
+  refreshUserData(): Promise<void> {
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) return Promise.reject('No user');
+
+    const ref = doc(this.firestore, `users/${uid}`);
+    return getDoc(ref).then(docSnap => {
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        this.currentUserSubject.next(userData); // 👈 Aquí es lo importante
+      }
+    });
+  }
 
 
   addCard(cardNumber: string): Promise<void> {
@@ -122,6 +132,11 @@ export class AuthService {
       fecha: new Date()
     };
 
+    const userData = {
+      tarjeta: cardNumber,
+      saldo: 500000
+    };
+
     return Promise.all([
       setDoc(userRef, { tarjeta: cardNumber, saldo: 500000 }, { merge: true }),
       addDoc(movRef, movimiento)
@@ -135,8 +150,14 @@ export class AuthService {
     if (!uid) return Promise.reject('No user');
     const ref = doc(this.firestore, `users/${uid}`);
     console.log('prueba 1');
-    return setDoc(ref, { limite_mensual: limit }, { merge: true });
+
+    return setDoc(ref, { limiteMensual: limit }, { merge: true })
+      .then(() => {
+        this.cardService.notifyLimitUpdate(); // 👈 Notificamos que el límite fue actualizado
+        return this.refreshUserData();
+      });
   }
+
 
   updateSaldo(nuevoSaldo: number): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
@@ -156,5 +177,17 @@ export class AuthService {
     );
 
   }
+
+  reset() {
+    this.userCache = null;
+    this.userSubject.next(null);
+    this.currentUserSubject.next(null);
+  }
+
+  getUidUsuario(): string | null {
+    return this.auth.currentUser?.uid || localStorage.getItem('userUid');
+  }
+
+
 }
 

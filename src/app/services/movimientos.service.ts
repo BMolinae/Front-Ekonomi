@@ -7,16 +7,17 @@ export class MovimientosService {
   constructor(
     private firestore: Firestore,
     private auth: Auth
-  ) {}
+  ) { }
 
   async agregarMovimiento(
     tipo: 'ingreso' | 'gasto',
     descripcion: string,
     monto: number,
-    categoria: string
+    categoria: string,
+    idTarjeta: string
   ): Promise<void> {
-    const uid = this.auth.currentUser?.uid;
-    console.log('1');
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+
     if (!uid) throw new Error('Usuario no autenticado');
 
     const ref = collection(this.firestore, `users/${uid}/movimientos`);
@@ -25,13 +26,15 @@ export class MovimientosService {
       descripcion,
       monto,
       categoria_nombre: categoria,
+      idTarjeta,
       fecha: Timestamp.now()
     });
-    
   }
 
+
   async obtenerMovimientos(): Promise<any[]> {
-    const uid = this.auth.currentUser?.uid;
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+
     console.log('2');
     if (!uid) throw new Error('Usuario no autenticado');
 
@@ -48,6 +51,29 @@ export class MovimientosService {
         fecha: data.fecha?.toDate ? data.fecha.toDate() : data.fecha
       };
     });
-     
+
   }
+
+  async obtenerMovimientosPorTarjeta(tarjetaId: string): Promise<any[]> {
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) throw new Error('Usuario no autenticado');
+
+    const ref = collection(this.firestore, `users/${uid}/movimientos`);
+    const q = query(ref, orderBy('fecha', 'desc'));
+    const snapshot = await getDocs(q);
+
+    // Filtramos manualmente por idTarjeta
+    return snapshot.docs
+      .map(doc => {
+        const data: any = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          categoria_nombre: data.categoria_nombre || data.categoria || '-',
+          fecha: data.fecha?.toDate ? data.fecha.toDate() : data.fecha
+        };
+      })
+      .filter(mov => mov.idTarjeta === tarjetaId);
+  }
+
 }
