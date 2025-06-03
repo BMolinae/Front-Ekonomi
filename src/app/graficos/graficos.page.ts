@@ -35,6 +35,8 @@ export class GraficosPage implements OnInit {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
   @ViewChild('lineChart') lineChart?: BaseChartDirective;
   @ViewChild('pieChart') pieChart?: BaseChartDirective;
+  @ViewChild('doughnutChart') doughnutChart?: BaseChartDirective;
+
 
   user: any;
   monthlyLimit = 0;
@@ -84,7 +86,7 @@ export class GraficosPage implements OnInit {
             const value = context.parsed;
             let total = 0;
             if (context.dataset && context.dataset.data) {
-                total = context.dataset.data.reduce((sum: number, val: any) => sum + Number(val), 0) as number;
+              total = context.dataset.data.reduce((sum: number, val: any) => sum + Number(val), 0) as number;
             }
             const percentage = total ? ((value / total) * 100).toFixed(1) : '0';
             return `${label}: $${value.toLocaleString('es-CL')} (${percentage}%)`;
@@ -95,9 +97,9 @@ export class GraficosPage implements OnInit {
         formatter: (value: number, context) => {
           const dataset = context.chart.data.datasets[0];
           let total = 0;
-            if (dataset && dataset.data) {
-                total = dataset.data.reduce((sum: number, val: any) => sum + Number(val), 0) as number;
-            }
+          if (dataset && dataset.data) {
+            total = dataset.data.reduce((sum: number, val: any) => sum + Number(val), 0) as number;
+          }
           const percentage = total ? (value / total) * 100 : 0;
           return percentage > 5 ? `${percentage.toFixed(1)}%` : '';
         },
@@ -193,7 +195,7 @@ export class GraficosPage implements OnInit {
           font: {
             size: 12
           },
-          callback: function(value) {
+          callback: function (value) {
             return '$' + Number(value).toLocaleString('es-CL');
           }
         }
@@ -251,7 +253,7 @@ export class GraficosPage implements OnInit {
           font: {
             size: 11
           },
-          callback: function(value) {
+          callback: function (value) {
             return '$' + Number(value).toLocaleString('es-CL');
           }
         }
@@ -262,11 +264,11 @@ export class GraficosPage implements OnInit {
   constructor(
     private authService: AuthService,
     private movimientosService: MovimientosService
-  ) {}
+  ) { }
 
   async ngOnInit() {
     this.user = await this.authService.getCurrentUser();
-    this.monthlyLimit = this.user?.limite_mensual || 0;
+    this.monthlyLimit = this.user?.limiteMensual || 0;
 
     const now = new Date();
     const monthNames = [
@@ -282,9 +284,13 @@ export class GraficosPage implements OnInit {
     const movimientos = await this.movimientosService.obtenerMovimientos();
     this.procesarDatos(movimientos);
     this.generateLimitMessage();
-    
+
+
     // Forzar actualización de gráficos
     setTimeout(() => {
+      if (this.doughnutChart) {
+        this.doughnutChart.update();
+      }
       if (this.chart) {
         this.chart.update();
       }
@@ -345,7 +351,7 @@ export class GraficosPage implements OnInit {
 
     // Ordenar categorías por monto (de mayor a menor)
     const sortedCategories = Object.entries(gastosPorCategoria)
-      .sort(([,a], [,b]) => b - a);
+      .sort(([, a], [, b]) => b - a);
 
     let colorIndex = 0;
 
@@ -386,8 +392,8 @@ export class GraficosPage implements OnInit {
 
   private configurarDoughnutChart() {
     const usedColor = this.usedPercentage >= 90 ? '#e74c3c' :
-                      this.usedPercentage >= 70 ? '#f39c12' :
-                      '#4ecdc4';
+      this.usedPercentage >= 70 ? '#f39c12' :
+        '#4ecdc4';
 
     this.doughnutData = {
       labels: ['Usado', 'Disponible'],
@@ -427,7 +433,7 @@ export class GraficosPage implements OnInit {
       });
 
       const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-                          'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
       meses.push({
         nombre: monthNames[fecha.getMonth()],
@@ -509,12 +515,12 @@ export class GraficosPage implements OnInit {
     if (this.categoryColors[categoria]) {
       return this.categoryColors[categoria];
     }
-    
+
     // Si no existe, usar colores de respaldo
     if (index < this.fallbackColors.length) {
       return this.fallbackColors[index];
     }
-    
+
     // Como último recurso, generar color dinámico
     return this.generateDynamicColor(categoria);
   }
@@ -533,7 +539,7 @@ export class GraficosPage implements OnInit {
 
   private generateLimitMessage() {
     if (this.monthlyLimit <= 0) {
-        this.limitMessage = 'No has definido un límite mensual.';
+      this.limitMessage = 'No has definido un límite mensual.';
     } else if (this.usedLimit >= this.monthlyLimit) {
       this.limitMessage = '¡Has alcanzado tu límite mensual!';
     } else if (this.usedPercentage >= 90) {
