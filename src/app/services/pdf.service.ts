@@ -2,9 +2,8 @@ import { Injectable } from '@angular/core';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
+import { FileOpener } from '@capacitor-community/file-opener';
 import { Platform } from '@ionic/angular';
-import { Capacitor } from '@capacitor/core';
 import { AlertController } from '@ionic/angular';
 
 @Injectable({
@@ -12,17 +11,10 @@ import { AlertController } from '@ionic/angular';
 })
 export class PdfService {
   constructor(
-    private fileOpener: FileOpener,
     private platform: Platform,
     private alertController: AlertController
   ) {}
 
-  /**
-   * Genera un PDF con los movimientos del usuario
-   * @param usuario Datos del usuario
-   * @param movimientos Lista de movimientos
-   * @param resumen Resumen financiero
-   */
   async generarPDF(
     usuario: any,
     movimientos: any[],
@@ -105,34 +97,34 @@ export class PdfService {
         );
       }
 
-      // 6. Guardar el archivo
-      const pdfOutput = doc.output('datauristring');
-      const base64 = pdfOutput.split(',')[1];
+      // 6. Guardar el archivo según la plataforma
       const fileName = `ekonomi_${usuario.username}_${new Date().getTime()}.pdf`;
+      const pdfBlob = doc.output('blob');
 
-      // 7. Escribir el archivo en el sistema
-      const fileResult = await Filesystem.writeFile({
-        path: fileName,
-        data: base64,
-        directory: this.getBestDirectory(),
-        encoding: Encoding.UTF8,
-      });
-
-      // 8. Obtener URI compatible con la plataforma
-      let fileUri = fileResult.uri;
-      if (this.platform.is('android')) {
-        fileUri = Capacitor.convertFileSrc(fileUri);
-      }
-
-      // 9. Abrir el archivo
-      await this.fileOpener.open(fileUri, 'application/pdf')
-        .catch(async (error) => {
-          console.error('Error al abrir PDF:', error);
-          await this.showAlert(
-            'Archivo descargado',
-            `El PDF se guardó correctamente pero no se pudo abrir automáticamente. Busca el archivo ${fileName} en tu dispositivo.`
-          );
+      if (this.platform.is('hybrid')) {
+        // Para dispositivos móviles
+        const base64Data = await this.blobToBase64(pdfBlob);
+        
+        await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8,
         });
+
+        const fileUri = await Filesystem.getUri({
+          directory: Directory.Documents,
+          path: fileName
+        });
+
+        await FileOpener.open({ 
+          filePath: fileUri.uri,
+          contentType: 'application/pdf'
+        });
+      } else {
+        // Para navegador
+        this.downloadInBrowser(URL.createObjectURL(pdfBlob), fileName);
+      }
 
     } catch (error) {
       console.error('Error en generación de PDF:', error);
@@ -144,19 +136,18 @@ export class PdfService {
     }
   }
 
-  /**
-   * Determina el mejor directorio según la plataforma
-   */
-  private getBestDirectory(): Directory {
-    if (this.platform.is('ios')) {
-      return Directory.Documents;
-    }
-    return Directory.ExternalStorage; // Para Android
+  private async blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]); // Solo la parte base64
+      };
+      reader.readAsDataURL(blob);
+    });
   }
 
-  /**
-   * Formatea la fecha para mostrarla en el PDF
-   */
   private formatDate(dateString: string): string {
     try {
       const date = new Date(dateString);
@@ -166,9 +157,6 @@ export class PdfService {
     }
   }
 
-  /**
-   * Muestra una alerta al usuario
-   */
   private async showAlert(header: string, message: string): Promise<void> {
     const alert = await this.alertController.create({
       header,
@@ -178,39 +166,16 @@ export class PdfService {
     await alert.present();
   }
 
-  /**
-   * Método alternativo para navegadores web
-   */
-  async downloadInBrowser(pdfData: string, filename: string): Promise<void> {
-    if (this.platform.is('mobileweb') || this.platform.is('desktop')) {
-      const blob = this.base64ToBlob(pdfData.split(',')[1], 'application/pdf');
-      const url = window.URL.createObjectURL(blob);
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      
-      setTimeout(() => {
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      }, 100);
-    }
-  }
-
-  /**
-   * Convierte base64 a Blob
-   */
-  private base64ToBlob(base64: string, mimeType: string): Blob {
-    const byteCharacters = atob(base64);
-    const byteNumbers = new Array(byteCharacters.length);
+  private downloadInBrowser(url: string, filename: string): void {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
     
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: mimeType });
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 100);
   }
 }
