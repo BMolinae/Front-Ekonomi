@@ -122,16 +122,19 @@ export class GraficosPage implements OnInit {
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const label = context.label || '';
-            const value = context.parsed;
-            const percentage = this.monthlyLimit ? ((value / this.monthlyLimit) * 100).toFixed(1) : '0';
-            return `${label}: $${value.toLocaleString('es-CL')} (${percentage}%)`;
-          }
-        }
-      },
+tooltip: {
+  callbacks: {
+    label: (context) => {
+      const label = context.label || '';
+      // Mostrar los valores reales en el tooltip
+      if (label === 'Usado') {
+        return `${label}: $${this.usedLimit.toLocaleString('es-CL')} (${this.usedPercentage.toFixed(1)}%)`;
+      } else {
+        return `${label}: $${this.limitLeft.toLocaleString('es-CL')} (${this.availablePercentage.toFixed(1)}%)`;
+      }
+    }
+  }
+},
       datalabels: {
         display: false
       }
@@ -390,21 +393,25 @@ export class GraficosPage implements OnInit {
     console.log('Category Details:', this.categoryDetails);
   }
 
-  private configurarDoughnutChart() {
-    const usedColor = this.usedPercentage >= 90 ? '#e74c3c' :
-      this.usedPercentage >= 70 ? '#f39c12' :
-        '#4ecdc4';
+private configurarDoughnutChart() {
+  const usedColor = this.usedPercentage >= 90 ? '#e74c3c' :
+    this.usedPercentage >= 70 ? '#f39c12' :
+      '#4ecdc4';
 
-    this.doughnutData = {
-      labels: ['Usado', 'Disponible'],
-      datasets: [{
-        data: [this.usedLimit, this.limitLeft],
-        backgroundColor: [usedColor, '#ecf0f1'],
-        borderWidth: 0,
-        hoverOffset: 5
-      }]
-    };
-  }
+  // Usar porcentajes en lugar de valores absolutos
+  const usedPercentageForChart = Math.min(this.usedPercentage, 100);
+  const availablePercentageForChart = Math.max(0, 100 - usedPercentageForChart);
+
+  this.doughnutData = {
+    labels: ['Usado', 'Disponible'],
+    datasets: [{
+      data: [usedPercentageForChart, availablePercentageForChart], // ← CAMBIADO
+      backgroundColor: [usedColor, '#ecf0f1'],
+      borderWidth: 0,
+      hoverOffset: 5
+    }]
+  };
+}
 
   private configurarLineChart(movimientos: any[]) {
     const now = new Date();
