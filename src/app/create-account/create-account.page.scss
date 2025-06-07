@@ -64,20 +64,20 @@ ion-content {
 .register-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
   width: 100%;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 24px;
   margin: 0;
-  
+  min-height: 100vh;
 }
 
 ion-item.valid-password {
-  --highlight-color-focused: var(--ion-color-success); /* cambia el color del borde cuando está enfocado */
-  --border-color: var(--ion-color-success); /* borde verde */
+  --highlight-color-focused: var(--ion-color-success);
+  --border-color: var(--ion-color-success);
 }
-
 
 .password-requirements {
   margin-top: 8px;
@@ -87,16 +87,15 @@ ion-item.valid-password {
 }
 
 .password-item {
-  background: #f0e8e8; /* Blanco */
+  background: #f0e8e8;
   border-radius: 12px;
   margin-top: 15px;
   --padding-start: 10px;
   --inner-padding-end: 10px;
-  --background: transparent; /* Asegura que el fondo externo sea transparente */
-  --color: black; /* Color del texto */
-  --highlight-color-focused: transparent; /* Quita el borde azul al hacer focus */
+  --background: transparent;
+  --color: black;
+  --highlight-color-focused: transparent;
 }
-
 
 .input-icon {
   color: #555;
@@ -104,18 +103,21 @@ ion-item.valid-password {
 }
 
 .validation-list {
-  font-size: 14px;
-  margin-top: 10px;
+  font-size: 12px;
+  margin-top: 8px;
   margin-left: 15px;
+  margin-bottom: 8px;
+  padding: 0;
 }
 
 .validation-list ion-icon {
-  margin-right: 6px;
+  margin-right: 4px;
   vertical-align: middle;
+  font-size: 12px;
 }
 
 .background-gradient {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -128,10 +130,11 @@ ion-item.valid-password {
 
 .welcome-container {
   text-align: left;
-  margin: 60px 0 40px;
+  margin: 40px 0 30px;
   padding: 0 8px;
   position: relative;
   animation: fadeIn 0.8s ease-in-out;
+  flex-shrink: 0;
 }
 
 .welcome-icon {
@@ -139,12 +142,12 @@ ion-item.valid-password {
 }
 
 .welcome-icon ion-icon {
-  font-size: 32px;
+  font-size: 28px;
   color: var(--accent-turquoise);
 }
 
 .welcome-title {
-  font-size: 30px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--primary-blue);
   margin: 0 0 12px 0;
@@ -153,11 +156,11 @@ ion-item.valid-password {
 }
 
 .welcome-subtitle {
-  font-size: 17px;
+  font-size: 16px;
   color: var(--placeholder-color);
   margin: 0 0 15px 0;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.4;
   opacity: 0.9;
 }
 
@@ -173,6 +176,8 @@ ion-item.valid-password {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
+  padding-bottom: 80px;
 }
 
 .input-item {
@@ -182,8 +187,9 @@ ion-item.valid-password {
   --inner-padding-end: 16px;
   --inner-padding-start: 16px;
   --padding-start: 0;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  flex-shrink: 0;
 }
 
 ion-item.input-item {
@@ -215,7 +221,7 @@ ion-item.input-item ion-input {
 
 ion-item.input-item::part(native) {
   padding-left: 16px;
-  height: 60px;
+  height: 50px;
   display: flex;
   align-items: center;
 }
@@ -252,11 +258,16 @@ ion-item.input-item.ion-valid ion-label[position="floating"] {
   --color: var(--light-text);
   --box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
   font-weight: bold;
-  height: 52px;
+  height: 48px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-top: 10px;
+  margin-top: 16px;
+  margin-bottom: 16px;
   transition: all 0.3s ease;
+  position: sticky;
+  bottom: 16px;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 html, body {
@@ -273,65 +284,21 @@ app-root, app-home, app-register {
   width: 100%;
 }
 
-@media (max-height: 640px) {
-  .welcome-container {
-    margin: 30px 0 25px;
-  }
-
-  .welcome-title {
-    font-size: 24px;
-    margin-bottom: 8px;
-  }
-
-  .welcome-subtitle {
-    font-size: 15px;
-  }
-
-  .input-item {
-    margin-bottom: 18px;
-  }
-
-  .register-button {
-    margin-top: 5px;
-    height: 48px;
-  }
-}
-
-@media (min-height: 800px) {
-  .welcome-container {
-    margin: 80px 0 50px;
-  }
-
-  .register-button {
-    margin-top: 30px;
-  }
-
-  .input-item {
-    margin-bottom: 30px;
-  }
-
-  .welcome-icon ion-icon {
-    font-size: 36px;
-  }
-
-  .welcome-title {
-    font-size: 32px;
-  }
-}
-
 .footer {
   text-align: center;
-  padding: 20px 0;
+  padding: 16px 0;
   color: var(--primary-blue);
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.8;
+  flex-shrink: 0;
+  margin-top: auto;
 }
 
 .form-content ion-text[color="danger"] {
   display: block;
-  margin-top: -18px;
-  margin-bottom: 12px;
-  font-size: 13px;
+  margin-top: -12px;
+  margin-bottom: 8px;
+  font-size: 12px;
   padding-left: 10px;
   color: #eb445a;
 }
@@ -373,4 +340,192 @@ ion-input,
 ion-text,
 .custom-label {
   font-family: 'Flexo', sans-serif;
+}
+
+/* Responsive design mejorado para celulares pequeños */
+@media (max-height: 640px) {
+  .register-container {
+    padding: 16px;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .welcome-container {
+    margin: 20px 0 20px;
+  }
+
+  .welcome-title {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  .welcome-subtitle {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .welcome-icon ion-icon {
+    font-size: 24px;
+  }
+
+  .input-item {
+    margin-bottom: 12px;
+  }
+
+  .validation-list {
+    font-size: 11px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+  }
+
+  .register-button {
+    margin-top: 12px;
+    margin-bottom: 12px;
+    height: 44px;
+    position: relative;
+    bottom: auto;
+  }
+
+  .form-content {
+    padding-bottom: 40px;
+  }
+
+  .footer {
+    padding: 12px 0;
+    font-size: 10px;
+  }
+
+  .form-content ion-text[color="danger"] {
+    margin-top: -8px;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+}
+
+/* Para celulares muy pequeños */
+@media (max-height: 568px) {
+  .register-container {
+    padding: 12px;
+  }
+  
+  .welcome-container {
+    margin: 16px 0 16px;
+  }
+
+  .welcome-title {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+
+  .welcome-subtitle {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .welcome-icon ion-icon {
+    font-size: 22px;
+  }
+
+  .input-item {
+    margin-bottom: 10px;
+  }
+
+  ion-item.input-item::part(native) {
+    height: 44px;
+  }
+
+  .validation-list {
+    font-size: 10px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+
+  .register-button {
+    height: 40px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .form-content {
+    padding-bottom: 30px;
+  }
+
+  .footer {
+    padding: 8px 0;
+    font-size: 9px;
+  }
+
+  .welcome-accent-line {
+    width: 40px;
+    height: 3px;
+    margin-top: 10px;
+  }
+}
+
+/* Para pantallas medianas */
+@media (min-height: 641px) and (max-height: 799px) {
+  .welcome-container {
+    margin: 50px 0 35px;
+  }
+
+  .register-button {
+    margin-top: 20px;
+    height: 50px;
+  }
+
+  .input-item {
+    margin-bottom: 20px;
+  }
+}
+
+/* Para pantallas grandes */
+@media (min-height: 800px) {
+  .welcome-container {
+    margin: 80px 0 50px;
+  }
+
+  .register-button {
+    margin-top: 30px;
+    height: 52px;
+  }
+
+  .input-item {
+    margin-bottom: 30px;
+  }
+
+  .welcome-icon ion-icon {
+    font-size: 36px;
+  }
+
+  .welcome-title {
+    font-size: 32px;
+  }
+
+  .validation-list {
+    font-size: 14px;
+  }
+}
+
+/* Asegurar que el contenido sea scrolleable en pantallas muy pequeñas */
+@media (max-height: 500px) {
+  .register-container {
+    min-height: 100vh;
+    height: auto;
+    padding: 8px;
+  }
+  
+  .welcome-container {
+    margin: 12px 0 12px;
+  }
+  
+  .form-content {
+    padding-bottom: 20px;
+  }
+  
+  .register-button {
+    position: relative;
+    bottom: auto;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
 }
