@@ -84,23 +84,40 @@ export class GraficosPage implements OnInit {
           label: (context) => {
             const label = context.label || '';
             const value = context.parsed;
-            let total = 0;
-            if (context.dataset && context.dataset.data) {
-              total = context.dataset.data.reduce((sum: number, val: any) => sum + Number(val), 0) as number;
+            
+            // Si es el límite disponible, mostrar información diferente
+            if (label === 'Límite disponible') {
+              return `${label}: $${value.toLocaleString('es-CL')} disponible`;
             }
-            const percentage = total ? ((value / total) * 100).toFixed(1) : '0';
-            return `${label}: $${value.toLocaleString('es-CL')} (${percentage}%)`;
+            
+            // Para las categorías normales, calcular porcentaje basado en el límite mensual
+            if (this.monthlyLimit > 0) {
+              const percentage = ((value / this.monthlyLimit) * 100).toFixed(1);
+              return `${label}: $${value.toLocaleString('es-CL')} (${percentage}% del límite)`;
+            } else {
+              // Si no hay límite, usar el total de gastos
+              let total = 0;
+              if (context.dataset && context.dataset.data) {
+                total = context.dataset.data.reduce((sum: number, val: any) => sum + Number(val), 0) as number;
+              }
+              const percentage = total ? ((value / total) * 100).toFixed(1) : '0';
+              return `${label}: $${value.toLocaleString('es-CL')} (${percentage}%)`;
+            }
           }
         }
       },
       datalabels: {
         formatter: (value: number, context) => {
-          const dataset = context.chart.data.datasets[0];
-          let total = 0;
-          if (dataset && dataset.data) {
-            total = dataset.data.reduce((sum: number, val: any) => sum + Number(val), 0) as number;
+          const label = context.chart.data.labels?.[context.dataIndex] as string;
+          
+          // No mostrar porcentaje en el límite disponible si es muy grande
+          if (label === 'Límite disponible') {
+            const percentage = this.monthlyLimit ? (value / this.monthlyLimit) * 100 : 0;
+            return percentage > 10 ? `${percentage.toFixed(1)}%` : '';
           }
-          const percentage = total ? (value / total) * 100 : 0;
+          
+          // Para las categorías normales
+          const percentage = this.monthlyLimit ? (value / this.monthlyLimit) * 100 : 0;
           return percentage > 5 ? `${percentage.toFixed(1)}%` : '';
         },
         font: {
@@ -108,7 +125,10 @@ export class GraficosPage implements OnInit {
           size: 12,
           family: 'Flexo, Segoe UI, sans-serif',
         },
-        color: '#fff',
+        color: (context) => {
+          const label = context.chart.data.labels?.[context.dataIndex] as string;
+          return label === 'Límite disponible' ? '#666' : '#fff';
+        },
         anchor: 'center',
         align: 'center'
       }
@@ -352,28 +372,72 @@ tooltip: {
 
     this.categoryDetails = [];
 
-    // Ordenar categorías por monto (de mayor a menor)
-    const sortedCategories = Object.entries(gastosPorCategoria)
-      .sort(([, a], [, b]) => b - a);
+    // Verificar si hay límite mensual definido
+    if (this.monthlyLimit > 0) {
+      // Ordenar categorías por monto (de mayor a menor)
+      const sortedCategories = Object.entries(gastosPorCategoria)
+        .sort(([, a], [, b]) => b - a);
 
-    let colorIndex = 0;
+      let colorIndex = 0;
 
-    for (const [categoria, monto] of sortedCategories) {
-      const percentage = this.totalExpenses > 0 ? ((monto / this.totalExpenses) * 100) : 0;
-      const color = this.obtenerColorCategoria(categoria, colorIndex);
+      // Agregar categorías con gastos
+      for (const [categoria, monto] of sortedCategories) {
+        const percentage = (monto / this.monthlyLimit) * 100;
+        const color = this.obtenerColorCategoria(categoria, colorIndex);
 
-      labels.push(categoria);
-      data.push(monto);
-      backgroundColors.push(color);
+        labels.push(categoria);
+        data.push(monto);
+        backgroundColors.push(color);
 
-      this.categoryDetails.push({
-        name: categoria,
-        amount: monto,
-        percentage: Math.round(percentage),
-        color: color
-      });
+        this.categoryDetails.push({
+          name: categoria,
+          amount: monto,
+          percentage: Math.round(percentage),
+          color: color
+        });
 
-      colorIndex++;
+        colorIndex++;
+      }
+
+      // Agregar la porción no utilizada del límite si existe
+      if (this.limitLeft > 0) {
+        const availablePercentage = (this.limitLeft / this.monthlyLimit) * 100;
+        
+        labels.push('Límite disponible');
+        data.push(this.limitLeft);
+        backgroundColors.push('#ecf0f1'); // Color gris claro
+
+        this.categoryDetails.push({
+          name: 'Límite disponible',
+          amount: this.limitLeft,
+          percentage: Math.round(availablePercentage),
+          color: '#ecf0f1'
+        });
+      }
+    } else {
+      // Si no hay límite mensual, mostrar solo las categorías (comportamiento original)
+      const sortedCategories = Object.entries(gastosPorCategoria)
+        .sort(([, a], [, b]) => b - a);
+
+      let colorIndex = 0;
+
+      for (const [categoria, monto] of sortedCategories) {
+        const percentage = this.totalExpenses > 0 ? ((monto / this.totalExpenses) * 100) : 0;
+        const color = this.obtenerColorCategoria(categoria, colorIndex);
+
+        labels.push(categoria);
+        data.push(monto);
+        backgroundColors.push(color);
+
+        this.categoryDetails.push({
+          name: categoria,
+          amount: monto,
+          percentage: Math.round(percentage),
+          color: color
+        });
+
+        colorIndex++;
+      }
     }
 
     this.pieData = {

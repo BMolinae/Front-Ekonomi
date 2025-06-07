@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, AlertController, Platform } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { Firestore, collection, getDocs } from '@angular/fire/firestore';
 import { Chart, registerables } from 'chart.js';
@@ -7,8 +7,6 @@ import { PdfService } from '../services/pdf.service';
 import { AuthService } from '../services/auth.service';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
-import { Platform } from '@ionic/angular';
-import { AlertController } from '@ionic/angular';
 import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
 
 Chart.register(...registerables);
@@ -16,12 +14,10 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-documentos',
   standalone: true,
-  imports: [
-    IonicModule,
-    CommonModule
-  ],
+  imports: [IonicModule, CommonModule],
   templateUrl: './documentos.page.html',
   styleUrls: ['./documentos.page.scss'],
+  providers: [AndroidPermissions] // ✅ Proveedor agregado
 })
 export class DocumentosPage implements OnInit {
   charts = [
@@ -37,7 +33,7 @@ export class DocumentosPage implements OnInit {
     private platform: Platform,
     private alertController: AlertController,
     private androidPermissions: AndroidPermissions
-  ) { }
+  ) {}
 
   async ngOnInit() {
     if (this.platform.is('android')) {
@@ -50,12 +46,12 @@ export class DocumentosPage implements OnInit {
       const hasPermission = await this.androidPermissions.checkPermission(
         this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE
       );
-      
+
       if (!hasPermission.hasPermission) {
         const result = await this.androidPermissions.requestPermission(
           this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE
         );
-        
+
         if (!result.hasPermission) {
           this.showErrorAlert('Se necesitan permisos de almacenamiento para descargar archivos');
         }
@@ -120,7 +116,6 @@ export class DocumentosPage implements OnInit {
           contentType: 'text/csv'
         });
       } else {
-        // Para navegador
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -146,7 +141,6 @@ export class DocumentosPage implements OnInit {
 
       if (this.platform.is('hybrid')) {
         const base64data = canvas.toDataURL('image/png').split(',')[1];
-        
         await Filesystem.writeFile({
           path: fileName,
           data: base64data,
@@ -164,7 +158,6 @@ export class DocumentosPage implements OnInit {
           contentType: 'image/png'
         });
       } else {
-        // Para navegador
         const dataUrl = canvas.toDataURL('image/png');
         const link = document.createElement('a');
         link.download = fileName;
