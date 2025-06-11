@@ -13,6 +13,7 @@ export class AuthService {
   private userCache: any = null;
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private cacheKey = 'user_financial_data';
 
   constructor(
     private auth: Auth,
@@ -117,45 +118,80 @@ export class AuthService {
   }
 
 
-  addCard(cardNumber: string): Promise<void> {
+  async addCard(cardData: {
+    number: string,
+    name: string,
+    expiry: string,
+    cvv: string,
+    type: string
+  }): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
-    if (!uid) return Promise.reject('No user');
+    if (!uid) throw new Error('Usuario no autenticado');
 
     const userRef = doc(this.firestore, `users/${uid}`);
     const movRef = collection(this.firestore, `users/${uid}/movimientos`);
-    console.log('prueba 4');
 
+    // 1. Actualizar datos de la tarjeta
+    await setDoc(userRef, {
+      tarjeta: cardData.number.slice(-4),
+      cardType: cardData.type,
+      cardFullData: { // Opcional: guardar todos los datos cifrados en producción
+        name: cardData.name,
+        expiry: cardData.expiry,
+        cvv: cardData.cvv
+      }
+    }, { merge: true });
+
+    // 2. Crear movimiento de recarga
     const movimiento = {
       tipo: 'ingreso',
-      descripcion: 'Saldo inicial al agregar tarjeta',
+      descripcion: 'Recarga inicial por agregar tarjeta',
       monto: 500000,
-      fecha: new Date()
+      fecha: new Date(),
+      categoria: 'Recarga'
     };
 
-    const userData = {
-      tarjeta: cardNumber,
-      saldo: 500000
-    };
+    await addDoc(movRef, movimiento);
 
-    return Promise.all([
-      setDoc(userRef, { tarjeta: cardNumber, saldo: 500000 }, { merge: true }),
-      addDoc(movRef, movimiento)
-    ]).then(() => {
-      return;
-    });
+    // 3. Actualizar saldo
+    const currentUser = await this.getCurrentUser();
+    const nuevoSaldo = (currentUser?.saldo || 0) + 500000;
+    await this.updateSaldo(nuevoSaldo);
   }
 
-  setLimit(limit: number): Promise<void> {
+  private determineCardType(number: string): string {
+    const firstDigit = number.charAt(0);
+    switch (firstDigit) {
+      case '4': return 'Visa';
+      case '5': return 'Mastercard';
+      case '3': return 'American Express';
+      default: return 'Otra';
+    }
+  }
+
+  async setLimit(limit: number, currentBalance: number): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
     if (!uid) return Promise.reject('No user');
-    const ref = doc(this.firestore, `users/${uid}`);
-    console.log('prueba 1');
 
+    if (limit > currentBalance) {
+      return Promise.reject('El límite no puede ser mayor al saldo disponible');
+    }
+
+    const ref = doc(this.firestore, `users/${uid}`);
     return setDoc(ref, { limiteMensual: limit }, { merge: true })
       .then(() => {
-        this.cardService.notifyLimitUpdate(); // 👈 Notificamos que el límite fue actualizado
+        this.cardService.notifyLimitUpdate();
         return this.refreshUserData();
       });
+  }
+
+  async cacheUserData(data: any): Promise<void> {
+    localStorage.setItem(this.cacheKey, JSON.stringify(data));
+  }
+
+  async getCachedUserData(): Promise<any> {
+    const cached = localStorage.getItem(this.cacheKey);
+    return cached ? JSON.parse(cached) : null;
   }
 
 

@@ -1,5 +1,3 @@
-<!-- src/app/dashboard/dashboard.page.html -->
-
 <ion-content class="dashboard-container">
 
   <ion-refresher slot="fixed" #refresher (ionRefresh)="actualizarTodo($event)">
@@ -8,8 +6,7 @@
     </ion-refresher-content>
   </ion-refresher>
 
-
-  <!-- Fondo y panel de usuario (idéntico al anterior) -->
+  <!-- Fondo y panel de usuario -->
   <div class="background-gradient"></div>
   <div class="background-circle circle-1"></div>
   <div class="background-circle circle-2"></div>
@@ -52,10 +49,7 @@
     </div>
   </div>
 
-  <!-- Fondo transparente para cerrar el panel al hacer clic fuera -->
-  <div class="overlay-backdrop" *ngIf="isUserPanelExpanded" (click)="toggleUserPanel()">
-  </div>
-
+  <div class="overlay-backdrop" *ngIf="isUserPanelExpanded" (click)="toggleUserPanel()"></div>
 
   <div class="content-wrapper">
     <!-- Header -->
@@ -66,13 +60,12 @@
 
     <!-- Main Section -->
     <div class="main-section">
-
       <ion-card class="account-card">
         <ion-card-content>
           <!-- Información de cuenta -->
           <div class="account-info">
-            <div class="account-label">Cuenta Corriente</div>
-            <div class="account-number">{{ tarjeta || '*' }}</div>
+            <div class="account-label">{{ cardType || 'Cuenta' }}</div>
+            <div class="account-number">{{ tarjeta || '****' }}</div>
           </div>
 
           <div class="saldo-label">Saldo Disponible</div>
@@ -172,6 +165,7 @@
           <div class="indicator"></div>
         </div>
       </div>
+
       <!-- Transactions List -->
       <div class="transactions-section">
         <ion-card>
@@ -202,7 +196,6 @@
                   {{ mov.categoria }}
                 </p>
               </ion-label>
-
               <ion-badge [color]="mov.tipo==='ingreso' ? 'success' : 'danger'">
                 {{ mov.monto | number:'1.0-0' }}
               </ion-badge>
@@ -214,7 +207,6 @@
           </ion-list>
         </ion-card>
       </div>
-
-    </div><!-- fin main-section -->
-  </div><!-- fin content-wrapper -->
+    </div>
+  </div>
 </ion-content>

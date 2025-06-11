@@ -4,6 +4,9 @@ import { Auth } from '@angular/fire/auth';
 
 @Injectable({ providedIn: 'root' })
 export class MovimientosService {
+
+  private movimientosCache: any[] = [];
+
   constructor(
     private firestore: Firestore,
     private auth: Auth
@@ -32,26 +35,25 @@ export class MovimientosService {
   }
 
 
-  async obtenerMovimientos(): Promise<any[]> {
-    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+  async obtenerMovimientos(forceRefresh = false): Promise<any[]> {
+    if (!forceRefresh && this.movimientosCache.length) {
+      return this.movimientosCache;
+    }
 
-    console.log('2');
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
     if (!uid) throw new Error('Usuario no autenticado');
 
     const ref = collection(this.firestore, `users/${uid}/movimientos`);
     const q = query(ref, orderBy('fecha', 'desc'));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => {
-      const data: any = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        categoria_nombre: data.categoria_nombre || data.categoria || '-',
-        fecha: data.fecha?.toDate ? data.fecha.toDate() : data.fecha
-      };
-    });
+    this.movimientosCache = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      fecha: doc.data()['fecha']?.toDate?.() || doc.data()['fecha']
+    }));
 
+    return this.movimientosCache;
   }
 
   async obtenerMovimientosPorTarjeta(tarjetaId: string): Promise<any[]> {
