@@ -42,7 +42,6 @@ export class PdfService {
       doc.text(`Saldo actual: $${resumen.saldo.toLocaleString('es-MX')}`, 14, 54);
       doc.text(`Límite mensual: $${resumen.limite.toLocaleString('es-MX')}`, 14, 61);
       doc.text(`Gastado este mes: $${resumen.usado.toLocaleString('es-MX')}`, 14, 68);
-      doc.text(`Restante disponible: $${resumen.restante.toLocaleString('es-MX')}`, 14, 75);
 
       // 4. Tabla de movimientos
       const data = movimientos.map(m => [
