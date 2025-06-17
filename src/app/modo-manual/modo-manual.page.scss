@@ -1194,3 +1194,50 @@ ion-loading .loading-wrapper {
     --padding-end: 10px;
   }
 }
+
+// Mantén todos los estilos del dashboard original y agrega estos adicionales:
+
+.mode-switch-container {
+  margin: 14px 0 24px;
+}
+
+.mode-switch-button {
+  --background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  --background-activated: var(--secondary-blue);
+  --background-focused: var(--secondary-blue);
+  --background-hover: var(--secondary-blue);
+  --color: var(--white);
+  --border-radius: 14px;
+  --box-shadow: 0 4px 12px rgba(38, 86, 191, 0.3);
+  height: 56px;
+  font-size: 16px;
+  font-weight: 500;
+  text-transform: none;
+  transition: all 0.3s ease;
+  margin: 0;
+  
+  ion-icon {
+    font-size: 20px;
+  }
+}
+
+.mode-switch-button:hover {
+  --box-shadow: 0 6px 16px rgba(38, 86, 191, 0.4);
+  transform: translateY(-2px);
+}
+
+.mode-switch-button:active {
+  transform: translateY(0);
+  opacity: 0.9;
+}
+
+// Estilos para el botón de agregar movimiento
+.action-button.add-movement {
+  --color: var(--income-green);
+  --color-activated: var(--income-green);
+  --color-focused: var(--income-green);
+}
+
+.action-button.add-movement ion-icon {
+  color: var(--income-green);
+}

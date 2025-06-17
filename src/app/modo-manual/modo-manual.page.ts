@@ -2,33 +2,28 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AlertController, IonicModule, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { Subscription, interval } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-import { MovimientosService } from '../services/movimientos.service';
-import { FirestoreService } from '../services/firestore.service';
 import { ViewChild } from '@angular/core';
 import { IonRefresher, LoadingController } from '@ionic/angular';
-import { createAnimation } from '@ionic/angular';
 import { ModalController } from '@ionic/angular';
-import { CardService } from '../services/card.service';
 import { Storage } from '@ionic/storage-angular';
+import { ManualTransactionService } from '../services/manual-transaction.service';
 
 @Component({
-  selector: 'app-dashboard',
+  selector: 'app-modo-manual',
   standalone: true,
   imports: [IonicModule, CommonModule, RouterModule],
-  templateUrl: './dashboard.page.html',
-  styleUrls: ['./dashboard.page.scss'],
+  templateUrl: './modo-manual.page.html',
+  styleUrls: ['./modo-manual.page.scss'],
 })
-export class DashboardPage implements OnInit, OnDestroy {
+export class ModoManualPage implements OnInit, OnDestroy {
   @ViewChild('refresher', { static: false }) refresher!: IonRefresher;
   private subscription?: Subscription;
 
   // Datos del usuario
   user: any = null;
   saldo = 0;
-  tarjeta = '';
-  cardType = '';
   movimientos: any[] = [];
 
   // Estadísticas
@@ -46,38 +41,35 @@ export class DashboardPage implements OnInit, OnDestroy {
     private router: Router,
     private alertCtrl: AlertController,
     private authService: AuthService,
-    private movimientosService: MovimientosService,
-    private firestoreService: FirestoreService,
     private loadingController: LoadingController,
     private modalCtrl: ModalController,
-    private cardService: CardService,
     private storage: Storage,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private manualTransactionService: ManualTransactionService
   ) { }
 
   async ngOnInit() {
     await this.storage.create();
     this.loadCachedData();
 
-    this.authService.user$.subscribe(user => {
+    this.authService.user$.subscribe(async user => {
       this.user = user;
       if (user) {
-        this.loadData();
+        await this.loadData();
+        await this.manualTransactionService.syncLocalTransactions();
       } else {
         this.router.navigate(['/login']);
       }
     });
-
-    this.subscription = this.cardService.cardLimitUpdated$.subscribe(() => {
-      this.loadUserData();
-    });
   }
 
   private async loadCachedData() {
-    const cachedData = await this.storage.get('user_financial_data');
+    const cachedData = await this.storage.get('manual_financial_data');
     if (cachedData) {
+      this.movimientos = cachedData.movimientos || [];
       this.monthlyLimit = cachedData.monthlyLimit || 0;
       this.saldo = cachedData.saldo || 0;
+      this.computeMonthlyStats();
     }
   }
 
@@ -91,8 +83,6 @@ export class DashboardPage implements OnInit, OnDestroy {
   async loadUserData() {
     const userData = await this.authService.getCurrentUser();
     if (userData) {
-      this.tarjeta = userData.tarjeta || '';
-      this.cardType = userData.cardType || '';
       this.monthlyLimit = userData.limiteMensual || 0;
       this.saveFinancialData();
     }
@@ -106,11 +96,12 @@ export class DashboardPage implements OnInit, OnDestroy {
     await loading.present();
 
     try {
-      this.movimientos = await this.movimientosService.obtenerMovimientos();
+      this.movimientos = await this.manualTransactionService.getTransactions();
       this.computeMonthlyStats();
+      await this.saveFinancialData();
     } catch (err) {
       console.error('Error al cargar movimientos', err);
-      this.showToast('Error al cargar movimientos');
+      this.showToast('Error al cargar movimientos. Usando datos locales.');
     } finally {
       await loading.dismiss();
     }
@@ -131,24 +122,23 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     this.ingresoMes = ingresos;
     this.gastosMes = gastos;
-    this.saldo = ingresos - gastos;
+    this.saldo = ingresos - gastos; // Aquí se hace la diferencia correcta
     this.limitLeft = this.monthlyLimit - gastos;
 
     this.percentOfLimit = this.monthlyLimit > 0
       ? Math.min(Math.round((gastos / this.monthlyLimit) * 100), 100)
       : 0;
-
-    this.saveFinancialData();
   }
 
   private saveFinancialData() {
     const data = {
+      movimientos: this.movimientos,
       saldo: this.saldo,
       monthlyLimit: this.monthlyLimit,
       gastosMes: this.gastosMes,
       ingresoMes: this.ingresoMes
     };
-    this.storage.set('user_financial_data', data);
+    return this.storage.set('manual_financial_data', data);
   }
 
   async onSetLimit() {
@@ -187,31 +177,30 @@ export class DashboardPage implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  async onAddCard() {
+  async abrirModalAgregar() {
     const alert = await this.alertCtrl.create({
-      header: 'Agregar Tarjeta',
+      header: 'Agregar Movimiento Manual',
       inputs: [
         {
-          name: 'cardNumber',
+          name: 'descripcion',
           type: 'text',
-          placeholder: 'Número de tarjeta (16 dígitos)',
-          attributes: { maxlength: 16, inputmode: 'numeric' }
+          placeholder: 'Descripción'
         },
         {
-          name: 'cardName',
+          name: 'monto',
+          type: 'number',
+          placeholder: 'Monto',
+          attributes: { inputmode: 'decimal' }
+        },
+        {
+          name: 'tipo',
           type: 'text',
-          placeholder: 'Nombre del titular'
+          placeholder: 'Escribe: ingreso o gasto' // ✅ más claro
         },
         {
-          name: 'expiryDate',
-          type: 'month',
-          placeholder: 'Fecha de expiración'
-        },
-        {
-          name: 'cvv',
-          type: 'password',
-          placeholder: 'CVV (3 dígitos)',
-          attributes: { maxlength: 3, inputmode: 'numeric' }
+          name: 'categoria',
+          type: 'text',
+          placeholder: 'Categoría (opcional)'
         }
       ],
       buttons: [
@@ -219,62 +208,54 @@ export class DashboardPage implements OnInit, OnDestroy {
         {
           text: 'Guardar',
           handler: async (data) => {
+            if (!data.descripcion || !data.monto) {
+              this.showToast('Descripción y monto son requeridos');
+              return false;
+            }
+
+            // ✅ Normalizamos el texto: quita espacios y convierte a minúscula
+            const tipoLimpio = (data.tipo || '').trim().toLowerCase();
+
+            // ✅ Solo acepta 'ingreso' o 'gasto', todo lo demás será 'gasto' por defecto
+            const tipo = tipoLimpio === 'ingreso' ? 'ingreso' : 'gasto';
+
+            const newTransaction = {
+              descripcion: data.descripcion,
+              monto: +data.monto,
+              tipo,
+              categoria: data.categoria?.trim() || 'Otros',
+              fecha: new Date().toISOString()
+            };
+
             try {
-              // Validación de campos
-              if (!data.cardNumber || data.cardNumber.length !== 16) {
-                this.showToast('Número de tarjeta inválido');
-                return false;
-              }
-              if (!data.cardName) {
-                this.showToast('Ingrese el nombre del titular');
-                return false;
-              }
-              if (!data.expiryDate) {
-                this.showToast('Seleccione fecha de expiración');
-                return false;
-              }
-              if (!data.cvv || data.cvv.length !== 3) {
-                this.showToast('CVV inválido');
-                return false;
-              }
-
-              // Determinar tipo de tarjeta
-              const cardType = this.determineCardType(data.cardNumber);
-
-              // Guardar tarjeta y recargar saldo
-              await this.authService.addCard({
-                number: data.cardNumber,
-                name: data.cardName,
-                expiry: data.expiryDate,
-                cvv: data.cvv,
-                type: cardType
-              });
-
-              this.showToast(`Tarjeta ${cardType} agregada con éxito + $500,000 recargados`);
-              this.loadMovimientos();
+              await this.manualTransactionService.addTransaction(newTransaction);
+              this.movimientos.unshift(newTransaction);
+              this.computeMonthlyStats();
+              await this.saveFinancialData();
+              this.showToast('Movimiento guardado correctamente');
               return true;
-            } catch (error: any) {
-              this.showToast(error.message || 'Error al agregar tarjeta');
+            } catch (error) {
+              this.showToast('Error guardando movimiento');
               return false;
             }
           }
         }
       ]
     });
+
     await alert.present();
   }
 
-  private determineCardType(cardNumber: string): string {
-    const firstDigit = cardNumber.charAt(0);
-    switch (firstDigit) {
-      case '4': return 'Visa';
-      case '5': return 'Mastercard';
-      case '3': return 'American Express';
-      default: return 'Otra';
+
+
+  async switchToAutoMode() {
+    try {
+      await this.router.navigate(['/dashboard']);
+    } catch (error) {
+      console.error('Error al cambiar a modo automático:', error);
+      this.showToast('Error al cambiar de modo');
     }
   }
-  // Resto de métodos existentes (toggleBalance, abrirModalAgregar, etc.) se mantienen igual
-  // ... 
 
   private async showToast(message: string) {
     const toast = await this.toastController.create({
@@ -296,12 +277,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
   }
 
-  // Métodos del panel de usuario
   toggleUserPanel() {
     this.isUserPanelExpanded = !this.isUserPanelExpanded;
   }
 
-  // Métodos de navegación
   conoceTuApp() {
     this.router.navigate(['/conoce-tu-app']);
   }
@@ -314,15 +293,6 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.router.navigate(['/contactenos']);
   }
 
-  async switchToManualMode() {
-    try {
-      await this.router.navigate(['/modo-manual']);
-    } catch (error) {
-      console.error('Error al cambiar a modo manual:', error);
-      this.showToast('Error al cambiar de modo');
-    }
-  }
-
   async cerrarSesion() {
     try {
       await this.authService.logout();
@@ -332,15 +302,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
   }
 
-  // Método para mostrar/ocultar saldo
   toggleBalance() {
     this.isBalanceHidden = !this.isBalanceHidden;
   }
 
-  // Método para abrir modal de agregar movimiento
-
-
-  // Método para obtener iconos de categoría
   getCategoriaIcono(nombreCategoria: string): string {
     const iconos: Record<string, string> = {
       Transporte: 'bus-outline',
