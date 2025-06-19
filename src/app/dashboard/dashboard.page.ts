@@ -77,7 +77,6 @@ export class DashboardPage implements OnInit, OnDestroy {
     const cachedData = await this.storage.get('user_financial_data');
     if (cachedData) {
       this.monthlyLimit = cachedData.monthlyLimit || 0;
-      this.saldo = cachedData.saldo || 0;
     }
   }
 

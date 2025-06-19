@@ -1,3 +1,4 @@
+// modo-manual.page.ts (versión corregida)
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AlertController, IonicModule, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
@@ -6,9 +7,8 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { ViewChild } from '@angular/core';
 import { IonRefresher, LoadingController } from '@ionic/angular';
-import { ModalController } from '@ionic/angular';
-import { Storage } from '@ionic/storage-angular';
 import { ManualTransactionService } from '../services/manual-transaction.service';
+import { Storage } from '@ionic/storage-angular';
 
 @Component({
   selector: 'app-modo-manual',
@@ -19,7 +19,8 @@ import { ManualTransactionService } from '../services/manual-transaction.service
 })
 export class ModoManualPage implements OnInit, OnDestroy {
   @ViewChild('refresher', { static: false }) refresher!: IonRefresher;
-  private subscription?: Subscription;
+  private transactionsSubscription?: Subscription;
+  private userSubscription?: Subscription;
 
   // Datos del usuario
   user: any = null;
@@ -42,35 +43,31 @@ export class ModoManualPage implements OnInit, OnDestroy {
     private alertCtrl: AlertController,
     private authService: AuthService,
     private loadingController: LoadingController,
-    private modalCtrl: ModalController,
-    private storage: Storage,
     private toastController: ToastController,
-    private manualTransactionService: ManualTransactionService
+    private manualTransactionService: ManualTransactionService,
+    private storage: Storage
   ) { }
 
   async ngOnInit() {
     await this.storage.create();
-    this.loadCachedData();
-
-    this.authService.user$.subscribe(async user => {
-      this.user = user;
-      if (user) {
-        await this.loadData();
-        await this.manualTransactionService.syncLocalTransactions();
-      } else {
-        this.router.navigate(['/login']);
-      }
-    });
+    this.loadInitialData();
   }
 
-  private async loadCachedData() {
-    const cachedData = await this.storage.get('manual_financial_data');
-    if (cachedData) {
-      this.movimientos = cachedData.movimientos || [];
-      this.monthlyLimit = cachedData.monthlyLimit || 0;
-      this.saldo = cachedData.saldo || 0;
-      this.computeMonthlyStats();
-    }
+  private loadInitialData() {
+    this.userSubscription = this.authService.user$.subscribe({
+      next: async (user) => {
+        this.user = user;
+        if (user) {
+          await this.loadData();
+        } else {
+          this.router.navigate(['/login']);
+        }
+      },
+      error: (err) => {
+        console.error('Error al cargar usuario:', err);
+        this.showToast('Error al cargar datos del usuario');
+      }
+    });
   }
 
   private async loadData() {
@@ -81,10 +78,14 @@ export class ModoManualPage implements OnInit, OnDestroy {
   }
 
   async loadUserData() {
-    const userData = await this.authService.getCurrentUser();
-    if (userData) {
-      this.monthlyLimit = userData.limiteMensual || 0;
-      this.saveFinancialData();
+    try {
+      const userData = await this.authService.getCurrentUser();
+      if (userData) {
+        this.monthlyLimit = userData.limiteMensual || 0;
+      }
+    } catch (error) {
+      console.error('Error al cargar datos del usuario:', error);
+      throw error;
     }
   }
 
@@ -96,12 +97,29 @@ export class ModoManualPage implements OnInit, OnDestroy {
     await loading.present();
 
     try {
-      this.movimientos = await this.manualTransactionService.getTransactions();
-      this.computeMonthlyStats();
-      await this.saveFinancialData();
-    } catch (err) {
-      console.error('Error al cargar movimientos', err);
-      this.showToast('Error al cargar movimientos. Usando datos locales.');
+      if (this.transactionsSubscription) {
+        this.transactionsSubscription.unsubscribe();
+      }
+
+      this.transactionsSubscription = this.manualTransactionService.getTransactions().subscribe({
+        next: (transactions) => {
+          // Mapear las transacciones para que coincidan con la estructura del modo tarjeta
+          this.movimientos = transactions.map(t => ({
+            id: t.id,
+            tipo: t.tipo,
+            descripcion: t.descripcion,
+            monto: Math.abs(t.monto),
+            categoria_nombre: t.categoria || 'Otros',
+            fecha: t.createdAt?.toDate?.() || t.fecha || new Date()
+          }));
+
+          this.computeMonthlyStats();
+        },
+        error: (err) => {
+          console.error('Error al cargar movimientos:', err);
+          this.showToast('Error al cargar movimientos');
+        }
+      });
     } finally {
       await loading.dismiss();
     }
@@ -110,8 +128,14 @@ export class ModoManualPage implements OnInit, OnDestroy {
   private computeMonthlyStats() {
     const now = new Date();
     const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
-    const movMes = this.movimientos.filter(m => new Date(m.fecha) >= inicioMes);
 
+    // Filtrar movimientos del mes actual
+    const movMes = this.movimientos.filter(m => {
+      const fechaMov = m.fecha instanceof Date ? m.fecha : new Date(m.fecha);
+      return fechaMov >= inicioMes;
+    });
+
+    // Calcular ingresos y gastos
     const ingresos = movMes
       .filter(m => m.tipo === 'ingreso')
       .reduce((sum, m) => sum + +m.monto, 0);
@@ -120,26 +144,112 @@ export class ModoManualPage implements OnInit, OnDestroy {
       .filter(m => m.tipo === 'gasto')
       .reduce((sum, m) => sum + +m.monto, 0);
 
+    // Actualizar estadísticas
     this.ingresoMes = ingresos;
     this.gastosMes = gastos;
-    this.saldo = ingresos - gastos; // Aquí se hace la diferencia correcta
-    this.limitLeft = this.monthlyLimit - gastos;
+    this.saldo = ingresos - gastos;
+    this.limitLeft = Math.max(0, this.monthlyLimit - gastos);
 
     this.percentOfLimit = this.monthlyLimit > 0
       ? Math.min(Math.round((gastos / this.monthlyLimit) * 100), 100)
       : 0;
   }
 
-  private saveFinancialData() {
-    const data = {
-      movimientos: this.movimientos,
-      saldo: this.saldo,
-      monthlyLimit: this.monthlyLimit,
-      gastosMes: this.gastosMes,
-      ingresoMes: this.ingresoMes
-    };
-    return this.storage.set('manual_financial_data', data);
+
+  async abrirModalAgregar() {
+    const alert = await this.alertCtrl.create({
+      header: 'Agregar Movimiento Manual',
+      inputs: [
+        {
+          name: 'descripcion',
+          type: 'text',
+          placeholder: 'Descripción'
+        },
+        {
+          name: 'monto',
+          type: 'number',
+          placeholder: 'Monto',
+          attributes: {
+            inputmode: 'decimal',
+            min: '0.01'
+          }
+        },
+        {
+          name: 'tipo',
+          type: 'text',
+          placeholder: 'Tipo (ingreso/gasto)',
+          value: 'gasto'
+        },
+        {
+          name: 'categoria',
+          type: 'text',
+          placeholder: 'Categoría',
+          value: 'Otros'
+        }
+      ],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Guardar',
+          handler: async (data) => {
+            if (!data.descripcion || !data.monto) {
+              this.showToast('Descripción y monto son requeridos');
+              return false;
+            }
+
+            const montoNumber = Number(data.monto);
+            if (isNaN(montoNumber) || montoNumber <= 0) {
+              this.showToast('El monto debe ser un número positivo');
+              return false;
+            }
+
+            const tipo = data.tipo.trim().toLowerCase() === 'ingreso' ? 'ingreso' : 'gasto';
+
+            try {
+              await this.manualTransactionService.addTransaction({
+                descripcion: data.descripcion.trim(),
+                monto: tipo === 'ingreso' ? montoNumber : -montoNumber,
+                tipo,
+                categoria: data.categoria?.trim() || 'Otros',
+                fecha: new Date().toISOString()
+              });
+
+              this.showToast('Movimiento guardado correctamente');
+              return true;
+            } catch (error) {
+              console.error('Error guardando movimiento:', error);
+              this.showToast('Error al guardar movimiento');
+              return false;
+            }
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
+
+  private async showToast(message: string) {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      position: 'top'
+    });
+    await toast.present();
+  }
+
+  async actualizarTodo(event?: any) {
+    try {
+      await this.loadData();
+    } catch (error) {
+      console.error('Error al actualizar:', error);
+      this.showToast('Error al actualizar datos');
+    } finally {
+      if (event) event.target.complete();
+    }
+  }
+
+
 
   async onSetLimit() {
     const alert = await this.alertCtrl.create({
@@ -177,77 +287,6 @@ export class ModoManualPage implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  async abrirModalAgregar() {
-    const alert = await this.alertCtrl.create({
-      header: 'Agregar Movimiento Manual',
-      inputs: [
-        {
-          name: 'descripcion',
-          type: 'text',
-          placeholder: 'Descripción'
-        },
-        {
-          name: 'monto',
-          type: 'number',
-          placeholder: 'Monto',
-          attributes: { inputmode: 'decimal' }
-        },
-        {
-          name: 'tipo',
-          type: 'text',
-          placeholder: 'Escribe: ingreso o gasto' // ✅ más claro
-        },
-        {
-          name: 'categoria',
-          type: 'text',
-          placeholder: 'Categoría (opcional)'
-        }
-      ],
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Guardar',
-          handler: async (data) => {
-            if (!data.descripcion || !data.monto) {
-              this.showToast('Descripción y monto son requeridos');
-              return false;
-            }
-
-            // ✅ Normalizamos el texto: quita espacios y convierte a minúscula
-            const tipoLimpio = (data.tipo || '').trim().toLowerCase();
-
-            // ✅ Solo acepta 'ingreso' o 'gasto', todo lo demás será 'gasto' por defecto
-            const tipo = tipoLimpio === 'ingreso' ? 'ingreso' : 'gasto';
-
-            const newTransaction = {
-              descripcion: data.descripcion,
-              monto: +data.monto,
-              tipo,
-              categoria: data.categoria?.trim() || 'Otros',
-              fecha: new Date().toISOString()
-            };
-
-            try {
-              await this.manualTransactionService.addTransaction(newTransaction);
-              this.movimientos.unshift(newTransaction);
-              this.computeMonthlyStats();
-              await this.saveFinancialData();
-              this.showToast('Movimiento guardado correctamente');
-              return true;
-            } catch (error) {
-              this.showToast('Error guardando movimiento');
-              return false;
-            }
-          }
-        }
-      ]
-    });
-
-    await alert.present();
-  }
-
-
-
   async switchToAutoMode() {
     try {
       await this.router.navigate(['/dashboard']);
@@ -257,25 +296,9 @@ export class ModoManualPage implements OnInit, OnDestroy {
     }
   }
 
-  private async showToast(message: string) {
-    const toast = await this.toastController.create({
-      message,
-      duration: 3000,
-      position: 'top'
-    });
-    await toast.present();
-  }
 
-  async actualizarTodo(event?: any) {
-    try {
-      await this.loadUserData();
-      await this.loadMovimientos();
-      if (event) event.target.complete();
-    } catch (error) {
-      console.error('Error al actualizar:', error);
-      if (event) event.target.complete();
-    }
-  }
+
+
 
   toggleUserPanel() {
     this.isUserPanelExpanded = !this.isUserPanelExpanded;
@@ -320,6 +343,8 @@ export class ModoManualPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.subscription?.unsubscribe();
+    this.transactionsSubscription?.unsubscribe();
+    this.userSubscription?.unsubscribe();
   }
 }
+
