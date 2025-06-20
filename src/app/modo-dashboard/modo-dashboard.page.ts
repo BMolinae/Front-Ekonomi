@@ -15,10 +15,10 @@ import { ModoService } from '../services/modo.service';
   selector: 'app-modo-manual',
   standalone: true,
   imports: [IonicModule, CommonModule, RouterModule],
-  templateUrl: './modo-manual.page.html',
-  styleUrls: ['./modo-manual.page.scss'],
+  templateUrl: './modo-dashboard.page.html',
+  styleUrls: ['./modo-dashboard.page.scss'],
 })
-export class ModoManualPage implements OnInit, OnDestroy {
+export class ModoDashboardPage implements OnInit, OnDestroy {
   @ViewChild('refresher', { static: false }) refresher!: IonRefresher;
   private transactionsSubscription?: Subscription;
   private userSubscription?: Subscription;

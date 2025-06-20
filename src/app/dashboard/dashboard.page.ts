@@ -12,6 +12,7 @@ import { createAnimation } from '@ionic/angular';
 import { ModalController } from '@ionic/angular';
 import { CardService } from '../services/card.service';
 import { Storage } from '@ionic/storage-angular';
+import { ModoService } from '../services/modo.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,6 +24,8 @@ import { Storage } from '@ionic/storage-angular';
 export class DashboardPage implements OnInit, OnDestroy {
   @ViewChild('refresher', { static: false }) refresher!: IonRefresher;
   private subscription?: Subscription;
+
+  
 
   // Datos del usuario
   user: any = null;
@@ -52,7 +55,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private modalCtrl: ModalController,
     private cardService: CardService,
     private storage: Storage,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private modoService: ModoService
   ) { }
 
   async ngOnInit() {
@@ -249,7 +253,7 @@ export class DashboardPage implements OnInit, OnDestroy {
                 type: cardType
               });
 
-              this.showToast(`Tarjeta ${cardType} agregada con éxito + $500,000 recargados`);
+              this.showToast(`Tarjeta ${cardType} agregada con éxito!`);
               this.loadMovimientos();
               return true;
             } catch (error: any) {
@@ -315,7 +319,8 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   async switchToManualMode() {
     try {
-      await this.router.navigate(['/modo-manual']);
+      this.modoService.setModoManual(true);
+      await this.router.navigate(['/modo-dashboard']);
     } catch (error) {
       console.error('Error al cambiar a modo manual:', error);
       this.showToast('Error al cambiar de modo');

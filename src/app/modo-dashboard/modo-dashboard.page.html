@@ -1,0 +1,175 @@
+<ion-content class="dashboard-container">
+
+  <ion-refresher slot="fixed" #refresher (ionRefresh)="actualizarTodo($event)">
+    <ion-refresher-content pullingIcon="arrow-down" pullingText="Desliza para actualizar" refreshingSpinner="circles"
+      refreshingText="Actualizando...">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Fondo y panel de usuario -->
+  <div class="background-gradient"></div>
+  <div class="background-circle circle-1"></div>
+  <div class="background-circle circle-2"></div>
+
+  <!-- Panel desplegable de usuario -->
+  <div class="expandable-panel user-panel" [class.expanded]="isUserPanelExpanded">
+    <div class="expandable-header" (click)="toggleUserPanel()">
+      <div class="panel-title">
+        <ion-icon name="person-circle-outline"></ion-icon>
+        <span>{{ user?.first_name || user?.username }}</span>
+      </div>
+      <ion-icon [name]="isUserPanelExpanded ? 'chevron-up-outline' : 'chevron-down-outline'" class="toggle-icon">
+      </ion-icon>
+    </div>
+    <div class="expandable-content" [class.expanded]="isUserPanelExpanded">
+      <div class="panel-item" (click)="conoceTuApp()">
+        <div class="item-icon"><ion-icon name="phone-portrait-outline"></ion-icon></div>
+        <div class="item-content">
+          <div class="item-link">Conoce tu App</div>
+        </div>
+      </div>
+      <div class="panel-item" (click)="politicaUso()">
+        <div class="item-icon"><ion-icon name="document-text-outline"></ion-icon></div>
+        <div class="item-content">
+          <div class="item-link">Política de uso</div>
+        </div>
+      </div>
+      <div class="panel-item" (click)="contactenos()">
+        <div class="item-icon"><ion-icon name="mail-outline"></ion-icon></div>
+        <div class="item-content">
+          <div class="item-link">Contáctenos</div>
+        </div>
+      </div>
+      <div class="panel-item" (click)="cerrarSesion()">
+        <div class="item-icon"><ion-icon name="log-out-outline"></ion-icon></div>
+        <div class="item-content">
+          <div class="item-link">Cerrar Sesión</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay-backdrop" *ngIf="isUserPanelExpanded" (click)="toggleUserPanel()"></div>
+
+  <div class="content-wrapper">
+    <!-- Header -->
+    <div class="header-section">
+      <div class="logo-text">Ekonomi Manual</div>
+      <ion-icon name="person-outline" class="notification-icon" (click)="toggleUserPanel()"></ion-icon>
+    </div>
+
+    <!-- Main Section -->
+    <div class="main-section">
+      <ion-card class="account-card">
+        <ion-card-content>
+          <!-- Información de cuenta -->
+          <div class="account-info">
+            <div class="account-label">Modo Manual</div>
+            <div class="account-number">Gestión directa</div>
+          </div>
+
+          <div class="saldo-label">Saldo Disponible</div>
+          <div class="balance-section">
+            <div class="currency-symbol">$</div>
+            <div class="balance-amount">
+              {{ isBalanceHidden ? '**********' : (saldo | number:'1.0-0') }}
+            </div>
+            <div class="show-balance" (click)="toggleBalance()">
+              <ion-icon [name]="isBalanceHidden ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </div>
+          </div>
+
+          <!-- Estadísticas -->
+          <div class="account-stats">
+            <!-- Límite Disponible -->
+            <div class="stat-item limit-section">
+              <div class="stat-icon"><ion-icon name="wallet-outline"></ion-icon></div>
+              <div class="stat-content">
+                <div class="stat-label">Límite Disponible</div>
+                <div class="stat-value">{{ limitLeft | number:'1.0-0' }}</div>
+                <div class="stat-progress">
+                  <div class="progress-bar" [style.width]="percentOfLimit + '%'"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gastos e Ingresos del mes -->
+            <div class="stats-row">
+              <div class="stat-item monthly-item expenses">
+                <div class="stat-icon"><ion-icon name="trending-down-outline"></ion-icon></div>
+                <div class="stat-content">
+                  <div class="stat-label">Gastos del mes</div>
+                  <div class="stat-value">{{ gastosMes | number:'1.0-0' }}</div>
+                  <div class="small-text">{{ percentOfLimit }}% del límite</div>
+                </div>
+              </div>
+              <div class="stat-item monthly-item income">
+                <div class="stat-icon"><ion-icon name="trending-up-outline"></ion-icon></div>
+                <div class="stat-content">
+                  <div class="stat-label">Ingreso del mes</div>
+                  <div class="stat-value">{{ ingresoMes | number:'1.0-0' }}</div>
+                  <div class="small-text">Últimos 30 días</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Action Buttons - Modificado para modo manual -->
+      <div class="action-buttons">
+        <ion-button class="action-button add-movement" (click)="abrirModalAgregar()">
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          Agregar Movimiento
+        </ion-button>
+        <ion-button class="action-button set-limit" (click)="onSetLimit()">
+          <ion-icon name="options-outline" slot="start"></ion-icon>
+          Poner límite
+        </ion-button>
+      </div>
+
+      <!-- Botón para volver al modo automático -->
+      <div class="mode-switch-container">
+        <ion-button expand="block" class="mode-switch-button" (click)="switchToAutoMode()">
+          <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
+          Volver a Modo Automático
+        </ion-button>
+      </div>
+
+      <!-- Transactions List -->
+      <div class="transactions-section">
+        <ion-card>
+          <ion-card-header class="ion-no-padding ion-padding-horizontal">
+            <ion-grid>
+              <ion-row class="ion-align-items-center">
+                <ion-col>
+                  <h2>Movimientos Recientes</h2>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-header>
+
+          <ion-list class="transactions-list">
+            <ion-item *ngFor="let mov of movimientos" class="transaction-item">
+              <ion-label>
+                <h3 [ngClass]="mov.tipo">{{ mov.descripcion }}</h3>
+                <p>
+                  {{ mov.fecha | date:'short' }}
+                  <ion-icon [name]="getCategoriaIcono(mov.categoria)" slot="start"></ion-icon>
+                  {{ mov.categoria }}
+                </p>
+              </ion-label>
+              <ion-badge [color]="mov.tipo==='ingreso' ? 'success' : 'danger'">
+                {{ mov.monto | number:'1.0-0' }}
+              </ion-badge>
+            </ion-item>
+
+            <ion-item *ngIf="!movimientos.length" class="empty-transactions">
+              <div class="empty-message">No hay transacciones recientes disponibles</div>
+            </ion-item>
+          </ion-list>
+        </ion-card>
+      </div>
+    </div>
+  </div>
+</ion-content>

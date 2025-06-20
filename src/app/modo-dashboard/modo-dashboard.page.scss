@@ -13,7 +13,7 @@
   --button-hover: rgba(38, 86, 191, 0.1);
   --button-active: rgba(38, 86, 191, 0.2);
   --expense-red: #ef476f;
-  --income-green: #42a34d;
+  --income-green: #68104c;
 }
 
 @font-face {
@@ -501,20 +501,7 @@ ion-button.action-button::part(native):active {
   font-style: normal;
 }
 
-:host {
-  --primary-blue: #2656bf;
-  --secondary-blue: #4287d6;
-  --accent-turquoise: #4ecdc4;
-  --light-turquoise: #a9e4e0;
-  --white: #ffffff;
-  --light-gray: #f5f8fb;
-  --dark-text: #333333;
-  --light-text: #ffffff;
-  --transition-speed: 0.3s;
-  --hover-bg: rgba(66, 135, 214, 0.08);
-  --active-item: rgba(78, 205, 196, 0.2);
-  --font-family: 'Flexo', sans-serif;
-}
+
 
 /* Aplicación global de la fuente */
 .user-panel,

@@ -1,0 +1,177 @@
+/* src/app/chatbot/chatbot.page.scss */
+
+/* 0) Cargar la fuente Flexo */
+@font-face {
+  font-family: 'Flexo';
+  src: url('/assets/fonts/Flexo-Regular.woff2') format('woff2'),
+       url('/assets/fonts/Flexo-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  --primary-purple: #7c4dff;
+  --dark-purple: #5e35b1;
+  --light-purple: #b388ff;
+  --pale-purple: #f3e5f5;
+  --accent-pink: #ff4081;
+}
+/* 1) Asegura que la página sea columna flex y ocupe toda la pantalla */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: 'Flexo', 'Segoe UI', sans-serif;
+}
+
+/* 2) Ion-content como contenedor flex para la tarjeta */
+.chat-content {
+  --background: transparent !important;
+  background: transparent !important;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0;
+  box-sizing: border-box;
+}
+
+/* 3) La "chat-card" llena todo el content */
+.chat-card {
+  background: #fff;
+  margin: 0 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+  height: 90vh;
+  margin-top: 10px;
+}
+
+/* 4) Header interno */
+.chat-card-header {
+  background: #5e35b1;
+  color: #fff;
+  padding: 16px;
+  font-size: 1.25rem;
+  font-weight: bold;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+/* 5) Mensajes con scroll */
+.messages {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  background-color: #ffffff;
+}
+
+/* 6) Burbujas de usuario y bot */
+.user, .bot {
+  max-width: 75%;
+  padding: 10px 16px;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.user {
+  align-self: flex-end;
+  background: #5e35b1;
+  color: #ffffff;
+  border-bottom-right-radius: 0;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+.bot {
+  align-self: flex-start;
+  background: #e9eef4;
+  color: #333333;
+  border-bottom-left-radius: 0;
+  border: 1px solid #d9e0e9;
+}
+
+/* 7) Form pegado abajo dentro de la tarjeta */
+.chat-form {
+  display: flex;
+  padding: 8px 16px;
+  background: #fff;
+  border-top: 1px solid #eee;
+}
+.chat-form ion-input {
+  flex: 1;
+  --placeholder-color: var(--ion-color-medium);
+  --color: black !important;
+  color: black !important;
+  background-color: #f0f4f8;
+  border-radius: 20px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  margin: 0;
+  border: 1px solid #e0e5ea;
+}
+
+/* Asegurar que el texto dentro del input sea visible */
+.chat-form ion-input input {
+  color: black !important;
+}
+
+/* Carrusel de sugerencias */
+.suggestions {
+  display: flex;
+  overflow-x: auto;
+  padding: 8px 16px;
+  gap: 8px;
+  background: #fff;
+  margin-bottom: 8px;
+}
+
+ion-chip {
+  --background: #e0e6f0;
+  --color: rgb(28, 39, 70);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 15px;
+  margin-left: 20px;
+  padding: 5px 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+ion-chip:hover {
+  --background: #5e35b1;
+  --color: #fff;
+}
+
+/* Buttons en la parte inferior */
+.button-container {
+  display: flex;
+  padding: 8px 16px;
+  gap: 8px;
+  background: #f9f9f9;
+  border-top: 1px solid #eee;
+}
+
+.button-container button {
+  background-color: #ebebeb;
+  color: #333333;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.button-container button:hover {
+  background-color: #e0e0e0;
+}
+
+.chat-form ion-button {
+  margin-left: 8px;
+  --background: #7c4dff;
+  --border-radius: 20px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  height: 36px;
+  --color: white;
+}

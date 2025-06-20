@@ -63,8 +63,22 @@ const routes: Routes = [
   {
     path: 'modo-manual',
     loadChildren: () => import('./modo-manual/modo-manual.module').then( m => m.ModoManualPageModule)
+  },  {
+    path: 'modo-graficos',
+    loadChildren: () => import('./modo-graficos/modo-graficos.module').then( m => m.ModoGraficosPageModule)
   },
-
+  {
+    path: 'modo-chatbot',
+    loadChildren: () => import('./modo-chatbot/modo-chatbot.module').then( m => m.ModoChatbotPageModule)
+  },
+  {
+    path: 'modo-documentos',
+    loadChildren: () => import('./modo-documentos/modo-documentos.module').then( m => m.ModoDocumentosPageModule)
+  },
+  {
+    path: 'modo-dashboard',
+    loadChildren: () => import('./modo-dashboard/modo-dashboard.module').then( m => m.ModoDashboardPageModule)
+  },
 
 
 ];
