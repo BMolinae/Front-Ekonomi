@@ -10,6 +10,7 @@ import { IonRefresher, LoadingController } from '@ionic/angular';
 import { ManualTransactionService } from '../services/manual-transaction.service';
 import { Storage } from '@ionic/storage-angular';
 import { ModoService } from '../services/modo.service';
+import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-modo-manual',
@@ -47,7 +48,9 @@ export class ModoDashboardPage implements OnInit, OnDestroy {
     private toastController: ToastController,
     private manualTransactionService: ManualTransactionService,
     private storage: Storage,
-    private modoService: ModoService
+    private modoService: ModoService,
+    private firestore: Firestore,
+
   ) { }
 
   async ngOnInit() {
@@ -81,15 +84,22 @@ export class ModoDashboardPage implements OnInit, OnDestroy {
 
   async loadUserData() {
     try {
-      const userData = await this.authService.getCurrentUser();
-      if (userData) {
-        this.monthlyLimit = userData.limiteMensual || 0;
+      const uid = this.authService.getUidUsuario();
+      if (!uid) return;
+
+      const ref = doc(this.firestore, `users/${uid}`);
+      const snapshot = await getDoc(ref); // 🔁 Consulta directa
+      const data = snapshot.data();
+
+      if (data) {
+        this.monthlyLimit = data['limiteMensualManual'] || 0;
       }
     } catch (error) {
-      console.error('Error al cargar datos del usuario:', error);
+      console.error('Error al cargar límite mensual:', error);
       throw error;
     }
   }
+
 
   async loadMovimientos() {
     const loading = await this.loadingController.create({
@@ -273,7 +283,7 @@ export class ModoDashboardPage implements OnInit, OnDestroy {
           handler: async (data) => {
             const newLimit = Number(data.limite);
             try {
-              await this.authService.setLimit(newLimit, this.saldo);
+              await this.authService.setLimit(newLimit, this.saldo, 'manual');
               this.monthlyLimit = newLimit;
               this.computeMonthlyStats();
               this.showToast('Límite actualizado correctamente');

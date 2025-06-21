@@ -169,7 +169,7 @@ export class AuthService {
     }
   }
 
-  async setLimit(limit: number, currentBalance: number): Promise<void> {
+  async setLimit(limit: number, currentBalance: number, modo: 'manual' | 'tarjeta'): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
     if (!uid) return Promise.reject('No user');
 
@@ -178,12 +178,17 @@ export class AuthService {
     }
 
     const ref = doc(this.firestore, `users/${uid}`);
-    return setDoc(ref, { limiteMensual: limit }, { merge: true })
-      .then(() => {
+
+    const field = modo === 'manual' ? 'limiteMensualManual' : 'limiteMensual';
+
+    return setDoc(ref, { [field]: limit }, { merge: true })
+      .then(async () => {
         this.cardService.notifyLimitUpdate();
-        return this.refreshUserData();
+        const updatedDoc = await getDoc(ref);
+        this.userCache = updatedDoc.data(); // Actualiza el caché también
       });
   }
+
 
   async cacheUserData(data: any): Promise<void> {
     localStorage.setItem(this.cacheKey, JSON.stringify(data));

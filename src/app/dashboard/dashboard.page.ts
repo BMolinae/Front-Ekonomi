@@ -25,7 +25,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   @ViewChild('refresher', { static: false }) refresher!: IonRefresher;
   private subscription?: Subscription;
 
-  
+
 
   // Datos del usuario
   user: any = null;
@@ -96,6 +96,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     if (userData) {
       this.tarjeta = userData.tarjeta || '';
       this.cardType = userData.cardType || '';
+      // Usar el campo correcto según cómo lo guardamos
       this.monthlyLimit = userData.limiteMensual || 0;
       this.saveFinancialData();
     }
@@ -174,7 +175,7 @@ export class DashboardPage implements OnInit, OnDestroy {
           handler: async (data) => {
             const newLimit = Number(data.limite);
             try {
-              await this.authService.setLimit(newLimit, this.saldo);
+              await this.authService.setLimit(newLimit, this.saldo, 'tarjeta');
               this.monthlyLimit = newLimit;
               this.computeMonthlyStats();
               this.showToast('Límite actualizado correctamente');

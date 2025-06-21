@@ -61,9 +61,6 @@ const routes: Routes = [
     loadChildren: () => import('./politica-uso/politica-uso.module').then( m => m.PoliticaUsoPageModule)
   },
   {
-    path: 'modo-manual',
-    loadChildren: () => import('./modo-manual/modo-manual.module').then( m => m.ModoManualPageModule)
-  },  {
     path: 'modo-graficos',
     loadChildren: () => import('./modo-graficos/modo-graficos.module').then( m => m.ModoGraficosPageModule)
   },
