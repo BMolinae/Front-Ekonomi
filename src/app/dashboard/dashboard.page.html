@@ -72,7 +72,7 @@
           <div class="balance-section">
             <div class="currency-symbol">$</div>
             <div class="balance-amount">
-              {{ isBalanceHidden ? '**********' : (saldo | number:'1.0-0') }}
+              {{ isBalanceHidden ? '**********' : (saldoTarjeta | number:'1.0-0') }}
             </div>
             <div class="show-balance" (click)="toggleBalance()">
               <ion-icon [name]="isBalanceHidden ? 'eye-off-outline' : 'eye-outline'"></ion-icon>

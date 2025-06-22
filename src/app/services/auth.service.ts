@@ -4,12 +4,14 @@ import { Firestore, doc, addDoc, setDoc, getDoc, getDocs, collection } from '@an
 import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { CardService } from '../services/card.service';
+import { limit } from 'firebase/firestore';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private currentUser: User | null = null;
   private userSubject = new BehaviorSubject<any>(null);
   public user$ = this.userSubject.asObservable();
+
   private userCache: any = null;
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -24,17 +26,15 @@ export class AuthService {
     onAuthStateChanged(this.auth, user => {
       this.currentUser = user;
       if (user) {
-        this.getCurrentUser().then(data => {
-          this.userSubject.next(data);
-          localStorage.setItem('userEmail', user.email || '');
-          localStorage.setItem('userUid', user.uid);
-          localStorage.setItem('username', data?.username || '');
-        });
+        const staticData = {
+          uid: user.uid,
+          email: user.email
+        };
+        this.userSubject.next(staticData);
+        localStorage.setItem('userUid', user.uid);
+        localStorage.setItem('userEmail', user.email || '');
       } else {
-        this.userSubject.next(null);
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('userUid');
-        localStorage.removeItem('username');
+        this.reset();
       }
     });
   }
@@ -43,7 +43,7 @@ export class AuthService {
     return signInWithEmailAndPassword(this.auth, email, password)
       .then((cred) => {
         this.currentUser = cred.user;
-        return this.getCurrentUser().then(data => {
+        return this.getCurrentUserData().then(data => {
           this.userSubject.next(data);
           localStorage.setItem('userEmail', cred.user.email || '');
           localStorage.setItem('userUid', cred.user.uid);
@@ -58,16 +58,32 @@ export class AuthService {
 
   }
 
+  // In your register method in AuthService
   register(email: string, password: string, username: string): Promise<void> {
+    // First clear any existing data
+    this.reset(); // Add this line
+
     return createUserWithEmailAndPassword(this.auth, email, password)
       .then(cred => {
+        // Clear localStorage before setting new values
+        localStorage.removeItem('userUid');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('username');
+
         const userRef = doc(this.firestore, `users/${cred.user.uid}`);
         return setDoc(userRef, {
           email,
           username,
-          saldo: 500000,
-          limiteMensual: 0,
-          tarjeta: ''
+          saldoTarjeta: 500000, // Default value
+          saldoManual: 0,       // Default value
+          limiteMensual: 0,     // Default value
+          limiteMensualManual: 0, // Default value
+          tarjeta: ''           // Default value
+        }).then(() => {
+          // Set new user data in localStorage
+          localStorage.setItem('userUid', cred.user.uid);
+          localStorage.setItem('userEmail', email);
+          localStorage.setItem('username', username);
         });
       })
       .catch(error => {
@@ -77,31 +93,38 @@ export class AuthService {
         }
         return Promise.reject(errorMsg);
       });
-
-
-
   }
 
   logout(): Promise<void> {
-    localStorage.clear();
-    return signOut(this.auth);
+    // Limpiar todo el almacenamiento local relacionado con la sesión
+    localStorage.removeItem('userUid');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('username');
+    localStorage.removeItem(this.cacheKey); // Elimina los datos financieros en caché
+
+    // Resetear los observables y caché en memoria
+    this.userCache = null;
+    this.userSubject.next(null);
+    this.currentUserSubject.next(null);
+
+    // Cerrar sesión en Firebase Auth
+    return signOut(this.auth)
+      .then(() => {
+        this.router.navigate(['/home']); // Redirigir a la página de inicio
+      })
+      .catch(error => {
+        console.error('Error al cerrar sesión:', error);
+        throw error;
+      });
   }
 
-  getCurrentUser(): Promise<any> {
-    if (this.userCache) {
-      return Promise.resolve(this.userCache); // devuelve desde memoria
-    }
-
+  async getCurrentUserData(): Promise<any> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
-    if (!uid) return Promise.reject('No user');
+    if (!uid) return null;
 
     const ref = doc(this.firestore, `users/${uid}`);
-    return getDoc(ref).then(snapshot => {
-      const data = snapshot.data();
-      this.userSubject.next(data);
-      this.userCache = data;
-      return data;
-    });
+    const snapshot = await getDoc(ref);
+    return snapshot.exists() ? snapshot.data() : null;
   }
 
   refreshUserData(): Promise<void> {
@@ -154,9 +177,9 @@ export class AuthService {
     await addDoc(movRef, movimiento);
 
     // 3. Actualizar saldo
-    const currentUser = await this.getCurrentUser();
-    const nuevoSaldo = (currentUser?.saldo || 0) + 500000;
-    await this.updateSaldo(nuevoSaldo);
+    const currentUser = await this.getCurrentUserData();
+    const nuevoSaldo = (currentUser?.saldoTarjeta || 0) + 500000;
+    await this.updateSaldo(nuevoSaldo, 'tarjeta');
   }
 
   private determineCardType(number: string): string {
@@ -169,24 +192,13 @@ export class AuthService {
     }
   }
 
-  async setLimit(limit: number, currentBalance: number, modo: 'manual' | 'tarjeta'): Promise<void> {
+  async setLimit(limit: number, modo: 'manual' | 'tarjeta'): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
-    if (!uid) return Promise.reject('No user');
-
-    if (limit > currentBalance) {
-      return Promise.reject('El límite no puede ser mayor al saldo disponible');
-    }
-
-    const ref = doc(this.firestore, `users/${uid}`);
+    if (!uid) throw new Error('Usuario no autenticado');
 
     const field = modo === 'manual' ? 'limiteMensualManual' : 'limiteMensual';
-
-    return setDoc(ref, { [field]: limit }, { merge: true })
-      .then(async () => {
-        this.cardService.notifyLimitUpdate();
-        const updatedDoc = await getDoc(ref);
-        this.userCache = updatedDoc.data(); // Actualiza el caché también
-      });
+    const ref = doc(this.firestore, `users/${uid}`);
+    await setDoc(ref, { [field]: limit }, { merge: true });
   }
 
 
@@ -200,12 +212,19 @@ export class AuthService {
   }
 
 
-  updateSaldo(nuevoSaldo: number): Promise<void> {
+  async updateSaldo(nuevoSaldo: number, modo: 'manual' | 'tarjeta'): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
-    if (!uid) return Promise.reject('No user');
+    if (!uid) throw new Error('Usuario no autenticado');
+
+    const field = modo === 'manual' ? 'saldoManual' : 'saldoTarjeta';
     const ref = doc(this.firestore, `users/${uid}`);
-    console.log('prueba 2');
-    return setDoc(ref, { saldo: nuevoSaldo }, { merge: true });
+    await setDoc(ref, { [field]: nuevoSaldo }, { merge: true });
+  }
+
+  async getSaldo(modo: 'manual' | 'tarjeta'): Promise<number> {
+    const userData = await this.getCurrentUserData();
+    const field = modo === 'manual' ? 'saldoManual' : 'saldoTarjeta';
+    return userData?.[field] || 0;
   }
 
   getMovimientos(): Promise<any[]> {
@@ -219,14 +238,23 @@ export class AuthService {
 
   }
 
-  reset() {
-    this.userCache = null;
-    this.userSubject.next(null);
-    this.currentUserSubject.next(null);
+reset(): void {
+  this.currentUser = null;
+  this.userCache = null;
+  this.userSubject.next(null);
+  this.currentUserSubject.next(null);
+  localStorage.removeItem('userUid');
+  localStorage.removeItem('userEmail');
+  localStorage.removeItem('username');
+  localStorage.removeItem(this.cacheKey);
+}
+
+  getUserId(): string | null {
+    return this.auth.currentUser?.uid || localStorage.getItem('userUid');
   }
 
-  getUidUsuario(): string | null {
-    return this.auth.currentUser?.uid || localStorage.getItem('userUid');
+  getUserEmail(): string | null {
+    return this.auth.currentUser?.email || localStorage.getItem('userEmail');
   }
 
 

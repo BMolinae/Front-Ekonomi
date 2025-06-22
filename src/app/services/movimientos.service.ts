@@ -17,7 +17,7 @@ export class MovimientosService {
     descripcion: string,
     monto: number,
     categoria: string,
-    idTarjeta: string
+    tarjeta: string
   ): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
 
@@ -29,13 +29,15 @@ export class MovimientosService {
       descripcion,
       monto,
       categoria_nombre: categoria,
-      idTarjeta,
-      fecha: Timestamp.now()
+      tarjeta,
+      fecha: Timestamp.now(),
+      modo: 'tarjeta'
     });
   }
 
 
   async obtenerMovimientos(forceRefresh = false): Promise<any[]> {
+    console.log('Obteniendo movimientos...');
     if (!forceRefresh && this.movimientosCache.length) {
       return this.movimientosCache;
     }
@@ -56,7 +58,8 @@ export class MovimientosService {
     return this.movimientosCache;
   }
 
-  async obtenerMovimientosPorTarjeta(tarjetaId: string): Promise<any[]> {
+  async obtenerMovimientosPorTarjeta(tarjeta: string): Promise<any[]> {
+    console.log(`Obteniendo movimientos para tarjeta ${tarjeta}...`);
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
     if (!uid) throw new Error('Usuario no autenticado');
 
@@ -75,7 +78,7 @@ export class MovimientosService {
           fecha: data.fecha?.toDate ? data.fecha.toDate() : data.fecha
         };
       })
-      .filter(mov => mov.idTarjeta === tarjetaId);
+      .filter(mov => mov.tarjeta === tarjeta);
   }
 
 }

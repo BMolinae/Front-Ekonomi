@@ -172,7 +172,7 @@ export class DocumentosPage implements OnInit {
 
   private async generatePDF() {
     try {
-      const user = await this.auth.getCurrentUser();
+      const user = await this.auth.getCurrentUserData();
       if (!user) {
         throw new Error('Usuario no autenticado');
       }

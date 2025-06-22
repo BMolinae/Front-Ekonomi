@@ -40,7 +40,8 @@ export class ManualTransactionService {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       // Asegurar que la fecha sea un Timestamp si viene como string
-      fecha: transaction.fecha ? Timestamp.fromDate(new Date(transaction.fecha)) : serverTimestamp()
+      fecha: transaction.fecha ? Timestamp.fromDate(new Date(transaction.fecha)) : serverTimestamp(),
+      modo: 'manual'
     };
 
     const transactionsRef = this.getUserManualTransactionsRef(user.uid);

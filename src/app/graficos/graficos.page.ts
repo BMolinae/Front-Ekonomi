@@ -290,7 +290,7 @@ tooltip: {
   ) { }
 
   async ngOnInit() {
-    this.user = await this.authService.getCurrentUser();
+    this.user = await this.authService.getCurrentUserData();
     this.monthlyLimit = this.user?.limiteMensual || 0;
 
     const now = new Date();

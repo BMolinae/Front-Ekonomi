@@ -42,6 +42,8 @@ export class CreateAccountPage implements OnInit {
   }
 
   ngOnInit() {
+    this.authService.reset();
+    
     this.registerForm.get('password')!.valueChanges.subscribe((password: string) => {
       this.hasMinLength = password.length >= 6;
       this.hasUppercase = /[A-Z]/.test(password);

@@ -29,7 +29,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   // Datos del usuario
   user: any = null;
-  saldo = 0;
+  saldoTarjeta = 0;
   tarjeta = '';
   cardType = '';
   movimientos: any[] = [];
@@ -92,13 +92,19 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   async loadUserData() {
-    const userData = await this.authService.getCurrentUser();
-    if (userData) {
-      this.tarjeta = userData.tarjeta || '';
-      this.cardType = userData.cardType || '';
-      // Usar el campo correcto según cómo lo guardamos
-      this.monthlyLimit = userData.limiteMensual || 0;
-      this.saveFinancialData();
+    try {
+      const userData = await this.authService.getCurrentUserData();
+      if (userData) {
+        this.tarjeta = userData.tarjeta || ''; // Dato estático
+        this.cardType = userData.cardType || ''; // Dato estático
+
+        // Datos dinámicos (siempre frescos desde Firestore)
+        this.monthlyLimit = userData.limiteMensual || 0;
+        this.saldoTarjeta = userData.saldoTarjeta || 0;
+      }
+    } catch (error) {
+      console.error('Error al cargar datos del usuario:', error);
+      this.showToast('Error al cargar datos');
     }
   }
 
@@ -135,19 +141,22 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     this.ingresoMes = ingresos;
     this.gastosMes = gastos;
-    this.saldo = ingresos - gastos;
+    this.saldoTarjeta = ingresos - gastos;
     this.limitLeft = this.monthlyLimit - gastos;
 
     this.percentOfLimit = this.monthlyLimit > 0
       ? Math.min(Math.round((gastos / this.monthlyLimit) * 100), 100)
       : 0;
 
+    this.authService.updateSaldo(this.saldoTarjeta, 'tarjeta').catch(err => {
+      console.error('Error al actualizar saldo:', err);
+    });
     this.saveFinancialData();
   }
 
   private saveFinancialData() {
     const data = {
-      saldo: this.saldo,
+      saldoTarjeta: this.saldoTarjeta,
       monthlyLimit: this.monthlyLimit,
       gastosMes: this.gastosMes,
       ingresoMes: this.ingresoMes
@@ -161,9 +170,9 @@ export class DashboardPage implements OnInit, OnDestroy {
       inputs: [{
         name: 'limite',
         type: 'number',
-        placeholder: `Máximo: $${this.saldo}`,
+        placeholder: `Máximo: $${this.saldoTarjeta}`,
         min: '0',
-        max: this.saldo.toString(),
+        max: this.saldoTarjeta.toString(),
         attributes: {
           inputmode: 'decimal'
         }
@@ -175,14 +184,14 @@ export class DashboardPage implements OnInit, OnDestroy {
           handler: async (data) => {
             const newLimit = Number(data.limite);
             try {
-              await this.authService.setLimit(newLimit, this.saldo, 'tarjeta');
+              await this.authService.setLimit(newLimit, 'tarjeta');
+              // Actualizar UI directamente sin depender de cache
               this.monthlyLimit = newLimit;
               this.computeMonthlyStats();
               this.showToast('Límite actualizado correctamente');
-              return true;
-            } catch (error: any) {
-              this.showToast(error.message || 'Error al guardar límite');
-              return false;
+            } catch (error) {
+              const errorMessage = (error as any)?.message || 'Error al guardar límite';
+              this.showToast(errorMessage);
             }
           }
         }
@@ -292,7 +301,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   async actualizarTodo(event?: any) {
     try {
       await this.loadUserData();
-      await this.loadMovimientos();
+      this.movimientos = await this.movimientosService.obtenerMovimientos(true); // Forzar actualización
+      this.computeMonthlyStats();
       if (event) event.target.complete();
     } catch (error) {
       console.error('Error al actualizar:', error);

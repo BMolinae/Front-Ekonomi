@@ -82,23 +82,19 @@ export class ModoDashboardPage implements OnInit, OnDestroy {
     ]);
   }
 
-  async loadUserData() {
+async loadUserData() {
     try {
-      const uid = this.authService.getUidUsuario();
-      if (!uid) return;
-
-      const ref = doc(this.firestore, `users/${uid}`);
-      const snapshot = await getDoc(ref); // 🔁 Consulta directa
-      const data = snapshot.data();
-
-      if (data) {
-        this.monthlyLimit = data['limiteMensualManual'] || 0;
+      const userData = await this.authService.getCurrentUserData();
+      if (userData) {
+        // Datos dinámicos siempre frescos
+        this.monthlyLimit = userData.limiteMensualManual || 0;
+        this.saldo = userData.saldoManual || 0;
       }
     } catch (error) {
-      console.error('Error al cargar límite mensual:', error);
-      throw error;
+      console.error('Error al cargar datos del usuario:', error);
+      this.showToast('Error al cargar datos');
     }
-  }
+}
 
 
   async loadMovimientos() {
@@ -165,6 +161,9 @@ export class ModoDashboardPage implements OnInit, OnDestroy {
     this.percentOfLimit = this.monthlyLimit > 0
       ? Math.min(Math.round((gastos / this.monthlyLimit) * 100), 100)
       : 0;
+
+    this.authService.updateSaldo(this.saldo, 'manual')
+      .catch(err => console.error('Error al actualizar saldo:', err));
   }
 
 
@@ -283,7 +282,7 @@ export class ModoDashboardPage implements OnInit, OnDestroy {
           handler: async (data) => {
             const newLimit = Number(data.limite);
             try {
-              await this.authService.setLimit(newLimit, this.saldo, 'manual');
+              await this.authService.setLimit(newLimit, 'manual');
               this.monthlyLimit = newLimit;
               this.computeMonthlyStats();
               this.showToast('Límite actualizado correctamente');
