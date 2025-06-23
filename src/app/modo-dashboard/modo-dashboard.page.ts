@@ -65,7 +65,7 @@ export class ModoDashboardPage implements OnInit, OnDestroy {
         if (user) {
           await this.loadData();
         } else {
-          this.router.navigate(['/login']);
+          this.router.navigate(['/home']);
         }
       },
       error: (err) => {

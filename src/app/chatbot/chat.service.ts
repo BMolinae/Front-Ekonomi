@@ -33,7 +33,7 @@ export class ChatService {
     if (key.includes('saldo')) {
       return from(this.firestoreService.getUserDataOnce()).pipe(
         map((userData: any) => {
-          const saldo = userData?.saldo || 0;
+          const saldo = userData?.saldoTarjeta || 0; // Usar saldoTarjeta
           const formatted = saldo.toLocaleString('es-CL', {
             style: 'currency',
             currency: 'CLP'

@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { CardService } from '../services/card.service';
 import { limit } from 'firebase/firestore';
+import { Storage } from '@ionic/storage';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -21,8 +22,11 @@ export class AuthService {
     private auth: Auth,
     private firestore: Firestore,
     private router: Router,
-    private cardService: CardService
+    private cardService: CardService,
+    private storage: Storage
+
   ) {
+    this.initStorage(); // Inicializar Storage
     onAuthStateChanged(this.auth, user => {
       this.currentUser = user;
       if (user) {
@@ -31,12 +35,16 @@ export class AuthService {
           email: user.email
         };
         this.userSubject.next(staticData);
-        localStorage.setItem('userUid', user.uid);
-        localStorage.setItem('userEmail', user.email || '');
+        this.storage.set('userUid', user.uid);
+        this.storage.set('userEmail', user.email || '');
       } else {
         this.reset();
       }
     });
+  }
+
+  private async initStorage() {
+    await this.storage.create();
   }
 
   login(email: string, password: string): Promise<void> {
@@ -45,9 +53,9 @@ export class AuthService {
         this.currentUser = cred.user;
         return this.getCurrentUserData().then(data => {
           this.userSubject.next(data);
-          localStorage.setItem('userEmail', cred.user.email || '');
-          localStorage.setItem('userUid', cred.user.uid);
-          localStorage.setItem('username', data?.username || '');
+          this.storage.set('userEmail', cred.user.email || '');
+          this.storage.set('userUid', cred.user.uid);
+          this.storage.set('username', data?.username || '');
           this.router.navigate(['/dashboard']);
         });
       })
@@ -55,35 +63,37 @@ export class AuthService {
         console.error('Error de inicio de sesión:', error);
         return Promise.reject('Credenciales inválidas. Intentelo Nuevamente');
       });
-
   }
 
-  // In your register method in AuthService
+
   register(email: string, password: string, username: string): Promise<void> {
-    // First clear any existing data
-    this.reset(); // Add this line
+    this.reset(); // Limpiar datos existentes
 
     return createUserWithEmailAndPassword(this.auth, email, password)
       .then(cred => {
-        // Clear localStorage before setting new values
-        localStorage.removeItem('userUid');
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('username');
-
-        const userRef = doc(this.firestore, `users/${cred.user.uid}`);
-        return setDoc(userRef, {
-          email,
-          username,
-          saldoTarjeta: 500000, // Default value
-          saldoManual: 0,       // Default value
-          limiteMensual: 0,     // Default value
-          limiteMensualManual: 0, // Default value
-          tarjeta: ''           // Default value
-        }).then(() => {
-          // Set new user data in localStorage
-          localStorage.setItem('userUid', cred.user.uid);
-          localStorage.setItem('userEmail', email);
-          localStorage.setItem('username', username);
+        // Limpiar storage antes de establecer nuevos valores
+        return Promise.all([
+          this.storage.remove('userUid'),
+          this.storage.remove('userEmail'),
+          this.storage.remove('username')
+        ]).then(() => {
+          const userRef = doc(this.firestore, `users/${cred.user.uid}`);
+          return setDoc(userRef, {
+            email,
+            username,
+            saldoTarjeta: 500000,
+            saldoManual: 0,
+            limiteMensual: 0,
+            limiteMensualManual: 0,
+            tarjeta: ''
+          }).then(() => {
+            // Establecer nuevos datos de usuario
+            return Promise.all([
+              this.storage.set('userUid', cred.user.uid),
+              this.storage.set('userEmail', email),
+              this.storage.set('username', username)
+            ]).then(() => {}); // <-- Ensure void is returned
+          });
         });
       })
       .catch(error => {
@@ -96,30 +106,32 @@ export class AuthService {
   }
 
   logout(): Promise<void> {
-    // Limpiar todo el almacenamiento local relacionado con la sesión
-    localStorage.removeItem('userUid');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('username');
-    localStorage.removeItem(this.cacheKey); // Elimina los datos financieros en caché
+    // Limpiar todo el almacenamiento
+    return Promise.all([
+      this.storage.remove('userUid'),
+      this.storage.remove('userEmail'),
+      this.storage.remove('username'),
+      this.storage.remove(this.cacheKey)
+    ]).then(() => {
+      // Resetear observables y caché en memoria
+      this.userCache = null;
+      this.userSubject.next(null);
+      this.currentUserSubject.next(null);
 
-    // Resetear los observables y caché en memoria
-    this.userCache = null;
-    this.userSubject.next(null);
-    this.currentUserSubject.next(null);
-
-    // Cerrar sesión en Firebase Auth
-    return signOut(this.auth)
-      .then(() => {
-        this.router.navigate(['/home']); // Redirigir a la página de inicio
-      })
-      .catch(error => {
-        console.error('Error al cerrar sesión:', error);
-        throw error;
-      });
+      // Cerrar sesión en Firebase Auth
+      return signOut(this.auth)
+        .then(() => {
+          this.router.navigate(['/home']);
+        })
+        .catch(error => {
+          console.error('Error al cerrar sesión:', error);
+          throw error;
+        });
+    });
   }
 
   async getCurrentUserData(): Promise<any> {
-    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    const uid = this.auth.currentUser?.uid || await this.storage.get('userUid');
     if (!uid) return null;
 
     const ref = doc(this.firestore, `users/${uid}`);
@@ -128,16 +140,26 @@ export class AuthService {
   }
 
   refreshUserData(): Promise<void> {
-    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
-    if (!uid) return Promise.reject('No user');
+    return this.storage.get('userUid').then(uid => {
+      if (!uid) return Promise.reject('No user');
 
-    const ref = doc(this.firestore, `users/${uid}`);
-    return getDoc(ref).then(docSnap => {
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        this.currentUserSubject.next(userData); // 👈 Aquí es lo importante
-      }
+      const ref = doc(this.firestore, `users/${uid}`);
+      return getDoc(ref).then(docSnap => {
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          this.currentUserSubject.next(userData);
+        }
+      });
     });
+  }
+
+
+  async cacheUserData(data: any): Promise<void> {
+    await this.storage.set(this.cacheKey, data);
+  }
+
+  async getCachedUserData(): Promise<any> {
+    return await this.storage.get(this.cacheKey);
   }
 
 
@@ -202,15 +224,6 @@ export class AuthService {
   }
 
 
-  async cacheUserData(data: any): Promise<void> {
-    localStorage.setItem(this.cacheKey, JSON.stringify(data));
-  }
-
-  async getCachedUserData(): Promise<any> {
-    const cached = localStorage.getItem(this.cacheKey);
-    return cached ? JSON.parse(cached) : null;
-  }
-
 
   async updateSaldo(nuevoSaldo: number, modo: 'manual' | 'tarjeta'): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
@@ -238,23 +251,26 @@ export class AuthService {
 
   }
 
-reset(): void {
-  this.currentUser = null;
-  this.userCache = null;
-  this.userSubject.next(null);
-  this.currentUserSubject.next(null);
-  localStorage.removeItem('userUid');
-  localStorage.removeItem('userEmail');
-  localStorage.removeItem('username');
-  localStorage.removeItem(this.cacheKey);
-}
-
-  getUserId(): string | null {
-    return this.auth.currentUser?.uid || localStorage.getItem('userUid');
+  reset(): void {
+    this.currentUser = null;
+    this.userCache = null;
+    this.userSubject.next(null);
+    this.currentUserSubject.next(null);
+    // No necesitamos await aquí ya que es un método void
+    Promise.all([
+      this.storage.remove('userUid'),
+      this.storage.remove('userEmail'),
+      this.storage.remove('username'),
+      this.storage.remove(this.cacheKey)
+    ]).catch(err => console.error('Error clearing storage:', err));
   }
 
-  getUserEmail(): string | null {
-    return this.auth.currentUser?.email || localStorage.getItem('userEmail');
+  getUserId(): Promise<string | null> {
+    return this.storage.get('userUid');
+  }
+
+  getUserEmail(): Promise<string | null> {
+    return this.storage.get('userEmail');
   }
 
 

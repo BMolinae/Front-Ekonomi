@@ -1,17 +1,23 @@
-
+// src/app/modo-chatbot/modo-chatbot.page.ts
 import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { IonicModule, IonContent } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Message } from '../chatbot/message.model';
 import { RouterModule } from '@angular/router';
-import { interval, Subscription } from 'rxjs';
-import { Storage } from '@ionic/storage';
+import { interval, Subscription, from, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { AuthService } from '../services/auth.service';
+import { ManualTransactionService } from '../services/manual-transaction.service';
+import { HttpClient } from '@angular/common/http';
+
+const GEMINI_API_KEY = 'AIzaSyDjunmOJ9Qm6P3Fr6HHmSj8oPtUiTjxj1c';
+const GEMINI_MODEL = 'gemini-2.0-flash';
 
 @Component({
   selector: 'app-modo-chatbot',
-    standalone: true,
-    imports: [
+  standalone: true,
+  imports: [
     IonicModule,
     CommonModule,
     ReactiveFormsModule,
@@ -27,10 +33,11 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
   chatForm!: FormGroup;
 
   private suggestionFlows: string[][] = [
-    ['👋 ¡Hola!', '¿Cómo te encuentras hoy? 😊', '¡Gracias por tu confianza! 🙏', '👋 ¡Hasta pronto!'],
-    ['💳 Consultar mi saldo', '📉 ¿Cuánto he gastado este mes?', '📈 Ajustar mi límite de gastos', '➕ Agregar nueva tarjeta',],
-    ['🛠️ Necesito ayuda de soporte', '🚨 Reportar un problema técnico', '🔒 Recuperar acceso a mi cuenta'],
+    ['consultar mi saldo', '¿cuánto he gastado este mes?', 'ver mi límite'],
   ];
+
+  public showAllSuggestions = false;
+  public quickActionLabel = 'Acciones rápidas';
 
   private currentStage = 0;
   suggestions: string[] = [];
@@ -38,7 +45,9 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
   public saldo: number = 0;
   public gastosMes: number = 0;
   public ingresoMes: number = 0;
+  public monthlyLimit: number = 0;
   public limitLeft: number = 0;
+  public usedLimit: number = 0;
   public movimientos: any[] = [];
 
   private awaitingResetConfirmation = false;
@@ -50,7 +59,9 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private storage: Storage
+    private authService: AuthService,
+    private manualTransactionService: ManualTransactionService,
+    private http: HttpClient
   ) { }
 
   ngOnInit() {
@@ -71,7 +82,7 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
     setTimeout(() => {
       this.messages.push({
         from: 'bot',
-        text: '¡Hola! 👋 Soy tu asistente financiero virtual. ¿En qué puedo ayudarte hoy?',
+        text: '¡Hola! 👋 Soy tu asistente financiero virtual para el modo manual. ¿En qué puedo ayudarte hoy?',
         timestamp: new Date()
       });
       this.scrollToBottom();
@@ -79,52 +90,91 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
   }
 
   private loadSuggestions() {
-    this.suggestions = this.suggestionFlows[this.currentStage] || [];
+    this.suggestions = this.showAllSuggestions
+      ? [this.quickActionLabel, ...this.suggestionFlows[this.currentStage] || []]
+      : [this.quickActionLabel];
   }
 
   private async loadFinancialData() {
     try {
-      const data = await this.storage.get('user_financial_data');
-      const rawMovs = await this.storage.get('user_movimientos');
+      // Obtener datos del usuario directamente desde AuthService
+      const userData = await this.authService.getCurrentUserData();
 
-      if (data) {
-        this.saldo = data.saldo || 0;
-        this.gastosMes = data.gastosMes || 0;
-        this.ingresoMes = data.ingresoMes || 0;
-        this.limitLeft = data.limitLeft || 0;
+      if (userData) {
+        this.monthlyLimit = userData.limiteMensualManual || 0;
+        this.saldo = userData.saldoManual || 0;
       }
 
-      if (rawMovs) {
-        this.movimientos = rawMovs.map((mov: any) => ({
-          ...mov,
-          fecha: new Date(mov.fecha)
-        }));
-      }
+      // Obtener movimientos manuales directamente
+      this.movimientos = await this.getManualMovimientos();
+
+      // Calcular estadísticas (similar al Dashboard manual)
+      const now = new Date();
+      const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+      const movMes = this.movimientos.filter(m => new Date(m.fecha) >= inicioMes);
+
+      this.gastosMes = movMes
+        .filter(m => m.tipo === 'gasto')
+        .reduce((sum, m) => sum + +m.monto, 0);
+
+      this.ingresoMes = movMes
+        .filter(m => m.tipo === 'ingreso')
+        .reduce((sum, m) => sum + +m.monto, 0);
+
+      this.limitLeft = this.monthlyLimit - this.gastosMes;
+      this.usedLimit = this.gastosMes;
+
     } catch (error) {
-      console.error('Error al cargar datos desde storage:', error);
+      console.error('Error al cargar datos:', error);
+      this.messages.push({
+        from: 'bot',
+        text: '⚠️ No pude obtener tus datos financieros. Intenta nuevamente.',
+        timestamp: new Date()
+      });
     }
   }
 
-
+  private async getManualMovimientos(): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const sub = this.manualTransactionService.getTransactions().subscribe({
+        next: (transactions) => {
+          const mapped = transactions.map(t => ({
+            id: t.id,
+            tipo: t.tipo,
+            descripcion: t.descripcion,
+            monto: Math.abs(t.monto),
+            categoria: t.categoria || 'Otros',
+            fecha: t.createdAt?.toDate?.() || t.fecha || new Date()
+          }));
+          sub.unsubscribe();
+          resolve(mapped);
+        },
+        error: (err) => {
+          sub.unsubscribe();
+          reject(err);
+        }
+      });
+    });
+  }
 
   onSuggestion(q: string) {
-    this.chatForm.setValue({ message: q });
-    this.send();
-    this.advanceSuggestions();
-  }
-
-  private advanceSuggestions() {
-    if (this.currentStage < this.suggestionFlows.length - 1) {
-      this.currentStage++;
+    if (q === this.quickActionLabel) {
+      this.showAllSuggestions = !this.showAllSuggestions;
+      this.loadSuggestions();
     } else {
-      this.currentStage = 0;
+      this.chatForm.setValue({ message: q });
+      this.send();
+      this.showAllSuggestions = false;
+      setTimeout(() => this.loadSuggestions(), 300);
     }
-    this.loadSuggestions();
   }
 
-  send() {
+  async send() {
     const text = this.chatForm.value.message.trim();
     if (!text) return;
+
+    // Recargar datos antes de responder
+    await this.loadFinancialData();
 
     this.messages.push({
       from: 'user',
@@ -137,28 +187,52 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
     this.hasAskedIfPresent = false;
     this.inactivityWarnings = 0;
 
-    setTimeout(() => {
-      const botResponse = this.generateBotResponse(text);
-      this.messages.push({
-        from: 'bot',
-        text: botResponse,
-        timestamp: new Date()
+    const botResponse = this.generateBotResponse(text);
+
+    if (typeof botResponse === 'string') {
+      setTimeout(() => {
+        this.messages.push({
+          from: 'bot',
+          text: botResponse,
+          timestamp: new Date()
+        });
+        this.scrollToBottom();
+      }, 400);
+    } else {
+      botResponse.subscribe(response => {
+        this.messages.push({
+          from: 'bot',
+          text: response,
+          timestamp: new Date()
+        });
+        this.scrollToBottom();
       });
-      this.scrollToBottom();
-    }, 400);
+    }
   }
 
-  private generateBotResponse(userMessage: string): string {
+  private generateBotResponse(userMessage: string): string | Observable<string> {
     const msg = userMessage.toLowerCase();
     this.analyzeMood(msg);
 
+    // Manejar preguntas predefinidas
+    const predefinedResponse = this.handlePredefinedQuestions(msg);
+    if (predefinedResponse) {
+      return predefinedResponse;
+    }
+
+    // Si no es pregunta predefinida, usar Gemini
+    return this.queryGemini(userMessage);
+  }
+
+  private handlePredefinedQuestions(msg: string): string | null {
+    const lowerMsg = msg.toLowerCase().trim();
+
     if (this.awaitingResetConfirmation) {
       this.awaitingResetConfirmation = false;
-
-      if (msg.includes('sí') || msg.includes('si')) {
+      if (lowerMsg.includes('sí') || lowerMsg.includes('si')) {
         this.resetChat();
         return '✅ Chat reiniciado. ¿En qué puedo ayudarte?';
-      } else if (msg.includes('no')) {
+      } else if (lowerMsg.includes('no')) {
         this.loadSuggestions();
         return '👌 Perfecto, continuamos entonces. ¿Cómo puedo ayudarte ahora?';
       } else {
@@ -167,75 +241,81 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
       }
     }
 
-    // Flujo 1: Saludos y despedida
-    if (msg.includes('👋 ¡hola!') || msg.includes('hola') || msg.includes('buenas')) {
-      return '¡Hola! 😃 ¿En qué puedo ayudarte hoy?';
+    if (lowerMsg === 'consultar mi saldo') {
+      return `💳 Tu saldo disponible es de $${this.saldo.toLocaleString('es-CL')}.`;
     }
 
-    if (msg.includes('¿cómo te encuentras hoy?') || msg.includes('cómo estás')) {
-      return '¡Estoy muy bien, gracias por preguntar! 😊 Listo para ayudarte con tu gestión financiera. ¿En qué puedo asistirte?';
+    if (lowerMsg === '¿cuánto he gastado este mes?') {
+      return `📉 Este mes has gastado $${this.gastosMes.toLocaleString('es-CL')} ` +
+        `(${this.monthlyLimit > 0 ? Math.round((this.gastosMes / this.monthlyLimit) * 100) : 0}% de tu límite).`;
     }
 
-    if (msg.includes('¡gracias por tu confianza!') || msg.includes('gracias')) {
-      return this.userMood === 'positive' ?
-        '¡Me alegra haberte ayudado! 🌟 Trabajamos cada día para ofrecerte el mejor servicio. ¿Algo más en que pueda asistirte?' :
-        '¡Siempre estoy aquí para ayudarte! 🙌 Tu satisfacción es nuestra prioridad.';
+    if (lowerMsg === 'ver mi límite') {
+      if (this.monthlyLimit <= 0) {
+        return `📊 Aún no has establecido un límite mensual. Puedes configurarlo en el Dashboard.`;
+      }
+      return `🏦 Tu límite mensual es $${this.monthlyLimit.toLocaleString('es-CL')}. ` +
+        `Has gastado $${this.gastosMes.toLocaleString('es-CL')} ` +
+        `(te quedan $${this.limitLeft.toLocaleString('es-CL')}).`;
     }
 
-    if (msg.includes('👋 ¡hasta pronto!') || msg.includes('hasta pronto') || msg.includes('chao') || msg.includes('adiós')) {
-      return '¡Hasta luego! 👋 Que tengas un excelente día. Recuerda que estamos disponibles 24/7 para cualquier consulta.';
-    }
+    return null;
+  }
 
-    // Flujo 2: Consultas financieras
-    if (msg.includes('💳 consultar mi saldo') || msg.includes('saldo')) {
-      return `💳 Tu saldo disponible es de ${this.saldo.toLocaleString('es-CL')}. ¿Necesitas realizar alguna operación con este saldo?`;
-    }
+  private queryGemini(userMessage: string): Observable<string> {
+    const prompt = `Actúa como el chatbot oficial de la aplicación financiera personal "Ekonomi CB&J", en su MODO MANUAL. Tu tarea es responder exclusivamente dudas sobre el uso de esta app en modo manual. No respondas sobre el modo tarjeta. Si la consulta corresponde al modo tarjeta, sugiere al usuario volver a modo automático desde el botón en la pantalla de inicio. Responde siempre de forma breve, clara y precisa.
 
-    if (msg.includes('📉 ¿cuánto he gastado este mes?') || msg.includes('gasto') || msg.includes('gasté') || msg.includes('cuánto he gastado')) {
-      return `📉 Este mes has gastado ${this.gastosMes.toLocaleString('es-CL')}. Si quieres ver el detalle de tus gastos, puedes revisar la sección "Movimientos".`;
-    }
+### Flujo general de la app:
+- login → Inicio (modo tarjeta por defecto) → Gráficos → Chatbot → Documentos
+- Desde "Inicio", el usuario puede cambiar a modo manual.
+- El flujo del modo manual es: Inicio Manual → Gráficos Manuales → Chatbot Manual → Documentos Manuales
 
-    if (msg.includes('📈 ajustar mi límite de gastos') || msg.includes('límite') || msg.includes('ajustar mi límite')) {
-      return `🏦 Tu límite de gastos actual es de ${this.limitLeft.toLocaleString('es-CL')}. Para ajustarlo, ve a la sección "Configuración" > "Límites de gastos" y establece el nuevo valor que desees.`;
-    }
+### Modo MANUAL:
+- Permite registrar gastos e ingresos de forma manual, útil para controlar pagos en efectivo o fuera del banco.
 
-    if (msg.includes('➕ agregar nueva tarjeta') || msg.includes('agregar tarjeta') || msg.includes('nueva tarjeta') || msg.includes('tarjeta')) {
-      return '💳 Para agregar una nueva tarjeta, sigue estos pasos: 1) Ve a la sección "Métodos de pago" 2) Pulsa en "Agregar nueva tarjeta" 3) Ingresa los datos solicitados y confirma la operación. ¿Necesitas ayuda con algo más?';
-    }
+**Paneles del Modo Manual:**
 
-    // Flujo 3: Soporte y resolución de problemas
-    if (msg.includes('🛠️ necesito ayuda de soporte') || msg.includes('ayuda de soporte')) {
-      return '🛠️ Estoy aquí para ayudarte. Puedes contactar a nuestro equipo de soporte escribiendo a soporte@ekonomi.com o llamando al 800-123-456. Nuestro horario de atención es de lunes a viernes de 9:00 a 18:00 hrs.';
-    }
+1. **Inicio Manual (Dashboard)**:
+   - Saldo disponible, límite, ingresos y gastos del mes.
+   - Botones: “Agregar movimiento”, “Poner límite”, “Volver a modo automático”.
+   - Lista de movimientos recientes.
 
-    if (msg.includes('🚨 reportar un problema técnico') || msg.includes('problema técnico') || msg.includes('reportar problema')) {
-      return '🚨 Lamento que estés experimentando dificultades. Para reportar un problema técnico, por favor describe el error con el mayor detalle posible y nuestro equipo lo resolverá a la brevedad. ¿Puedes contarme qué problema estás enfrentando?';
-    }
+2. **Gráficos Manuales**:
+   - Tarjeta del límite restante.
+   - Gráfico circular de uso del límite.
+   - Gráfico de líneas con ingresos y gastos últimos 4 meses.
+   - Gráfico de categorías de gasto.
 
-    if (msg.includes('🔒 recuperar acceso a mi cuenta') || msg.includes('recuperar acceso') || msg.includes('recuperar')) {
-      return '🔒 Para recuperar el acceso a tu cuenta: 1) En la pantalla de inicio, selecciona "¿Olvidaste tu contraseña?" 2) Ingresa tu correo electrónico registrado 3) Recibirás un enlace para restablecer tu contraseña. Si necesitas asistencia adicional, contacta a soporte@ekonomi.com.';
-    }
+3. **Chatbot Manual**:
+   - Aquí solo debes resolver dudas sobre el modo manual.
 
-    // Otras consultas financieras
-    if (msg.includes('ingreso')) {
-      return `📈 Tus ingresos recientes son ${this.ingresoMes.toLocaleString('es-CL')}. ¿Te gustaría ver un desglose de tus fuentes de ingreso?`;
-    }
+4. **Documentos Manuales**:
+   - Informe mensual manual (PDF), exportar CSV, gráficos en PNG.
 
-    if (msg.includes('movimiento') || msg.includes('transacción')) {
-      return this.formatMovimientos();
-    }
+### Sidebar:
+- “Conoce tu app”, “Políticas de uso”, “Contacto”, “Cerrar sesión”.
 
-    if (msg.includes('alertas')) {
-      return '🔔 Puedes configurar alertas personalizadas en la sección "Notificaciones" de la app. Allí podrás activar avisos para: pagos próximos, gastos inusuales, depósitos recibidos y mucho más.';
-    }
+Si el usuario pregunta sobre agregar tarjetas o cómo funciona el registro automático, sugiérele volver a modo automático. No expliques cómo funciona el modo tarjeta. Mantente concreto, enfocado y responde siempre dentro del MODO MANUAL.
 
-    if (msg.includes('soporte') || msg.includes('problema')) {
-      return '🛠️ Puedes contactar a nuestro equipo de soporte escribiendo a soporte@ekonomi.com o a través del chat en vivo disponible de lunes a viernes de 9:00 a 18:00 hrs.';
-    }
+${userMessage}`;
 
-    // Si no reconoce el mensaje, pide confirmación para reiniciar
-    this.awaitingResetConfirmation = true;
-    return '🤔 No entendí muy bien tu mensaje... ¿Deseas reiniciar el chat para empezar de nuevo? (Sí / No)';
+
+    return this.http.post<any>(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }]
+          }
+        ]
+      }
+    ).pipe(
+      map(response => {
+        return response.candidates?.[0]?.content?.parts?.[0]?.text ||
+          "Lo siento, no puedo responder ahora. Intenta más tarde.";
+      })
+    );
   }
 
   private analyzeMood(msg: string) {
@@ -250,10 +330,10 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
 
   private formatMovimientos(): string {
     if (!this.movimientos.length) {
-      return '📄 No tienes transacciones recientes registradas.';
+      return '📄 No tienes transacciones manuales recientes registradas.';
     }
 
-    let respuesta = '📄 Aquí tienes tus últimas transacciones:\n\n';
+    let respuesta = '📄 Aquí tienes tus últimas transacciones manuales:\n\n';
 
     this.movimientos
       .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
@@ -288,7 +368,7 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
       const now = Date.now();
       const diffSeconds = (now - this.lastActivityTime) / 1000;
 
-      if (diffSeconds > 15 && !this.hasAskedIfPresent) {
+      if (diffSeconds > 30 && !this.hasAskedIfPresent) {
         this.hasAskedIfPresent = true;
         this.inactivityWarnings++;
         this.messages.push({
@@ -299,7 +379,7 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
         this.scrollToBottom();
       }
 
-      if (diffSeconds > 30 && this.inactivityWarnings === 1) {
+      if (diffSeconds > 60 && this.inactivityWarnings === 1) {
         this.inactivityWarnings++;
         this.messages.push({
           from: 'bot',
@@ -311,4 +391,3 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
     });
   }
 }
-

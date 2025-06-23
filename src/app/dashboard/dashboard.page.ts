@@ -68,7 +68,7 @@ export class DashboardPage implements OnInit, OnDestroy {
       if (user) {
         this.loadData();
       } else {
-        this.router.navigate(['/login']);
+        this.router.navigate(['/home']);
       }
     });
 
