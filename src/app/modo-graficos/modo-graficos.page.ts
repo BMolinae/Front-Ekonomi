@@ -1,3 +1,4 @@
+// src/app/modo-graficos/modo-graficos.page.ts
 import 'chart.js/auto';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
@@ -6,12 +7,11 @@ import { RouterModule } from '@angular/router';
 import { ChartData, ChartOptions } from 'chart.js';
 import { NgChartsModule, BaseChartDirective } from 'ng2-charts';
 import { AuthService } from '../services/auth.service';
-import { MovimientosService } from '../services/movimientos.service';
+import { ManualTransactionService } from '../services/manual-transaction.service';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Chart } from 'chart.js';
 
 Chart.register(ChartDataLabels);
-
 
 interface CategoryDetail {
   name: string;
@@ -19,7 +19,6 @@ interface CategoryDetail {
   percentage: number;
   color: string;
 }
-
 
 @Component({
   selector: 'app-modo-graficos',
@@ -32,14 +31,12 @@ interface CategoryDetail {
   ],
   templateUrl: './modo-graficos.page.html',
   styleUrls: ['./modo-graficos.page.scss'],
-  
 })
 export class ModoGraficosPage implements OnInit {
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
   @ViewChild('lineChart') lineChart?: BaseChartDirective;
   @ViewChild('pieChart') pieChart?: BaseChartDirective;
   @ViewChild('doughnutChart') doughnutChart?: BaseChartDirective;
-
 
   user: any;
   monthlyLimit = 0;
@@ -54,20 +51,19 @@ export class ModoGraficosPage implements OnInit {
 
   // Colores predefinidos para las categorías
   private readonly categoryColors: Record<string, string> = {
-    'Transporte': '#3498db',        // Azul
-    'Alimentación': '#e67e22',      // Naranja
-    'Salud': '#e74c3c',             // Rojo
-    'Educación': '#9b59b6',         // Morado
-    'Entretenimiento': '#f1c40f',   // Amarillo
-    'Servicios': '#1abc9c',         // Turquesa
-    'Compras': '#34495e',           // Gris Azulado Oscuro
-    'Vivienda': '#2ecc71',          // Verde Esmeralda
-    'Ropa': '#d35400',              // Naranja Oscuro
-    'Regalos': '#c0392b',           // Rojo Oscuro
-    'Otros': '#95a5a6',             // Gris Claro
+    'Transporte': '#3498db',
+    'Alimentación': '#e67e22',
+    'Salud': '#e74c3c',
+    'Educación': '#9b59b6',
+    'Entretenimiento': '#f1c40f',
+    'Servicios': '#1abc9c',
+    'Compras': '#34495e',
+    'Vivienda': '#2ecc71',
+    'Ropa': '#d35400',
+    'Regalos': '#c0392b',
+    'Otros': '#95a5a6',
   };
 
-  // Colores de respaldo para categorías no predefinidas
   private readonly fallbackColors: string[] = [
     '#8e44ad', '#16a085', '#f39c12', '#d35400', '#c0392b',
     '#2980b9', '#27ae60', '#f1c40f', '#e67e22', '#e74c3c'
@@ -79,26 +75,21 @@ export class ModoGraficosPage implements OnInit {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false // Ocultamos la leyenda porque usaremos una personalizada
-      },
+      legend: { display: false },
       tooltip: {
         callbacks: {
           label: (context) => {
             const label = context.label || '';
             const value = context.parsed;
             
-            // Si es el límite disponible, mostrar información diferente
             if (label === 'Límite disponible') {
               return `${label}: $${value.toLocaleString('es-CL')} disponible`;
             }
             
-            // Para las categorías normales, calcular porcentaje basado en el límite mensual
             if (this.monthlyLimit > 0) {
               const percentage = ((value / this.monthlyLimit) * 100).toFixed(1);
               return `${label}: $${value.toLocaleString('es-CL')} (${percentage}% del límite)`;
             } else {
-              // Si no hay límite, usar el total de gastos
               let total = 0;
               if (context.dataset && context.dataset.data) {
                 total = context.dataset.data.reduce((sum: number, val: any) => sum + Number(val), 0) as number;
@@ -113,13 +104,11 @@ export class ModoGraficosPage implements OnInit {
         formatter: (value: number, context) => {
           const label = context.chart.data.labels?.[context.dataIndex] as string;
           
-          // No mostrar porcentaje en el límite disponible si es muy grande
           if (label === 'Límite disponible') {
             const percentage = this.monthlyLimit ? (value / this.monthlyLimit) * 100 : 0;
             return percentage > 10 ? `${percentage.toFixed(1)}%` : '';
           }
           
-          // Para las categorías normales
           const percentage = this.monthlyLimit ? (value / this.monthlyLimit) * 100 : 0;
           return percentage > 5 ? `${percentage.toFixed(1)}%` : '';
         },
@@ -145,22 +134,19 @@ export class ModoGraficosPage implements OnInit {
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
-tooltip: {
-  callbacks: {
-    label: (context) => {
-      const label = context.label || '';
-      // Mostrar los valores reales en el tooltip
-      if (label === 'Usado') {
-        return `${label}: $${this.usedLimit.toLocaleString('es-CL')} (${this.usedPercentage.toFixed(1)}%)`;
-      } else {
-        return `${label}: $${this.limitLeft.toLocaleString('es-CL')} (${this.availablePercentage.toFixed(1)}%)`;
-      }
-    }
-  }
-},
-      datalabels: {
-        display: false
-      }
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const label = context.label || '';
+            if (label === 'Usado') {
+              return `${label}: $${this.usedLimit.toLocaleString('es-CL')} (${this.usedPercentage.toFixed(1)}%)`;
+            } else {
+              return `${label}: $${this.limitLeft.toLocaleString('es-CL')} (${this.availablePercentage.toFixed(1)}%)`;
+            }
+          }
+        }
+      },
+      datalabels: { display: false }
     },
     cutout: '70%'
   };
@@ -170,22 +156,15 @@ tooltip: {
   lineOpts: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
-    interaction: {
-      intersect: false,
-      mode: 'index'
-    },
+    interaction: { intersect: false, mode: 'index' },
     plugins: {
-      legend: {
-        display: false
-      },
+      legend: { display: false },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
         titleColor: '#fff',
         bodyColor: '#fff',
         callbacks: {
-          title: (context) => {
-            return context[0].label;
-          },
+          title: (context) => context[0].label,
           label: (context) => {
             const label = context.dataset.label || '';
             const value = context.parsed.y;
@@ -193,48 +172,28 @@ tooltip: {
           }
         }
       },
-      datalabels: {
-        display: false
-      }
+      datalabels: { display: false }
     },
     scales: {
       x: {
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
-          lineWidth: 1
-        },
-        ticks: {
-          color: '#666',
-          font: {
-            size: 12
-          }
-        }
+        grid: { color: 'rgba(0, 0, 0, 0.1)', lineWidth: 1 },
+        ticks: { color: '#666', font: { size: 12 } }
       },
       y: {
         beginAtZero: true,
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
-          lineWidth: 1
-        },
+        grid: { color: 'rgba(0, 0, 0, 0.1)', lineWidth: 1 },
         ticks: {
           color: '#666',
-          font: {
-            size: 12
-          },
-          callback: function (value) {
+          font: { size: 12 },
+          callback: function(value) {
             return '$' + Number(value).toLocaleString('es-CL');
           }
         }
       }
     },
     elements: {
-      point: {
-        radius: 4,
-        hoverRadius: 8
-      },
-      line: {
-        borderWidth: 3
-      }
+      point: { radius: 4, hoverRadius: 8 },
+      line: { borderWidth: 3 }
     }
   };
 
@@ -253,33 +212,20 @@ tooltip: {
           }
         }
       },
-      datalabels: {
-        display: false
-      }
+      datalabels: { display: false }
     },
     scales: {
       x: {
-        grid: {
-          display: false
-        },
-        ticks: {
-          color: '#666',
-          font: {
-            size: 11
-          }
-        }
+        grid: { display: false },
+        ticks: { color: '#666', font: { size: 11 } }
       },
       y: {
         beginAtZero: true,
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)'
-        },
+        grid: { color: 'rgba(0, 0, 0, 0.1)' },
         ticks: {
           color: '#666',
-          font: {
-            size: 11
-          },
-          callback: function (value) {
+          font: { size: 11 },
+          callback: function(value) {
             return '$' + Number(value).toLocaleString('es-CL');
           }
         }
@@ -289,12 +235,12 @@ tooltip: {
 
   constructor(
     private authService: AuthService,
-    private movimientosService: MovimientosService
+    private manualTransactionService: ManualTransactionService
   ) { }
 
   async ngOnInit() {
     this.user = await this.authService.getCurrentUserData();
-    this.monthlyLimit = this.user?.limiteMensual || 0;
+    this.monthlyLimit = this.user?.limiteMensualManual || 0;
 
     const now = new Date();
     const monthNames = [
@@ -307,31 +253,30 @@ tooltip: {
   }
 
   async loadAndProcessData() {
-    const movimientos = await this.movimientosService.obtenerMovimientos();
-    this.procesarDatos(movimientos);
-    this.generateLimitMessage();
-
-
-    // Forzar actualización de gráficos
-    setTimeout(() => {
-      if (this.doughnutChart) {
-        this.doughnutChart.update();
+    try {
+      const transactions = await this.manualTransactionService.getTransactions().toPromise();
+      if (transactions) {
+        this.procesarDatos(transactions);
+        this.generateLimitMessage();
+        this.updateCharts();
       }
-      if (this.chart) {
-        this.chart.update();
-      }
-      if (this.pieChart) {
-        this.pieChart.update();
-      }
-      if (this.lineChart) {
-        this.lineChart.update();
-      }
-    }, 100);
+    } catch (error) {
+      console.error('Error al cargar transacciones manuales:', error);
+    }
   }
 
-  private procesarDatos(movimientos: any[]) {
+  private procesarDatos(transactions: any[]) {
     const now = new Date();
     const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Mapear transacciones a formato compatible
+    const movimientos = transactions.map(t => ({
+      ...t,
+      tipo: t.monto >= 0 ? 'ingreso' : 'gasto',
+      monto: Math.abs(t.monto),
+      categoria: t.categoria || 'Otros',
+      fecha: t.fecha || t.createdAt
+    }));
 
     const movimientosDelMes = movimientos.filter(
       m => new Date(m.fecha) >= inicioMes
@@ -375,15 +320,12 @@ tooltip: {
 
     this.categoryDetails = [];
 
-    // Verificar si hay límite mensual definido
     if (this.monthlyLimit > 0) {
-      // Ordenar categorías por monto (de mayor a menor)
       const sortedCategories = Object.entries(gastosPorCategoria)
         .sort(([, a], [, b]) => b - a);
 
       let colorIndex = 0;
 
-      // Agregar categorías con gastos
       for (const [categoria, monto] of sortedCategories) {
         const percentage = (monto / this.monthlyLimit) * 100;
         const color = this.obtenerColorCategoria(categoria, colorIndex);
@@ -402,13 +344,12 @@ tooltip: {
         colorIndex++;
       }
 
-      // Agregar la porción no utilizada del límite si existe
       if (this.limitLeft > 0) {
         const availablePercentage = (this.limitLeft / this.monthlyLimit) * 100;
         
         labels.push('Límite disponible');
         data.push(this.limitLeft);
-        backgroundColors.push('#ecf0f1'); // Color gris claro
+        backgroundColors.push('#ecf0f1');
 
         this.categoryDetails.push({
           name: 'Límite disponible',
@@ -418,7 +359,6 @@ tooltip: {
         });
       }
     } else {
-      // Si no hay límite mensual, mostrar solo las categorías (comportamiento original)
       const sortedCategories = Object.entries(gastosPorCategoria)
         .sort(([, a], [, b]) => b - a);
 
@@ -455,30 +395,25 @@ tooltip: {
         hoverBorderColor: '#eee'
       }]
     };
-
-    console.log('Pie Chart Data:', this.pieData);
-    console.log('Category Details:', this.categoryDetails);
   }
 
-private configurarDoughnutChart() {
-  const usedColor = this.usedPercentage >= 90 ? '#e74c3c' :
-    this.usedPercentage >= 70 ? '#f39c12' :
-      '#4ecdc4';
+  private configurarDoughnutChart() {
+    const usedColor = this.usedPercentage >= 90 ? '#e74c3c' :
+      this.usedPercentage >= 70 ? '#f39c12' : '#4ecdc4';
 
-  // Usar porcentajes en lugar de valores absolutos
-  const usedPercentageForChart = Math.min(this.usedPercentage, 100);
-  const availablePercentageForChart = Math.max(0, 100 - usedPercentageForChart);
+    const usedPercentageForChart = Math.min(this.usedPercentage, 100);
+    const availablePercentageForChart = Math.max(0, 100 - usedPercentageForChart);
 
-  this.doughnutData = {
-    labels: ['Usado', 'Disponible'],
-    datasets: [{
-      data: [usedPercentageForChart, availablePercentageForChart], // ← CAMBIADO
-      backgroundColor: [usedColor, '#ecf0f1'],
-      borderWidth: 0,
-      hoverOffset: 5
-    }]
-  };
-}
+    this.doughnutData = {
+      labels: ['Usado', 'Disponible'],
+      datasets: [{
+        data: [usedPercentageForChart, availablePercentageForChart],
+        backgroundColor: [usedColor, '#ecf0f1'],
+        borderWidth: 0,
+        hoverOffset: 5
+      }]
+    };
+  }
 
   private configurarLineChart(movimientos: any[]) {
     const now = new Date();
@@ -585,17 +520,14 @@ private configurarDoughnutChart() {
   }
 
   private obtenerColorCategoria(categoria: string, index: number = 0): string {
-    // Primero buscar en colores predefinidos
     if (this.categoryColors[categoria]) {
       return this.categoryColors[categoria];
     }
 
-    // Si no existe, usar colores de respaldo
     if (index < this.fallbackColors.length) {
       return this.fallbackColors[index];
     }
 
-    // Como último recurso, generar color dinámico
     return this.generateDynamicColor(categoria);
   }
 
@@ -625,11 +557,16 @@ private configurarDoughnutChart() {
     }
   }
 
-  async updateCharts() {
-    await this.loadAndProcessData();
+  private updateCharts() {
+    setTimeout(() => {
+      this.doughnutChart?.update();
+      this.chart?.update();
+      this.pieChart?.update();
+      this.lineChart?.update();
+    }, 100);
   }
 
   async onTransactionAdded() {
-    await this.updateCharts();
+    await this.loadAndProcessData();
   }
 }
