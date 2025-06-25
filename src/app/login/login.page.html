@@ -49,7 +49,10 @@
             <div class="input-wrapper"
               [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
               <ion-icon name="lock-closed-outline"></ion-icon>
-              <ion-input formControlName="password" placeholder="Contraseña" type="password"></ion-input>
+              <ion-input formControlName="password" placeholder="Contraseña"
+                [type]="showPassword ? 'text' : 'password'"></ion-input>
+              <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" slot="end" class="input-icon"
+                (click)="togglePasswordVisibility()"></ion-icon>
             </div>
             <small class="error"
               *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">

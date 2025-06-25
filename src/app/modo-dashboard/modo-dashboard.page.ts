@@ -12,6 +12,9 @@ import { Storage } from '@ionic/storage-angular';
 import { ModoService } from '../services/modo.service';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 
+import { ModalController } from '@ionic/angular';
+import { ModalManualPage } from '../modal-manual/modal-manual.page';
+
 @Component({
   selector: 'app-modo-manual',
   standalone: true,
@@ -50,6 +53,7 @@ export class ModoDashboardPage implements OnInit, OnDestroy {
     private storage: Storage,
     private modoService: ModoService,
     private firestore: Firestore,
+    private modalCtrl: ModalController,
 
   ) { }
 
@@ -82,7 +86,7 @@ export class ModoDashboardPage implements OnInit, OnDestroy {
     ]);
   }
 
-async loadUserData() {
+  async loadUserData() {
     try {
       const userData = await this.authService.getCurrentUserData();
       if (userData) {
@@ -94,7 +98,7 @@ async loadUserData() {
       console.error('Error al cargar datos del usuario:', error);
       this.showToast('Error al cargar datos');
     }
-}
+  }
 
 
   async loadMovimientos() {
@@ -164,80 +168,6 @@ async loadUserData() {
 
     this.authService.updateSaldo(this.saldo, 'manual')
       .catch(err => console.error('Error al actualizar saldo:', err));
-  }
-
-
-  async abrirModalAgregar() {
-    const alert = await this.alertCtrl.create({
-      header: 'Agregar Movimiento Manual',
-      inputs: [
-        {
-          name: 'descripcion',
-          type: 'text',
-          placeholder: 'Descripción'
-        },
-        {
-          name: 'monto',
-          type: 'number',
-          placeholder: 'Monto',
-          attributes: {
-            inputmode: 'decimal',
-            min: '0.01'
-          }
-        },
-        {
-          name: 'tipo',
-          type: 'text',
-          placeholder: 'Tipo (ingreso/gasto)',
-          value: 'gasto'
-        },
-        {
-          name: 'categoria',
-          type: 'text',
-          placeholder: 'Categoría',
-          value: 'Otros'
-        }
-      ],
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Guardar',
-          handler: async (data) => {
-            if (!data.descripcion || !data.monto) {
-              this.showToast('Descripción y monto son requeridos');
-              return false;
-            }
-
-            const montoNumber = Number(data.monto);
-            if (isNaN(montoNumber) || montoNumber <= 0) {
-              this.showToast('El monto debe ser un número positivo');
-              return false;
-            }
-
-            const tipo = data.tipo.trim().toLowerCase() === 'ingreso' ? 'ingreso' : 'gasto';
-
-            try {
-              await this.manualTransactionService.addTransaction({
-                descripcion: data.descripcion.trim(),
-                monto: tipo === 'ingreso' ? montoNumber : -montoNumber,
-                tipo,
-                categoria: data.categoria?.trim() || 'Otros',
-                fecha: new Date().toISOString()
-              });
-
-              this.showToast('Movimiento guardado correctamente');
-              return true;
-            } catch (error) {
-              console.error('Error guardando movimiento:', error);
-              this.showToast('Error al guardar movimiento');
-              return false;
-            }
-          }
-        }
-      ]
-    });
-
-    await alert.present();
   }
 
   private async showToast(message: string) {
@@ -326,6 +256,10 @@ async loadUserData() {
 
   contactenos() {
     this.router.navigate(['/contactenos']);
+  }
+
+  abrirModalAgregar() {
+    this.router.navigate(['/modal-manual']);
   }
 
   async cerrarSesion() {

@@ -39,6 +39,11 @@ export class AppComponent {
     });
   }
 
+  ngOnInit() {
+    // Forzar modo claro en toda la app
+    document.body.setAttribute('color-theme', 'light');
+  }
+
   isActive(path: string): boolean {
     const expectedPath = this.isManualMode ? `/modo-${path}` : `/${path}`;
     return this.currentRoute === expectedPath;

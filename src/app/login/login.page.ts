@@ -16,6 +16,10 @@ import { ToastController } from '@ionic/angular';
 export class LoginPage {
   loginForm: FormGroup;
 
+
+
+  showPassword = false;
+
   constructor(
     private router: Router,
     private fb: FormBuilder,
@@ -40,6 +44,10 @@ export class LoginPage {
 
   goBack() {
     this.navCtrl.back();
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 
   login() {

@@ -75,7 +75,11 @@ const routes: Routes = [
   {
     path: 'modo-dashboard',
     loadChildren: () => import('./modo-dashboard/modo-dashboard.module').then( m => m.ModoDashboardPageModule)
+  },  {
+    path: 'modal-manual',
+    loadChildren: () => import('./modal-manual/modal-manual.module').then( m => m.ModalManualPageModule)
   },
+
 
 
 ];
