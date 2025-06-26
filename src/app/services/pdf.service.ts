@@ -125,7 +125,7 @@ export class PdfService {
           path: fileName,
           data: base64Data,
           directory: Directory.Documents,
-          encoding: Encoding.UTF8,
+          encoding: 'base64' as Encoding,
         });
 
         // Mostrar notificación
