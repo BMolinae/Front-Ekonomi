@@ -114,20 +114,22 @@ export class PdfService {
   }
 
   private async savePdf(doc: jsPDF, fileName: string): Promise<void> {
-    const pdfBlob = doc.output('blob');
-
     if (this.platform.is('hybrid')) {
       try {
-        const base64Data = await this.blobToBase64(pdfBlob); // solo los datos, sin encabezado
+        // Salida como arraybuffer
+        const buffer = doc.output('arraybuffer');
+
+        // Convertir a base64
+        const base64Data = this.arrayBufferToBase64(buffer);
 
         const result = await Filesystem.writeFile({
           path: fileName,
           data: base64Data,
-          directory: Directory.External, // más accesible
-          encoding: 'base64' as Encoding,
+          directory: Directory.Documents, // Puedes cambiar a External si necesitas
+          encoding: 'base64' as Encoding
         });
 
-        console.log('Archivo guardado en:', result.uri);
+        console.log('Guardado en:', result.uri);
 
         const alert = await this.alertController.create({
           header: 'Reporte guardado',
@@ -142,7 +144,10 @@ export class PdfService {
                 });
               }
             },
-            { text: 'Cerrar', role: 'cancel' }
+            {
+              text: 'Cerrar',
+              role: 'cancel'
+            }
           ]
         });
 
@@ -153,12 +158,24 @@ export class PdfService {
         throw error;
       }
     } else {
-      const url = window.URL.createObjectURL(pdfBlob);
+      const blob = doc.output('blob');
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = fileName;
       link.click();
+      window.URL.revokeObjectURL(url);
     }
+  }
+
+  private arrayBufferToBase64(buffer: ArrayBuffer): string {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
   }
 
 
