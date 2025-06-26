@@ -118,17 +118,17 @@ export class PdfService {
 
     if (this.platform.is('hybrid')) {
       try {
-        const base64Data = await this.blobToBase64(pdfBlob);
+        const base64Data = await this.blobToBase64(pdfBlob); // solo los datos, sin encabezado
 
-        // Guardar en Documents (no requiere permisos en Android)
         const result = await Filesystem.writeFile({
           path: fileName,
           data: base64Data,
-          directory: Directory.Documents,
+          directory: Directory.External, // más accesible
           encoding: 'base64' as Encoding,
         });
 
-        // Mostrar notificación
+        console.log('Archivo guardado en:', result.uri);
+
         const alert = await this.alertController.create({
           header: 'Reporte guardado',
           message: `El archivo se ha guardado correctamente. ¿Deseas abrirlo ahora?`,
@@ -138,16 +138,14 @@ export class PdfService {
               handler: async () => {
                 await FileOpener.open({
                   filePath: result.uri,
-                  contentType: 'application/pdf'
+                  contentType: 'application/pdf',
                 });
               }
             },
-            {
-              text: 'Cerrar',
-              role: 'cancel'
-            }
+            { text: 'Cerrar', role: 'cancel' }
           ]
         });
+
         await alert.present();
 
       } catch (error) {
@@ -155,7 +153,6 @@ export class PdfService {
         throw error;
       }
     } else {
-      // Descarga para navegador
       const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -163,6 +160,7 @@ export class PdfService {
       link.click();
     }
   }
+
 
   private blobToBase64(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
