@@ -132,6 +132,22 @@ ion-item:active {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+
+
+/* Estilo para el botón de descarga completa */
+ion-fab-button {
+  --background: var(--accent-turquoise);
+  --background-activated: var(--primary-blue);
+  --background-hover: var(--secondary-blue);
+  --color: var(--white);
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  
+  ion-icon {
+    font-size: 24px;
+  }
+}
+
+
 /* Media query for smaller devices */
 @media (max-width: 320px) {
   ion-item ion-label h3 {
@@ -142,3 +158,4 @@ ion-item:active {
     font-size: 12px;
   }
 }
+
