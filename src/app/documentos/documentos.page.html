@@ -5,14 +5,13 @@
 </ion-header>
 
 <ion-content class="docs-content">
-
   <!-- Botón de descarga completa -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button (click)="downloadCompleteReport()">
+    <ion-fab-button (click)="downloadCompleteReport()" color="primary">
       <ion-icon name="download"></ion-icon>
     </ion-fab-button>
   </ion-fab>
-  
+
   <ion-list>
     <!-- Informe PDF Mensual -->
     <ion-item>
@@ -55,6 +54,3 @@
     </ion-item>
   </ion-list>
 </ion-content>
-
-
-

@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { IonicModule, AlertController, Platform } from '@ionic/angular';
+import { Component } from '@angular/core';
+import { IonicModule, AlertController, Platform, LoadingController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { Firestore, collection, getDocs } from '@angular/fire/firestore';
 import { Chart, registerables } from 'chart.js';
@@ -17,9 +17,9 @@ Chart.register(...registerables);
   imports: [IonicModule, CommonModule],
   templateUrl: './documentos.page.html',
   styleUrls: ['./documentos.page.scss'],
-  providers: [AndroidPermissions] // ✅ Proveedor agregado
+  providers: [AndroidPermissions]
 })
-export class DocumentosPage implements OnInit {
+export class DocumentosPage {
   charts = [
     { id: 'gauge', name: 'Uso del Límite' },
     { id: 'pie', name: 'Distribución por Categorías' },
@@ -32,16 +32,57 @@ export class DocumentosPage implements OnInit {
     private pdfService: PdfService,
     private platform: Platform,
     private alertController: AlertController,
+    private loadingController: LoadingController,
     private androidPermissions: AndroidPermissions
   ) {}
 
-  async ngOnInit() {
-    if (this.platform.is('android')) {
-      await this.checkAndroidPermissions();
+  async downloadCompleteReport(): Promise<void> {
+    const loading = await this.loadingController.create({
+      message: 'Generando reporte completo...',
+    });
+    
+    try {
+      await loading.present();
+
+      // Verificar permisos en Android
+      if (this.platform.is('android')) {
+        const hasPermission = await this.checkAndroidPermissions();
+        if (!hasPermission) {
+          await loading.dismiss();
+          return this.showErrorAlert('Se requieren permisos de almacenamiento');
+        }
+      }
+
+      // Obtener datos
+      const user = await this.auth.getCurrentUserData();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      const movimientos = await this.auth.getMovimientos();
+      const saldo = user.saldo || 0;
+      const limite = user.limite_mensual || 0;
+      const usado = movimientos
+        .filter(m => m.tipo === 'gasto')
+        .reduce((sum, m) => sum + +m.monto, 0);
+      const restante = limite - usado;
+
+      // Generar PDF
+      await this.pdfService.generarPDFCompleto(
+        user,
+        movimientos,
+        { saldo, limite, usado, restante }
+      );
+
+      await loading.dismiss();
+      await this.showSuccessAlert('Reporte descargado correctamente');
+
+    } catch (error) {
+      console.error('Error:', error);
+      await loading.dismiss();
+      this.showErrorAlert('Error al generar el reporte');
     }
   }
 
-  private async checkAndroidPermissions() {
+  private async checkAndroidPermissions(): Promise<boolean> {
     try {
       const hasPermission = await this.androidPermissions.checkPermission(
         this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE
@@ -51,13 +92,12 @@ export class DocumentosPage implements OnInit {
         const result = await this.androidPermissions.requestPermission(
           this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE
         );
-
-        if (!result.hasPermission) {
-          this.showErrorAlert('Se necesitan permisos de almacenamiento para descargar archivos');
-        }
+        return result.hasPermission;
       }
+      return true;
     } catch (error) {
-      console.error('Error al verificar permisos:', error);
+      console.error('Error verificando permisos:', error);
+      return false;
     }
   }
 
@@ -72,11 +112,20 @@ export class DocumentosPage implements OnInit {
       }
     } catch (error) {
       console.error('Error en descarga:', error);
-      this.showErrorAlert('No se pudo descargar el archivo. Intenta nuevamente.');
+      this.showErrorAlert('No se pudo descargar el archivo');
     }
   }
 
-  private async showErrorAlert(message: string) {
+  private async showSuccessAlert(message: string): Promise<void> {
+    const alert = await this.alertController.create({
+      header: 'Éxito',
+      message,
+      buttons: ['OK']
+    });
+    await alert.present();
+  }
+
+  private async showErrorAlert(message: string): Promise<void> {
     const alert = await this.alertController.create({
       header: 'Error',
       message,
@@ -186,12 +235,10 @@ export class DocumentosPage implements OnInit {
       const restante = limite - usado;
 
       const resumen = { saldo, limite, usado, restante };
-      await this.pdfService.generarPDF(user, movimientos, resumen);
+      await this.pdfService.generarPDFCompleto(user, movimientos, resumen);
     } catch (error) {
       console.error('Error al generar PDF:', error);
       throw error;
     }
   }
-
-  
 }
