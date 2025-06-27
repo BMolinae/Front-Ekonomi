@@ -34,13 +34,123 @@ export class DocumentosPage {
     private alertController: AlertController,
     private loadingController: LoadingController,
     private androidPermissions: AndroidPermissions
-  ) {}
+  ) { }
+
+  ngAfterViewInit() {
+    this.renderExportCharts();
+  }
+
+
+  async renderExportCharts() {
+    try {
+      const user = await this.auth.getCurrentUserData();
+      const movimientos = await this.auth.getMovimientos();
+
+      const saldo = user.saldoTarjeta || 0;
+      const limite = user.limiteMensual || 0;
+
+      const gastos = movimientos.filter(m => m.tipo === 'gasto');
+      const ingresos = movimientos.filter(m => m.tipo === 'ingreso');
+
+      const usado = gastos.reduce((sum, g) => sum + +g.monto, 0);
+      const restante = limite - usado;
+
+      // 🍩 Doughnut: Uso del Límite
+      new Chart('gauge-chart', {
+        type: 'doughnut',
+        data: {
+          labels: ['Usado', 'Disponible'],
+          datasets: [{
+            data: [usado, restante],
+            backgroundColor: ['#FF6384', '#36A2EB'],
+          }]
+        },
+        options: {
+          responsive: false,
+          plugins: { legend: { display: true } }
+        }
+      });
+
+      // 📊 Pie: Gastos por Categoría
+      const categorias: { [cat: string]: number } = {};
+      gastos.forEach(g => {
+        const cat = g.categoria || 'Otro';
+        categorias[cat] = (categorias[cat] || 0) + +g.monto;
+      });
+
+      new Chart('pie-chart', {
+        type: 'pie',
+        data: {
+          labels: Object.keys(categorias),
+          datasets: [{
+            data: Object.values(categorias),
+            backgroundColor: Object.keys(categorias).map((_, i) =>
+              `hsl(${i * 50}, 70%, 60%)`)
+          }]
+        },
+        options: {
+          responsive: false,
+          plugins: { legend: { display: true } }
+        }
+      });
+
+      // 📈 Bar: Comparación Mensual
+      const meses: { [mes: string]: { ingresos: number, gastos: number } } = {};
+
+      movimientos.forEach(mov => {
+        const fecha = new Date(mov.fecha); // asegúrate de que `fecha` exista
+        const mes = fecha.toLocaleDateString('es-CL', { month: 'short' });
+
+        if (!meses[mes]) {
+          meses[mes] = { ingresos: 0, gastos: 0 };
+        }
+
+        if (mov.tipo === 'gasto') meses[mes].gastos += +mov.monto;
+        else if (mov.tipo === 'ingreso') meses[mes].ingresos += +mov.monto;
+      });
+
+      const ordenMeses = Object.keys(meses); // sin ordenar para mantener flujo natural
+
+      new Chart('bar-chart', {
+        type: 'bar',
+        data: {
+          labels: ordenMeses,
+          datasets: [
+            {
+              label: 'Gastos',
+              data: ordenMeses.map(m => meses[m].gastos),
+              backgroundColor: '#FF6384'
+            },
+            {
+              label: 'Ingresos',
+              data: ordenMeses.map(m => meses[m].ingresos),
+              backgroundColor: '#36A2EB'
+            }
+          ]
+        },
+        options: {
+          responsive: false,
+          plugins: {
+            legend: { position: 'top' }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+
+    } catch (err) {
+      console.error('Error renderizando gráficos exportables:', err);
+      this.showErrorAlert('No se pudieron cargar los datos de los gráficos');
+    }
+  }
+
 
   async downloadCompleteReport(): Promise<void> {
     const loading = await this.loadingController.create({
       message: 'Generando reporte completo...',
     });
-    
+
     try {
       await loading.present();
 
@@ -58,8 +168,8 @@ export class DocumentosPage {
       if (!user) throw new Error('Usuario no autenticado');
 
       const movimientos = await this.auth.getMovimientos();
-      const saldo = user.saldo || 0;
-      const limite = user.limite_mensual || 0;
+      const saldo = user.saldoTarjeta || 0;
+      const limite = user.limiteMensual || 0;
       const usado = movimientos
         .filter(m => m.tipo === 'gasto')
         .reduce((sum, m) => sum + +m.monto, 0);
@@ -136,15 +246,12 @@ export class DocumentosPage {
 
   async generateCSV(): Promise<void> {
     try {
-      const snapshot = await getDocs(collection(this.firestore, 'users'));
-      let csv = 'username,email,saldo,limite_mensual\n';
+      const user = await this.auth.getCurrentUserData();
+      if (!user) throw new Error('Usuario no autenticado');
 
-      snapshot.forEach(doc => {
-        const d: any = doc.data();
-        csv += `${d.username},${d.email},${d.saldo},${d.limite_mensual}\n`;
-      });
+      const csv = `username,email,saldoTarjeta,limiteMensual\n${user.username},${user.email},${user.saldoTarjeta},${user.limiteMensual}\n`;
 
-      const fileName = 'ekonomi_usuarios.csv';
+      const fileName = 'ekonomi_usuario.csv';
 
       if (this.platform.is('hybrid')) {
         const base64data = btoa(unescape(encodeURIComponent(csv)));
@@ -160,7 +267,7 @@ export class DocumentosPage {
           path: fileName
         });
 
-        await FileOpener.open({ 
+        await FileOpener.open({
           filePath: uri.uri,
           contentType: 'text/csv'
         });
@@ -186,38 +293,25 @@ export class DocumentosPage {
         throw new Error(`No se encontró el canvas para el gráfico ${type}`);
       }
 
+      await new Promise(resolve => setTimeout(resolve, 500)); // espera para asegurar que se renderizó
+
       const fileName = `ekonomi_${type}_${new Date().getTime()}.png`;
+      const dataUrl = canvas.toDataURL('image/png');
 
-      if (this.platform.is('hybrid')) {
-        const base64data = canvas.toDataURL('image/png').split(',')[1];
-        await Filesystem.writeFile({
-          path: fileName,
-          data: base64data,
-          directory: Directory.Documents,
-          encoding: Encoding.UTF8,
-        });
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-        const uriResult = await Filesystem.getUri({
-          directory: Directory.Documents,
-          path: fileName
-        });
-
-        await FileOpener.open({ 
-          filePath: uriResult.uri,
-          contentType: 'image/png'
-        });
-      } else {
-        const dataUrl = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = fileName;
-        link.href = dataUrl;
-        link.click();
-      }
     } catch (error) {
       console.error('Error al generar PNG:', error);
+      this.showErrorAlert('No se pudo generar la imagen del gráfico');
       throw error;
     }
   }
+
 
   private async generatePDF() {
     try {
@@ -227,8 +321,8 @@ export class DocumentosPage {
       }
 
       const movimientos = await this.auth.getMovimientos();
-      const saldo = user.saldo || 0;
-      const limite = user.limite_mensual || 0;
+      const saldo = user.saldoTarjeta || 0;
+      const limite = user.limiteMensual || 0;
       const usado = movimientos
         .filter(m => m.tipo === 'gasto')
         .reduce((sum, m) => sum + +m.monto, 0);
