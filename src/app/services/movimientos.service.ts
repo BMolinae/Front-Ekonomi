@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, getDocs, query, orderBy, Timestamp, doc, getDoc } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, getDocs, query, orderBy, Timestamp, doc, getDoc, updateDoc, increment } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { EmailService } from './email.service';
 
@@ -17,40 +17,48 @@ export class MovimientosService {
   async agregarMovimiento(
     tipo: 'ingreso' | 'gasto',
     descripcion: string,
-    monto: number,
+    monto: number, // Recibir el monto siempre positivo
     categoria: string,
   ): Promise<void> {
-    console.log('agregarMovimiento: inicio');
-
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
-    if (!uid) {
-      console.error('agregarMovimiento: usuario no autenticado');
-      throw new Error('Usuario no autenticado');
-    }
+    if (!uid) throw new Error('Usuario no autenticado');
 
+    // Guardar el movimiento (monto siempre positivo, el signo lo maneja el tipo)
     const ref = collection(this.firestore, `users/${uid}/movimientos`);
     await addDoc(ref, {
       categoria_nombre: categoria,
       descripcion,
       fecha: Timestamp.now(),
-      monto,
+      monto: Math.abs(monto), // Guardar siempre positivo
       tipo,
       modo: 'tarjeta'
     });
 
-    console.log('agregarMovimiento: gasto agregado, obteniendo usuario...');
+    // Obtener y actualizar usuario
     const userRef = doc(this.firestore, `users/${uid}`);
+    await updateDoc(userRef, {
+      saldoTarjeta: increment(tipo === 'ingreso' ? monto : -monto)
+    });
+
+    // Verificación de gasto
     const userSnap = await getDoc(userRef);
     const usuario = userSnap.data();
-
-    if (usuario) {
-      console.log('agregarMovimiento: usuario obtenido, verificando gasto...');
-      this.verificarGasto(usuario);
-    } else {
-      console.warn('agregarMovimiento: usuario no encontrado');
-    }
+    if (usuario) this.verificarGasto(usuario);
   }
 
+  async getTarjetaBalance(): Promise<number> {
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) return 0;
+
+    const ref = collection(this.firestore, `users/${uid}/movimientos`);
+    const q = query(ref);
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.reduce((sum, doc) => {
+      const data = doc.data();
+      return sum + (data['tipo'] === 'ingreso' ? +data['monto'] : -(+data['monto']));
+    }, 0);
+  }
 
   async obtenerMovimientos(forceRefresh = false): Promise<any[]> {
     console.log('Obteniendo movimientos...');

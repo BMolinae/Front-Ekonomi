@@ -45,16 +45,16 @@ export class ModalTarjetaPage {
     if (!this.validarFormulario()) return;
 
     try {
-      const montoNumber = Number(this.movimiento.monto);
+      const montoNumber = Math.abs(Number(this.movimiento.monto)); // Asegurar positivo
       await this.movimientosService.agregarMovimiento(
         this.movimiento.tipo as 'ingreso' | 'gasto',
         this.movimiento.descripcion.trim(),
-        this.movimiento.tipo === 'ingreso' ? montoNumber : -montoNumber,
+        montoNumber, // Enviar siempre positivo
         this.movimiento.categoria
       );
 
       await this.mostrarToast('Movimiento guardado correctamente');
-      this.router.navigate(['/dashboard']); // Redirige de vuelta
+      this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Error guardando movimiento:', error);
       this.mostrarToast('Error al guardar movimiento');
