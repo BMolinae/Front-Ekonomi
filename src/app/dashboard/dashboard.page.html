@@ -44,6 +44,9 @@
         <div class="item-icon"><ion-icon name="log-out-outline"></ion-icon></div>
         <div class="item-content">
           <div class="item-link">Cerrar Sesión</div>
+          <div *ngIf="isLoggingOut" class="logout-overlay">
+            <img src="assets/logo.png" class="logo-animation" />
+          </div>
         </div>
       </div>
     </div>

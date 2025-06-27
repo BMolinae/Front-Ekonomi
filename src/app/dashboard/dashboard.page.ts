@@ -45,6 +45,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   isBalanceHidden = false;
   isUserPanelExpanded = false;
 
+  isLoggingOut = false;
+
   constructor(
     private router: Router,
     private alertCtrl: AlertController,
@@ -342,14 +344,32 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
   }
 
-  async cerrarSesion() {
-    try {
-      await this.authService.logout();
-      this.router.navigate(['/home']);
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-    }
+async cerrarSesion() {
+  const loading = await this.loadingController.create({
+    message: 'Cerrando sesión...',
+    spinner: 'crescent',
+    duration: 1500
+  });
+
+  await loading.present();
+
+  try {
+    await this.authService.logout();
+
+    this.isLoggingOut = true;  // Mostrar animación overlay
+
+    await this.router.navigate(['/home']);
+
+    setTimeout(() => {
+      location.reload();  // Forzar recarga para limpiar todo el estado
+    }, 500);
+
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error);
+  } finally {
+    loading.dismiss();
   }
+}
 
   // Método para mostrar/ocultar saldo
   toggleBalance() {

@@ -6,6 +6,8 @@ import { BehaviorSubject } from 'rxjs';
 import { CardService } from '../services/card.service';
 import { limit } from 'firebase/firestore';
 import { Storage } from '@ionic/storage';
+import { LoadingController } from '@ionic/angular';
+
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -19,6 +21,7 @@ export class AuthService {
   private cacheKey = 'user_financial_data';
 
   constructor(
+    private loadingController: LoadingController,
     private auth: Auth,
     private firestore: Firestore,
     private router: Router,
@@ -92,7 +95,7 @@ export class AuthService {
               this.storage.set('userUid', cred.user.uid),
               this.storage.set('userEmail', email),
               this.storage.set('username', username)
-            ]).then(() => {}); // <-- Ensure void is returned
+            ]).then(() => { }); // <-- Ensure void is returned
           });
         });
       })
@@ -105,29 +108,37 @@ export class AuthService {
       });
   }
 
-  logout(): Promise<void> {
-    // Limpiar todo el almacenamiento
-    return Promise.all([
+  async logout(): Promise<void> {
+    const loading = await this.loadingController.create({
+      message: 'Cerrando sesión...',
+      duration: 1500,
+      spinner: 'crescent'
+    });
+
+    await loading.present();
+
+    await Promise.all([
       this.storage.remove('userUid'),
       this.storage.remove('userEmail'),
       this.storage.remove('username'),
       this.storage.remove(this.cacheKey)
-    ]).then(() => {
-      // Resetear observables y caché en memoria
-      this.userCache = null;
-      this.userSubject.next(null);
-      this.currentUserSubject.next(null);
+    ]);
 
-      // Cerrar sesión en Firebase Auth
-      return signOut(this.auth)
-        .then(() => {
-          this.router.navigate(['/home']);
-        })
-        .catch(error => {
-          console.error('Error al cerrar sesión:', error);
-          throw error;
-        });
-    });
+    this.userCache = null;
+    this.userSubject.next(null);
+    this.currentUserSubject.next(null);
+
+    try {
+      await signOut(this.auth);
+      await this.router.navigateByUrl('/home');
+      setTimeout(() => {
+        location.reload(); // Recarga con un pequeño delay tras el loader
+      }, 300);
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    } finally {
+      loading.dismiss();
+    }
   }
 
   async getCurrentUserData(): Promise<any> {
