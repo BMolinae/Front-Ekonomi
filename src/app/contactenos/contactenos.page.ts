@@ -3,6 +3,7 @@ import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms'; // Necesario para [(ngModel)]
+import { EmailService } from '../services/email.service';
 
 @Component({
   selector: 'app-contactenos',
@@ -16,20 +17,20 @@ import { FormsModule } from '@angular/forms'; // Necesario para [(ngModel)]
   styleUrls: ['./contactenos.page.scss'],
 })
 export class ContactenosPage {
-  nombre: string = '';
-  correo: string = '';
-  asunto: string = '';
-  mensaje: string = '';
+  nombre = '';
+  correo = '';
+  asunto = '';
+  mensaje = '';
 
-  constructor(private toastController: ToastController,
-              private navCtrl : NavController,
-              
-  ) {}
+  constructor(
+    private toastController: ToastController,
+    private navCtrl: NavController,
+    private emailService: EmailService
+  ) { }
 
   goBack() {
     this.navCtrl.back();
   }
-
 
   async enviarMensaje() {
     if (!this.nombre || !this.correo || !this.asunto || !this.mensaje) {
@@ -37,14 +38,19 @@ export class ContactenosPage {
       return;
     }
 
-    // Simulación de envío
-    this.mostrarToast('Mensaje enviado correctamente ✅');
+    try {
+      await this.emailService.sendContactEmail(this.nombre, this.correo, this.asunto, this.mensaje);
+      this.mostrarToast('Mensaje enviado correctamente ✅');
 
-    // Limpiar campos
-    this.nombre = '';
-    this.correo = '';
-    this.asunto = '';
-    this.mensaje = '';
+      // Limpiar campos
+      this.nombre = '';
+      this.correo = '';
+      this.asunto = '';
+      this.mensaje = '';
+    } catch (error) {
+      console.error(error);
+      this.mostrarToast('Error al enviar el mensaje ❌');
+    }
   }
 
   async mostrarToast(mensaje: string) {
@@ -52,9 +58,8 @@ export class ContactenosPage {
       message: mensaje,
       duration: 2000,
       position: 'bottom',
-      cssClass: 'custom-toast', // <- Aplica tu estilo
-      animated: true,
-      color: '', // Lo manejamos por CSS
+      cssClass: 'custom-toast',
+      animated: true
     });
     await toast.present();
   }

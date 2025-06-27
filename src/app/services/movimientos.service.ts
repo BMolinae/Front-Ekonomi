@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, getDocs, query, orderBy, Timestamp } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, getDocs, query, orderBy, Timestamp, doc, getDoc } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
+import { EmailService } from './email.service';
 
 @Injectable({ providedIn: 'root' })
 export class MovimientosService {
@@ -9,7 +10,8 @@ export class MovimientosService {
 
   constructor(
     private firestore: Firestore,
-    private auth: Auth
+    private auth: Auth,
+    private emailService: EmailService
   ) { }
 
   async agregarMovimiento(
@@ -17,22 +19,36 @@ export class MovimientosService {
     descripcion: string,
     monto: number,
     categoria: string,
-    tarjeta: string
   ): Promise<void> {
-    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    console.log('agregarMovimiento: inicio');
 
-    if (!uid) throw new Error('Usuario no autenticado');
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) {
+      console.error('agregarMovimiento: usuario no autenticado');
+      throw new Error('Usuario no autenticado');
+    }
 
     const ref = collection(this.firestore, `users/${uid}/movimientos`);
     await addDoc(ref, {
-      tipo,
-      descripcion,
-      monto,
       categoria_nombre: categoria,
-      tarjeta,
+      descripcion,
       fecha: Timestamp.now(),
+      monto,
+      tipo,
       modo: 'tarjeta'
     });
+
+    console.log('agregarMovimiento: gasto agregado, obteniendo usuario...');
+    const userRef = doc(this.firestore, `users/${uid}`);
+    const userSnap = await getDoc(userRef);
+    const usuario = userSnap.data();
+
+    if (usuario) {
+      console.log('agregarMovimiento: usuario obtenido, verificando gasto...');
+      this.verificarGasto(usuario);
+    } else {
+      console.warn('agregarMovimiento: usuario no encontrado');
+    }
   }
 
 
@@ -45,6 +61,7 @@ export class MovimientosService {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
     if (!uid) throw new Error('Usuario no autenticado');
 
+    // Obtener movimientos
     const ref = collection(this.firestore, `users/${uid}/movimientos`);
     const q = query(ref, orderBy('fecha', 'desc'));
     const snapshot = await getDocs(q);
@@ -55,8 +72,21 @@ export class MovimientosService {
       fecha: doc.data()['fecha']?.toDate?.() || doc.data()['fecha']
     }));
 
+    // Obtener usuario para verificar gasto
+    const userRef = doc(this.firestore, `users/${uid}`);
+    const userSnap = await getDoc(userRef);
+    const usuario = userSnap.data();
+
+    if (usuario) {
+      console.log('obtenerMovimientos: usuario obtenido, verificando gasto...');
+      this.verificarGasto(usuario);
+    } else {
+      console.warn('obtenerMovimientos: usuario no encontrado');
+    }
+
     return this.movimientosCache;
   }
+
 
   async obtenerMovimientosPorTarjeta(tarjeta: string): Promise<any[]> {
     console.log(`Obteniendo movimientos para tarjeta ${tarjeta}...`);
@@ -67,7 +97,6 @@ export class MovimientosService {
     const q = query(ref, orderBy('fecha', 'desc'));
     const snapshot = await getDocs(q);
 
-    // Filtramos manualmente por idTarjeta
     return snapshot.docs
       .map(doc => {
         const data: any = doc.data();
@@ -79,6 +108,37 @@ export class MovimientosService {
         };
       })
       .filter(mov => mov.tarjeta === tarjeta);
+  }
+
+  private verificarGasto(usuario: any) {
+    console.log('verificarGasto: entrando', usuario);
+    const { email, nombre, saldoTarjeta, limiteMensual } = usuario;
+
+    if (!email || !limiteMensual || !saldoTarjeta) {
+      console.log('verificarGasto: faltan datos para enviar alerta');
+      return;
+    }
+
+    const porcentaje = (saldoTarjeta / limiteMensual) * 100;
+
+    console.log(`verificarGasto: porcentaje gastado: ${porcentaje.toFixed(2)}%`);
+
+    if (porcentaje >= 80) {
+      console.log('verificarGasto: porcentaje >= 80%, enviando alerta...');
+      this.emailService.sendGastoAlertaEmail({
+        to_email: email,
+        user_name: nombre || 'Usuario',
+        saldo_tarjeta: saldoTarjeta,
+        limite_mensual: limiteMensual,
+        porcentaje_gastado: Math.round(porcentaje)
+      }).then(() => {
+        console.log('✅ Alerta enviada');
+      }).catch(err => {
+        console.error('❌ Error al enviar alerta:', err);
+      });
+    } else {
+      console.log('verificarGasto: porcentaje < 80%, no se envía alerta');
+    }
   }
 
 }

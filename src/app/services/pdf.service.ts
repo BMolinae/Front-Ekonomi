@@ -5,6 +5,7 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
 import { Platform } from '@ionic/angular';
 import { AlertController } from '@ionic/angular';
+import { Browser } from '@capacitor/browser';
 
 @Injectable({
   providedIn: 'root'
@@ -114,60 +115,34 @@ export class PdfService {
   }
 
   private async savePdf(doc: jsPDF, fileName: string): Promise<void> {
-    if (this.platform.is('hybrid')) {
-      try {
-        // Salida como arraybuffer
-        const buffer = doc.output('arraybuffer');
-
-        // Convertir a base64
-        const base64Data = this.arrayBufferToBase64(buffer);
-
-        const result = await Filesystem.writeFile({
-          path: fileName,
-          data: base64Data,
-          directory: Directory.Documents, // Puedes cambiar a External si necesitas
-          encoding: 'base64' as Encoding
-        });
-
-        console.log('Guardado en:', result.uri);
-
-        const alert = await this.alertController.create({
-          header: 'Reporte guardado',
-          message: `El archivo se ha guardado correctamente. ¿Deseas abrirlo ahora?`,
-          buttons: [
-            {
-              text: 'Abrir',
-              handler: async () => {
-                await FileOpener.open({
-                  filePath: result.uri,
-                  contentType: 'application/pdf',
-                });
-              }
-            },
-            {
-              text: 'Cerrar',
-              role: 'cancel'
-            }
-          ]
-        });
-
-        await alert.present();
-
-      } catch (error) {
-        console.error('Error al guardar PDF:', error);
-        throw error;
-      }
-    } else {
+    try {
       const blob = doc.output('blob');
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      link.click();
-      window.URL.revokeObjectURL(url);
+
+      if (this.platform.is('hybrid')) {
+        // App nativa: usa Capacitor Browser
+        await Browser.open({ url });
+      } else {
+        // Navegador: abrir en nueva pestaña
+        window.open(url, '_blank');
+      }
+
+      // Si prefieres descarga directa en navegador, descomenta esto:
+      // const a = document.createElement('a');
+      // a.href = url;
+      // a.download = fileName;
+      // a.click();
+
+    } catch (error) {
+      console.error('Error al mostrar PDF:', error);
+      const alert = await this.alertController.create({
+        header: 'Error',
+        message: 'No se pudo abrir el PDF',
+        buttons: ['OK']
+      });
+      await alert.present();
     }
   }
-
   private arrayBufferToBase64(buffer: ArrayBuffer): string {
     let binary = '';
     const bytes = new Uint8Array(buffer);

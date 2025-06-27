@@ -1,14 +1,19 @@
-import * as functions from 'firebase-functions';
-import * as nodemailer from 'nodemailer';
+import nodemailer from 'nodemailer';
+import functions from 'firebase-functions';
+import admin from 'firebase-admin';
 
-// Configura el correo desde donde se enviarán los mensajes
+
+admin.initializeApp(); // 👈 Asegúrate de que esté al principio
+
+// Configura el correo
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'EkonomiCBJ@gmail.com', // REEMPLAZA
-        pass: 'fcwoeeavxvmdsnaz' // REEMPLAZA (usa una contraseña de aplicación si tienes 2FA)
-    }
+  service: 'gmail',
+  auth: {
+    user: 'EkonomiCBJ@gmail.com',
+    pass: 'fcwoeeavxvmdsnaz'
+  }
 });
+
 const enviarCorreoHandler = async (
   data: {
     nombre: string;
@@ -41,5 +46,50 @@ const enviarCorreoHandler = async (
   }
 };
 
-// ✅ Aquí se exporta la función Firebase
+// ✅ Exportar función de correo
 export const enviarCorreo = functions.https.onCall(enviarCorreoHandler);
+
+// ✅ Nueva función para notificación de gasto
+export const notificarGastoPorCorreo = functions.firestore
+  .document('users/{uid}/movimientos/{movId}')
+  .onCreate(async (snap, context) => {
+    const { uid } = context.params;
+    const data = snap.data();
+
+    if (data.tipo !== 'gasto') return;
+
+    const userRef = admin.firestore().doc(`users/${uid}`);
+    const userSnap = await userRef.get();
+    const user = userSnap.data();
+
+    if (!user || !user.correo) return;
+
+    const { saldoTarjeta = 0, limiteMensual = 0, email } = user;
+    const correo = email;
+
+
+    if (!limiteMensual || !correo) return;
+
+    const porcentajeGastado = ((limiteMensual - saldoTarjeta) / limiteMensual) * 100;
+
+    if (porcentajeGastado >= 80) {
+      const mailOptions = {
+        from: '"Ekonomi Alertas" <EkonomiCBJ@gmail.com>',
+        to: correo,
+        subject: 'Alerta de Gasto Excesivo',
+        html: `
+          <h2>Has alcanzado el ${Math.round(porcentajeGastado)}% de tu límite mensual</h2>
+          <p>Saldo actual: $${saldoTarjeta.toLocaleString()}</p>
+          <p>Límite mensual: $${limiteMensual.toLocaleString()}</p>
+          <p>Te recomendamos revisar tus gastos para no exceder tu presupuesto.</p>
+        `
+      };
+
+      try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Correo enviado a ${correo}`);
+      } catch (error) {
+        console.error('Error al enviar correo:', error);
+      }
+    }
+  });

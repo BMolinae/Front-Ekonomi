@@ -328,6 +328,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.router.navigate(['/contactenos']);
   }
 
+  abrirModalAgregar() {
+    this.router.navigate(['/modal-tarjeta'])
+  }
+
   async switchToManualMode() {
     try {
       this.modoService.setModoManual(true);

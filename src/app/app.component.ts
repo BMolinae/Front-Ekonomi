@@ -2,6 +2,10 @@ import { Component } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { ModoService } from './services/modo.service';
 
+import { FirebaseX } from '@awesome-cordova-plugins/firebase-x/ngx';
+import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { Auth } from '@angular/fire/auth';
+
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
@@ -15,7 +19,10 @@ export class AppComponent {
 
   constructor(
     private router: Router,
-    private modoService: ModoService
+    private modoService: ModoService,
+    private firebaseX: FirebaseX,
+    private firestore: Firestore,
+    private auth: Auth
   ) {
     this.modoService.modoManual$.subscribe((value) => {
       this.isManualMode = value;
@@ -42,6 +49,13 @@ export class AppComponent {
   ngOnInit() {
     // Forzar modo claro en toda la app
     document.body.setAttribute('color-theme', 'light');
+    this.firebaseX.getToken().then(async token => {
+      const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+      if (!uid || !token) return;
+
+      const userDoc = doc(this.firestore, `users/${uid}`);
+      await setDoc(userDoc, { fcmToken: token }, { merge: true });
+    });
   }
 
   isActive(path: string): boolean {

@@ -79,6 +79,10 @@ const routes: Routes = [
     path: 'modal-manual',
     loadChildren: () => import('./modal-manual/modal-manual.module').then( m => m.ModalManualPageModule)
   },
+  {
+    path: 'modal-tarjeta',
+    loadChildren: () => import('./modal-tarjeta/modal-tarjeta.module').then( m => m.ModalTarjetaPageModule)
+  },
 
 
 
