@@ -1,4 +1,4 @@
-<ion-content class="chat-content">
+<ion-content scroll="true" fullscreen="true" class="chat-content">
   <div class="chat-card">
 
     <!-- 1) Header interno -->
@@ -11,7 +11,7 @@
       </div>
     </div>
 
-    <!-- 3) Sugerencias (debajo de mensajes, encima del form) -->
+    <!-- 3) Sugerencias (chips) -->
     <div class="suggestions-container" *ngIf="suggestions.length">
       <ion-chip *ngFor="let s of suggestions" (click)="onSuggestion(s)">
         {{ s }}
@@ -21,9 +21,10 @@
           style="margin-left: 5px;"></ion-icon>
       </ion-chip>
     </div>
+
     <!-- 4) Formulario de entrada -->
     <form class="chat-form" [formGroup]="chatForm" (ngSubmit)="send()">
-      <ion-input formControlName="message" placeholder="Escribe un mensaje…"></ion-input>
+      <ion-input formControlName="message" placeholder="Escribe un mensaje…" autocapitalize="off"></ion-input>
       <ion-button type="submit" [disabled]="chatForm.invalid" shape="round">
         Enviar
       </ion-button>

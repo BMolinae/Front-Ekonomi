@@ -1,4 +1,5 @@
-<ion-content>
+<ion-content scroll="true" fullscreen="true"> <!-- 👈 IMPORTANTE para que se comporte bien con teclado -->
+
   <div class="login-container">
     <!-- Fondo con gradiente -->
     <div class="background-gradient"></div>
@@ -14,45 +15,47 @@
         </button>
       </div>
 
-      <!-- Logo y título en la parte superior -->
+      <!-- Logo y título -->
       <div class="header-section">
         <div class="logo-text">CB&J</div>
         <h1 class="app-title">Ekonomi</h1>
       </div>
 
-      <!-- Sección central con bienvenida y formulario -->
+      <!-- Sección central -->
       <div class="main-section">
         <div class="welcome-container">
           <h2 class="welcome-text">Bienvenido</h2>
           <p class="welcome-subtitle">Gestiona tus finanzas de manera inteligente</p>
         </div>
 
-        <!-- Formulario de inicio de sesión -->
+        <!-- Formulario -->
         <form [formGroup]="loginForm" (ngSubmit)="login()" class="login-form">
           <div class="form-group">
             <div class="input-wrapper"
               [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
               <ion-icon name="mail-outline"></ion-icon>
-              <ion-input formControlName="email" placeholder="Correo electrónico" type="email"></ion-input>
+              <ion-input formControlName="email" placeholder="Correo electrónico" type="email"
+                         inputmode="email" autocapitalize="off"></ion-input>
             </div>
             <small class="error"
               *ngIf="loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched">
               El correo es obligatorio.
             </small>
-            <small class="error" *ngIf="loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched">
+            <small class="error"
+              *ngIf="loginForm.get('email')?.hasError('email') && loginForm.get('email')?.touched">
               El formato del correo no es válido.
             </small>
           </div>
-
 
           <div class="form-group">
             <div class="input-wrapper"
               [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
               <ion-icon name="lock-closed-outline"></ion-icon>
               <ion-input formControlName="password" placeholder="Contraseña"
-                [type]="showPassword ? 'text' : 'password'"></ion-input>
+                         [type]="showPassword ? 'text' : 'password'"
+                         autocapitalize="off"></ion-input>
               <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" slot="end" class="input-icon"
-                (click)="togglePasswordVisibility()"></ion-icon>
+                        (click)="togglePasswordVisibility()"></ion-icon>
             </div>
             <small class="error"
               *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
@@ -66,7 +69,6 @@
               <a (click)="goToForgotPassword()" class="create-link">¿Olvidaste tu contraseña?</a>
             </div>
           </div>
-
 
           <ion-button expand="block" class="login-button" type="submit">
             INGRESAR
@@ -85,4 +87,5 @@
       </div>
     </div>
   </div>
+
 </ion-content>

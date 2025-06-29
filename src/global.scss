@@ -173,3 +173,21 @@ body {
     transform: rotate(360deg);
   }
 }
+/* Ajustes globales para que el teclado móvil no tape inputs */
+ion-content {
+  --keyboard-offset: 0px; /* Ajuste por defecto, modifícalo si ves que falta espacio */
+  scroll-padding-bottom: 80px; /* Espacio extra al final cuando aparece teclado */
+}
+
+ion-input,
+ion-textarea {
+  scroll-margin-bottom: 80px; /* Evita que el campo quede oculto al enfocarlo */
+  -webkit-text-size-adjust: 100%; /* Evita zoom en iOS al enfocar */
+}
+
+/* Evita zoom automático en inputs y textarea (mejora UX en móviles) */
+input,
+textarea,
+ion-input {
+  font-size: 16px !important;
+}
