@@ -171,7 +171,7 @@ export class ModoDocumentosPage {
         .reduce((sum, m) => sum + +m.monto, 0);
       const restante = limite - usado;
 
-      await this.pdfService.generarPDFCompleto(
+      await this.pdfService.generarPDF(
         user,
         movimientos,
         { saldo, limite, usado, restante }
@@ -323,7 +323,7 @@ export class ModoDocumentosPage {
       const restante = limite - usado;
 
       const resumen = { saldo, limite, usado, restante };
-      await this.pdfService.generarPDFCompleto(user, movimientos, resumen);
+      await this.pdfService.generarPDF(user, movimientos, resumen);
     } catch (error) {
       console.error('Error al generar PDF:', error);
       throw error;
