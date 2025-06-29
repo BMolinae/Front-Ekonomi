@@ -14,7 +14,7 @@ export class MovimientosService {
     private emailService: EmailService
   ) { }
 
-  async agregarMovimiento(
+ async agregarMovimiento(
     tipo: 'ingreso' | 'gasto',
     descripcion: string,
     monto: number, // Recibir el monto siempre positivo
@@ -40,24 +40,13 @@ export class MovimientosService {
       saldoTarjeta: increment(tipo === 'ingreso' ? monto : -monto)
     });
 
-    // Verificación de gasto
+    // Verificación de gasto (movido aquí desde obtenerMovimientos)
     const userSnap = await getDoc(userRef);
     const usuario = userSnap.data();
-    if (usuario) this.verificarGasto(usuario);
-  }
-
-  async getTarjetaBalance(): Promise<number> {
-    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
-    if (!uid) return 0;
-
-    const ref = collection(this.firestore, `users/${uid}/movimientos`);
-    const q = query(ref);
-
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.reduce((sum, doc) => {
-      const data = doc.data();
-      return sum + (data['tipo'] === 'ingreso' ? +data['monto'] : -(+data['monto']));
-    }, 0);
+    if (usuario) {
+      console.log('agregarMovimiento: usuario obtenido, verificando gasto...');
+      this.verificarGasto(usuario);
+    }
   }
 
   async obtenerMovimientos(forceRefresh = false): Promise<any[]> {
@@ -80,21 +69,24 @@ export class MovimientosService {
       fecha: doc.data()['fecha']?.toDate?.() || doc.data()['fecha']
     }));
 
-    // Obtener usuario para verificar gasto
-    const userRef = doc(this.firestore, `users/${uid}`);
-    const userSnap = await getDoc(userRef);
-    const usuario = userSnap.data();
-
-    if (usuario) {
-      console.log('obtenerMovimientos: usuario obtenido, verificando gasto...');
-      this.verificarGasto(usuario);
-    } else {
-      console.warn('obtenerMovimientos: usuario no encontrado');
-    }
+    // Eliminado el verificarGasto de aquí
+    console.log('obtenerMovimientos: movimientos obtenidos sin verificación de gasto');
 
     return this.movimientosCache;
   }
+  async getTarjetaBalance(): Promise<number> {
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) return 0;
 
+    const ref = collection(this.firestore, `users/${uid}/movimientos`);
+    const q = query(ref);
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.reduce((sum, doc) => {
+      const data = doc.data();
+      return sum + (data['tipo'] === 'ingreso' ? +data['monto'] : -(+data['monto']));
+    }, 0);
+  }
 
   async obtenerMovimientosPorTarjeta(tarjeta: string): Promise<any[]> {
     console.log(`Obteniendo movimientos para tarjeta ${tarjeta}...`);
