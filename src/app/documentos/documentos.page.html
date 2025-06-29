@@ -1,9 +1,3 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Documentos</ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content class="docs-content">
   <!-- Botón de descarga completa -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
@@ -12,47 +6,89 @@
     </ion-fab-button>
   </ion-fab>
 
-  <ion-list>
-    <!-- Informe PDF Mensual -->
-    <ion-item>
-      <ion-icon slot="start" name="document-text-outline"></ion-icon>
-      <ion-label>
-        <h3>Informe Mensual (PDF)</h3>
-        <p>Resumen completo con gráficas y transacciones</p>
-      </ion-label>
-      <ion-button slot="end" (click)="downloadReport('monthly')" fill="clear">
-        <ion-icon slot="icon-only" name="download-outline"></ion-icon>
-      </ion-button>
-    </ion-item>
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <ion-icon name="document-text" class="header-icon"></ion-icon>
+      <h2>Mis Documentos</h2>
+      <p>Descarga y exporta tu información financiera</p>
+    </div>
+  </div>
 
-    <!-- Exportar CSV -->
-    <ion-item>
-      <ion-icon slot="start" name="grid-outline"></ion-icon>
-      <ion-label>
-        <h3>Exportar Transacciones (CSV)</h3>
-        <p>Todas tus transacciones en formato CSV</p>
-      </ion-label>
-      <ion-button slot="end" (click)="downloadReport('csv')" fill="clear">
-        <ion-icon slot="icon-only" name="download-outline"></ion-icon>
-      </ion-button>
-    </ion-item>
+  <!-- Main Cards Container -->
+  <div class="cards-container">
+    
+    <!-- Informe PDF Mensual Card -->
+    <div class="document-card featured-card">
+      <div class="card-header">
+        <div class="icon-container primary-bg">
+          <ion-icon name="document-text-outline"></ion-icon>
+        </div>
+        <div class="card-badge">Popular</div>
+      </div>
+      <div class="card-content">
+        <h3>Informe Mensual PDF</h3>
+        <p>Resumen completo con gráficas y análisis detallado de todas tus transacciones del mes</p>
+        <div class="card-features">
+          <div class="feature-item">
+            <ion-icon name="analytics-outline"></ion-icon>
+            <span>Gráficas incluidas</span>
+          </div>
+          <div class="feature-item">
+            <ion-icon name="list-outline"></ion-icon>
+            <span>Transacciones detalladas</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <ion-button (click)="downloadReport('monthly')" expand="block" fill="solid" color="primary">
+          <ion-icon slot="start" name="download-outline"></ion-icon>
+          Descargar PDF
+        </ion-button>
+      </div>
+    </div>
 
-    <!-- Imágenes de Gráficos -->
-    <ion-item lines="none">
-      <ion-label>
-        <h3>Imágenes de Gráficas</h3>
-        <p>Descarga PNG de cada gráfico</p>
-      </ion-label>
-    </ion-item>
-    <ion-item *ngFor="let chart of charts" lines="none">
-      <ion-label>
-        <p>{{ chart.name }}</p>
-      </ion-label>
-      <ion-button slot="end" (click)="downloadReport(chart.id)" fill="clear">
-        <ion-icon slot="icon-only" name="download-outline"></ion-icon>
-      </ion-button>
-    </ion-item>
-  </ion-list>
+    <!-- Exportar CSV Card -->
+    <div class="document-card">
+      <div class="card-header">
+        <div class="icon-container secondary-bg">
+          <ion-icon name="grid-outline"></ion-icon>
+        </div>
+      </div>
+      <div class="card-content">
+        <h3>Exportar a CSV</h3>
+        <p>Todas tus transacciones en formato CSV para análisis en Excel o Google Sheets</p>
+        <div class="card-features">
+          <div class="feature-item">
+            <ion-icon name="cellular-outline"></ion-icon>
+            <span>Formato compatible</span>
+          </div>
+          <div class="feature-item">
+            <ion-icon name="time-outline"></ion-icon>
+            <span>Datos actualizados</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <ion-button (click)="downloadReport('csv')" expand="block" fill="outline" color="primary">
+          <ion-icon slot="start" name="download-outline"></ion-icon>
+          Exportar CSV
+        </ion-button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Info Section -->
+  <div class="info-section">
+    <div class="info-card">
+      <ion-icon name="information-circle-outline" class="info-icon"></ion-icon>
+      <div class="info-content">
+        <h4>¿Necesitas ayuda?</h4>
+        <p>Los documentos se generan con la información más reciente de tu cuenta</p>
+      </div>
+    </div>
+  </div>
 
   <!-- CANVAS ocultos para exportación -->
   <div style="display: none;">
