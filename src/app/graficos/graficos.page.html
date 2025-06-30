@@ -15,7 +15,7 @@
           <h2>Límite restante</h2>
           <span class="badge">Débito</span>
         </div>
-        <div class="amount-large">${{ limitLeft | number }}</div>
+        <div class="amount-large">${{ limitLeft.tarjeta | number }}</div>
         <div class="success-message">
           <ion-icon name="checkmark-circle"></ion-icon>
           {{ limitMessage }}
@@ -23,52 +23,42 @@
         <div class="stat-grid">
           <div class="stat-item">
             <p class="stat-label">Límite Total</p>
-            <p class="stat-value">${{ monthlyLimit | number }}</p>
+            <p class="stat-value">${{ monthlyLimit.tarjeta | number }}</p>
           </div>
           <div class="stat-item">
             <p class="stat-label">Utilizado</p>
-            <p class="stat-value">${{ usedLimit | number }}</p>
+            <p class="stat-value">${{ usedLimit.tarjeta | number }}</p>
           </div>
         </div>
       </div>
 
-<!-- Tarjeta de Uso del Límite Mensual -->
-<div class="dashboard-card">
-  <h2>Uso del límite mensual</h2>
-  <div class="progress-container">
-    <div class="progress-labels">
-      <span>{{ usedPercentage | number: '1.0-0' }}% Utilizado</span>
-      <span>{{ availablePercentage | number: '1.0-0' }}% Disponible</span>
-    </div>
-    <div class="progress-bar">
-      <div class="progress-fill" [style.width.%]="usedPercentage"></div>
-    </div>
-  </div>
-  <div class="chart-container chart-doughnut">
-    <canvas baseChart
-      [data]="doughnutData"
-      [options]="doughnutOpts"
-      [type]="'doughnut'"
-      #doughnutChart>
-    </canvas>
-    <!-- Texto centrado en el doughnut -->
-    <div class="doughnut-center-text">
-      <div class="doughnut-percentage">{{ usedPercentage | number: '1.0-0' }}%</div>
-      <div class="doughnut-label">Utilizado</div>
-    </div>
-  </div>
-</div>
+      <div class="dashboard-card">
+        <h2>Uso del límite mensual</h2>
+        <div class="progress-container">
+          <div class="progress-labels">
+            <span>{{ usedPercentage | number: '1.0-0' }}% Gastado</span>
+            <span>{{ availablePercentage | number: '1.0-0' }}% Disponible</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="usedPercentage"></div>
+          </div>
+        </div>
+        <div class="chart-container chart-doughnut">
+          <canvas baseChart [data]="doughnutData" [options]="doughnutOpts" [type]="'doughnut'" #doughnutChart>
+          </canvas>
+          <div class="doughnut-center-text">
+            <div class="doughnut-percentage">{{ usedPercentage | number: '1.0-0' }}%</div>
+            <div class="doughnut-label">Gastado</div>
+          </div>
+        </div>
+      </div>
 
       <!-- Gráfico de Comparación Mensual (línea) -->
       <div class="dashboard-card">
         <h2>Comparación mensual</h2>
         <p class="subtitle">Últimos 4 meses</p>
         <div class="chart-container chart-line-large">
-          <canvas baseChart
-            [data]="lineData"
-            [options]="lineOpts"
-            [type]="'line'"
-            #lineChart>
+          <canvas baseChart [data]="lineData" [options]="lineOpts" [type]="'line'" #lineChart>
           </canvas>
         </div>
         <div class="chart-legend">
@@ -88,11 +78,7 @@
       <div class="dashboard-card">
         <h2>Gastos por categoría</h2>
         <div class="chart-container">
-          <canvas baseChart
-            [data]="pieData"
-            [options]="pieOpts"
-            [type]="'pie'"
-            #pieChart>
+          <canvas baseChart [data]="pieData" [options]="pieOpts" [type]="'pie'" #pieChart>
           </canvas>
         </div>
         <div class="category-legend" *ngIf="categoryDetails && categoryDetails.length > 0">

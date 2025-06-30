@@ -1,23 +1,23 @@
-// src/app/documentos/documentos.page.ts
-
 import { Component, OnInit } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';  // Mantenido de la versión original
-import { AlertController, Platform } from '@ionic/angular';         // Mantenido
-import { Chart } from 'chart.js';                                   // Mantenido
-import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';  // Agregado para Android 14
-import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';                // Agregado para abrir PDF
-import { PdfService } from '../services/pdf.service';               // Mantenido
-import { IonicModule } from '@ionic/angular'; // ✅ Agregar esto
+import { AlertController, Platform } from '@ionic/angular';
+import { Chart } from 'chart.js';
+import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
+import { FileOpener } from '@awesome-cordova-plugins/file-opener/ngx';
+import { PdfService } from '../services/pdf.service';
+import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
+
+import { Firestore, collection, collectionData } from '@angular/fire/firestore'; // ✅ Firebase modular
+import { firstValueFrom } from 'rxjs'; // Para usar async/await con collectionData
 
 @Component({
   selector: 'app-documentos',
   templateUrl: './documentos.page.html',
   styleUrls: ['./documentos.page.scss'],
   providers: [AndroidPermissions, FileOpener],
-  standalone: true, // ✅ Asegúrate de que esté esto
+  standalone: true,
   imports: [
-    IonicModule,     // ✅ Necesario para reconocer <ion-*>
+    IonicModule,
     CommonModule
   ]
 })
@@ -33,7 +33,7 @@ export class DocumentosPage implements OnInit {
   ];
 
   constructor(
-    private firestore: AngularFirestore,
+    private firestore: Firestore,
     private alertCtrl: AlertController,
     private platform: Platform,
     private androidPermissions: AndroidPermissions,
@@ -41,39 +41,22 @@ export class DocumentosPage implements OnInit {
     private pdfService: PdfService
   ) { }
 
-  downloadCompleteReport() {
-    console.log('Descargando informe completo...');
-    // lógica para generar informe completo en PDF
-  }
-
-  downloadReport(tipo: string) {
-    console.log('Descargar reporte:', tipo);
-    // lógica para generar PDF, CSV o imagen según tipo
-  }
-
-
   async ngOnInit() {
-    // Solicitar permisos en Android 14 antes de cualquier acceso a almacenamiento
     if (this.platform.is('android')) {
       await this.checkAndroidPermissions();
     }
 
-    // Carga de usuario y movimientos (mismo flujo que antes)
     const uid = /* obtener UID de usuario logueado */ 'user123';
     this.usuario = { nombre: 'Usuario Ejemplo', uid };
 
-    this.firestore
-      .collection(`movimientos/${uid}/registros`)
-      .valueChanges()
-      .subscribe((docs: any[]) => {
-        this.movimientos = docs;
-        this.calcularResumen();           // Mantenido
-        this.initChart();                 // Mantenido
-      });
+    const ref = collection(this.firestore, `movimientos/${uid}/registros`);
+    this.movimientos = await firstValueFrom(collectionData(ref));
+    
+    this.calcularResumen();
+    this.initChart();
   }
 
   private calcularResumen() {
-    // Lógica original de cálculo de resumen
     const usados = this.movimientos.reduce((sum, m) => sum + m.monto, 0);
     const limite = 1000;
     this.resumen = {
@@ -85,7 +68,6 @@ export class DocumentosPage implements OnInit {
   }
 
   private initChart() {
-    // Creación del gráfico con Chart.js (mantenido)
     const ctx = document.getElementById('myChart') as HTMLCanvasElement;
     new Chart(ctx, {
       type: 'pie',
@@ -115,7 +97,6 @@ export class DocumentosPage implements OnInit {
 
   async generarPDF() {
     try {
-      // Generación y guardado del PDF delegado al servicio
       const result = await this.pdfService.generarPDF(
         this.usuario,
         this.movimientos,
@@ -127,10 +108,7 @@ export class DocumentosPage implements OnInit {
       } else {
         throw new Error('No se pudo generar el archivo PDF');
       }
-
-      // Abrir automáticamente el PDF en Android
     } catch (err) {
-      // Mismo manejo de errores que la versión original
       const alert = await this.alertCtrl.create({
         header: 'Error',
         message: 'No se pudo generar o descargar el PDF: ' + err,
@@ -140,7 +118,11 @@ export class DocumentosPage implements OnInit {
     }
   }
 
+  downloadCompleteReport() {
+    console.log('Descargando informe completo...');
+  }
 
-
-
+  downloadReport(tipo: string) {
+    console.log('Descargar reporte:', tipo);
+  }
 }

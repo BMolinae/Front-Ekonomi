@@ -4,7 +4,7 @@ import { Firestore, doc, addDoc, setDoc, getDoc, getDocs, collection } from '@an
 import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { CardService } from '../services/card.service';
-import { limit } from 'firebase/firestore';
+import { limit, updateDoc } from 'firebase/firestore';
 import { Storage } from '@ionic/storage';
 import { LoadingController } from '@ionic/angular';
 
@@ -225,16 +225,34 @@ export class AuthService {
     }
   }
 
+
+  async resetGastoMensual(): Promise<void> {
+    const uid = this.auth.currentUser?.uid || await this.storage.get('userUid');
+    if (!uid) throw new Error('Usuario no autenticado');
+
+    const ref = doc(this.firestore, `users/${uid}`);
+    await setDoc(ref, {
+      gastoMensualActual: 0
+    }, { merge: true });
+  }
+
+  async updateGastoMensual(monto: number): Promise<void> {
+    const uid = this.auth.currentUser?.uid || await this.storage.get('userUid');
+    if (!uid) throw new Error('Usuario no autenticado');
+
+    const ref = doc(this.firestore, `users/${uid}`);
+    await setDoc(ref, { gastoMensualActual: monto }, { merge: true });
+  }
+
+
   async setLimit(limit: number, modo: 'manual' | 'tarjeta'): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
     if (!uid) throw new Error('Usuario no autenticado');
 
     const field = modo === 'manual' ? 'limiteMensualManual' : 'limiteMensual';
     const ref = doc(this.firestore, `users/${uid}`);
-    await setDoc(ref, { [field]: limit }, { merge: true });
+    await setDoc(ref, { [field]: limit }, { merge: true });;
   }
-
-
 
   async updateSaldo(nuevoSaldo: number, modo: 'manual' | 'tarjeta'): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');

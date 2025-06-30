@@ -26,7 +26,7 @@ export class EmailService {
   sendGastoAlertaEmail(data: {
     to_email: string;
     user_name: string;
-    saldo_tarjeta: number;
+    gasto_actual: number;
     limite_mensual: number;
     porcentaje_gastado: number;
   }) {

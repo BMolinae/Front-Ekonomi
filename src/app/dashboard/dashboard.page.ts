@@ -41,6 +41,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   percentOfLimit = 0;
   monthlyLimit = 0;
 
+  gastoMensualActual = 0;
+  porcentajeGastado = 0;
+  diasRestantesMes = 0;
+
   // UI States
   isBalanceHidden = false;
   isUserPanelExpanded = false;
@@ -79,6 +83,12 @@ export class DashboardPage implements OnInit, OnDestroy {
     });
   }
 
+  private calcularDiasRestantesMes() {
+    const hoy = new Date();
+    const ultimoDiaMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+    this.diasRestantesMes = ultimoDiaMes.getDate() - hoy.getDate();
+  }
+
   private async loadCachedData() {
     const cachedData = await this.storage.get('user_financial_data');
     if (cachedData) {
@@ -91,18 +101,22 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.loadUserData(),
       this.loadMovimientos()
     ]);
+    this.calcularDiasRestantesMes();
   }
 
   async loadUserData() {
     try {
       const userData = await this.authService.getCurrentUserData();
       if (userData) {
-        this.tarjeta = userData.tarjeta || ''; // Dato estático
-        this.cardType = userData.cardType || ''; // Dato estático
-
-        // Datos dinámicos (siempre frescos desde Firestore)
+        this.tarjeta = userData.tarjeta || '';
+        this.cardType = userData.cardType || '';
         this.monthlyLimit = userData.limiteMensual || 0;
         this.saldoTarjeta = userData.saldoTarjeta || 0;
+        this.gastoMensualActual = userData.gastoMensualActual || 0; // <-- Fuente principal
+
+        this.porcentajeGastado = this.monthlyLimit > 0
+          ? Math.min(Math.round((this.gastoMensualActual / this.monthlyLimit) * 100), 100)
+          : 0;
       }
     } catch (error) {
       console.error('Error al cargar datos del usuario:', error);
@@ -133,28 +147,26 @@ export class DashboardPage implements OnInit, OnDestroy {
     const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
     const movMes = this.movimientos.filter(m => new Date(m.fecha) >= inicioMes);
 
-    const ingresos = movMes
+    // Calcular solo ingresos (gastos vienen de Firestore)
+    this.ingresoMes = movMes
       .filter(m => m.tipo === 'ingreso')
       .reduce((sum, m) => sum + +m.monto, 0);
 
-    const gastos = movMes
-      .filter(m => m.tipo === 'gasto')
-      .reduce((sum, m) => sum + +m.monto, 0);
-
-    this.ingresoMes = ingresos;
-    this.gastosMes = gastos;
-    this.saldoTarjeta = ingresos - gastos;
-    this.limitLeft = this.monthlyLimit - gastos;
-
+    // Usar gastoMensualActual como fuente principal
+    this.limitLeft = this.monthlyLimit - this.gastoMensualActual;
     this.percentOfLimit = this.monthlyLimit > 0
-      ? Math.min(Math.round((gastos / this.monthlyLimit) * 100), 100)
+      ? Math.min(Math.round((this.gastoMensualActual / this.monthlyLimit) * 100), 100)
       : 0;
 
-    this.authService.updateSaldo(this.saldoTarjeta, 'tarjeta').catch(err => {
-      console.error('Error al actualizar saldo:', err);
+    console.log('Estadísticas:', {
+      saldoFirestore: this.saldoTarjeta,
+      ingresos: this.ingresoMes,
+      gastosFirestore: this.gastoMensualActual
     });
-    this.saveFinancialData();
   }
+
+
+
 
   private saveFinancialData() {
     const data = {
@@ -180,20 +192,115 @@ export class DashboardPage implements OnInit, OnDestroy {
         }
       }],
       buttons: [
-        { text: 'Cancelar', role: 'cancel' },
         {
-          text: 'Guardar',
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Continuar',
           handler: async (data) => {
             const newLimit = Number(data.limite);
+            if (isNaN(newLimit)) {
+              this.showToast('El límite ingresado no es válido');
+              return false;
+            }
+
+            // Mostrar confirmación para resetear gastos
+            await this.confirmResetGastos(newLimit);
+            return false; // Evitar que el alert se cierre automáticamente
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async confirmResetGastos(newLimit: number) {
+    const confirm = await this.alertCtrl.create({
+      header: '¿Reiniciar gastos del mes?',
+      message: '¿Deseas reiniciar el contador de gastos mensuales a cero? Esto es recomendado al cambiar el límite.',
+      buttons: [
+        {
+          text: 'No, usar gastos mensuales',
+          handler: async () => {
+            await this.updateLimit(newLimit, false);
+          }
+        },
+        {
+          text: 'Sí, reiniciar',
+          handler: async () => {
+            await this.updateLimit(newLimit, true);
+          }
+        }
+      ]
+    });
+    await confirm.present();
+  }
+
+  private async updateLimit(newLimit: number, resetGastos: boolean) {
+    const loading = await this.loadingController.create({
+      message: 'Actualizando límite...'
+    });
+    await loading.present();
+
+    try {
+      // 1. Actualizar el límite primero
+      await this.authService.setLimit(newLimit, 'tarjeta');
+
+      if (resetGastos) {
+        // Opción: Reiniciar gastos
+        await this.authService.resetGastoMensual();
+        this.gastoMensualActual = 0;
+        this.showToast('Límite actualizado y gastos reiniciados');
+      } else {
+        // Opción: Mantener gastos
+        // Calcula los gastos actuales desde los movimientos
+        const now = new Date();
+        const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+        const gastosActuales = this.movimientos
+          .filter(m => new Date(m.fecha) >= inicioMes && m.tipo === 'gasto')
+          .reduce((sum, m) => sum + +m.monto, 0);
+
+        // Actualiza Firestore con los gastos calculados
+        await this.authService.updateGastoMensual(gastosActuales);
+        this.gastoMensualActual = gastosActuales;
+        this.showToast('Límite actualizado correctamente');
+      }
+
+      // Actualizar UI
+      this.monthlyLimit = newLimit;
+      this.porcentajeGastado = this.monthlyLimit > 0
+        ? Math.min(Math.round((this.gastoMensualActual / this.monthlyLimit) * 100), 100)
+        : 0;
+
+    } catch (error) {
+      console.error('Error al actualizar límite:', error);
+      const errorMessage = (error as any)?.message || 'Error al guardar límite';
+      this.showToast(errorMessage);
+    } finally {
+      await loading.dismiss();
+    }
+  }
+
+  async resetearGastoMensual() {
+    const alert = await this.alertCtrl.create({
+      header: '¿Comenzar nuevo mes?',
+      message: 'Esto reseteará tu contador de gastos mensuales a cero.',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Confirmar',
+          handler: async () => {
             try {
-              await this.authService.setLimit(newLimit, 'tarjeta');
-              // Actualizar UI directamente sin depender de cache
-              this.monthlyLimit = newLimit;
-              this.computeMonthlyStats();
-              this.showToast('Límite actualizado correctamente');
+              await this.authService.resetGastoMensual();
+              this.gastoMensualActual = 0;
+              this.porcentajeGastado = 0;
+              this.showToast('Contador de gastos reiniciado');
             } catch (error) {
-              const errorMessage = (error as any)?.message || 'Error al guardar límite';
-              this.showToast(errorMessage);
+              this.showToast('Error al reiniciar contador');
             }
           }
         }
@@ -344,32 +451,32 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
   }
 
-async cerrarSesion() {
-  const loading = await this.loadingController.create({
-    message: 'Cerrando sesión...',
-    spinner: 'crescent',
-    duration: 1500
-  });
+  async cerrarSesion() {
+    const loading = await this.loadingController.create({
+      message: 'Cerrando sesión...',
+      spinner: 'crescent',
+      duration: 1500
+    });
 
-  await loading.present();
+    await loading.present();
 
-  try {
-    await this.authService.logout();
+    try {
+      await this.authService.logout();
 
-    this.isLoggingOut = true;  // Mostrar animación overlay
+      this.isLoggingOut = true;  // Mostrar animación overlay
 
-    await this.router.navigate(['/home']);
+      await this.router.navigate(['/home']);
 
-    setTimeout(() => {
-      location.reload();  // Forzar recarga para limpiar todo el estado
-    }, 500);
+      setTimeout(() => {
+        location.reload();  // Forzar recarga para limpiar todo el estado
+      }, 500);
 
-  } catch (error) {
-    console.error('Error al cerrar sesión:', error);
-  } finally {
-    loading.dismiss();
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    } finally {
+      loading.dismiss();
+    }
   }
-}
 
   // Método para mostrar/ocultar saldo
   toggleBalance() {

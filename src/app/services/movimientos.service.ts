@@ -14,7 +14,7 @@ export class MovimientosService {
     private emailService: EmailService
   ) { }
 
- async agregarMovimiento(
+  async agregarMovimiento(
     tipo: 'ingreso' | 'gasto',
     descripcion: string,
     monto: number, // Recibir el monto siempre positivo
@@ -36,9 +36,15 @@ export class MovimientosService {
 
     // Obtener y actualizar usuario
     const userRef = doc(this.firestore, `users/${uid}`);
-    await updateDoc(userRef, {
+    const updateData: any = {
       saldoTarjeta: increment(tipo === 'ingreso' ? monto : -monto)
-    });
+    };
+
+    if (tipo === 'gasto') {
+      updateData.gastoMensualActual = increment(monto);
+    }
+
+    await updateDoc(userRef, updateData);
 
     // Verificación de gasto (movido aquí desde obtenerMovimientos)
     const userSnap = await getDoc(userRef);
@@ -112,15 +118,14 @@ export class MovimientosService {
 
   private verificarGasto(usuario: any) {
     console.log('verificarGasto: entrando', usuario);
-    const { email, nombre, saldoTarjeta, limiteMensual } = usuario;
+    const { email, nombre, gastoMensualActual, limiteMensual } = usuario;
 
-    if (!email || !limiteMensual || !saldoTarjeta) {
+    if (!email || !limiteMensual || gastoMensualActual === undefined) {
       console.log('verificarGasto: faltan datos para enviar alerta');
       return;
     }
 
-    const porcentaje = (saldoTarjeta / limiteMensual) * 100;
-
+    const porcentaje = (gastoMensualActual / limiteMensual) * 100;
     console.log(`verificarGasto: porcentaje gastado: ${porcentaje.toFixed(2)}%`);
 
     if (porcentaje >= 80) {
@@ -128,7 +133,7 @@ export class MovimientosService {
       this.emailService.sendGastoAlertaEmail({
         to_email: email,
         user_name: nombre || 'Usuario',
-        saldo_tarjeta: saldoTarjeta,
+        gasto_actual: gastoMensualActual,
         limite_mensual: limiteMensual,
         porcentaje_gastado: Math.round(porcentaje)
       }).then(() => {
@@ -139,6 +144,27 @@ export class MovimientosService {
     } else {
       console.log('verificarGasto: porcentaje < 80%, no se envía alerta');
     }
+  }
+
+  async resetearGastoMensual(): Promise<void> {
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) throw new Error('Usuario no autenticado');
+
+    const userRef = doc(this.firestore, `users/${uid}`);
+    await updateDoc(userRef, {
+      gastoMensualActual: 0
+    });
+  }
+
+  async actualizarLimiteMensual(nuevoLimite: number): Promise<void> {
+    const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');
+    if (!uid) throw new Error('Usuario no autenticado');
+
+    const userRef = doc(this.firestore, `users/${uid}`);
+    await updateDoc(userRef, {
+      limiteMensual: nuevoLimite,
+      gastoMensualActual: 0
+    });
   }
 
 }
