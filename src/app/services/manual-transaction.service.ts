@@ -11,10 +11,11 @@ import {
   query,
   orderBy,
   Timestamp,
-  getDocs
+  getDocs,
+  increment
 } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { Observable, from } from 'rxjs';
+import { Observable, Subject, from } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 @Injectable({
@@ -31,21 +32,42 @@ export class ManualTransactionService {
     return collection(this.firestore, `users/${userId}/movimientosManual`);
   }
 
+  private transactionsUpdated = new Subject<void>();
+  transactionsUpdated$ = this.transactionsUpdated.asObservable();
+
   async addTransaction(transaction: any): Promise<void> {
     const user = this.auth.currentUser;
     if (!user) throw new Error('Usuario no autenticado');
 
+    // Asegurar que el monto sea positivo
+    const montoPositivo = Math.abs(transaction.monto);
     const transactionDoc = {
       ...transaction,
+      monto: montoPositivo,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      // Asegurar que la fecha sea un Timestamp si viene como string
       fecha: transaction.fecha ? Timestamp.fromDate(new Date(transaction.fecha)) : serverTimestamp(),
       modo: 'manual'
     };
 
     const transactionsRef = this.getUserManualTransactionsRef(user.uid);
     await addDoc(transactionsRef, transactionDoc);
+
+    // Actualizar gasto mensual y saldo
+    const userRef = doc(this.firestore, `users/${user.uid}`);
+
+    if (transaction.tipo === 'gasto') {
+      await updateDoc(userRef, {
+        gastoMensualActualManual: increment(montoPositivo),
+        saldoManual: increment(-montoPositivo)
+      });
+    } else if (transaction.tipo === 'ingreso') {
+      await updateDoc(userRef, {
+        saldoManual: increment(montoPositivo)
+      });
+    }
+    
+    this.transactionsUpdated.next();
   }
 
   getTransactions(): Observable<any[]> {
@@ -75,6 +97,7 @@ export class ManualTransactionService {
 
     const docRef = doc(this.firestore, `users/${user.uid}/movimientosManual/${transactionId}`);
     await deleteDoc(docRef);
+    this.transactionsUpdated.next();
   }
 
   async updateTransaction(transactionId: string, updates: any): Promise<void> {
@@ -88,6 +111,7 @@ export class ManualTransactionService {
 
     const docRef = doc(this.firestore, `users/${user.uid}/movimientosManual/${transactionId}`);
     await updateDoc(docRef, updateData);
+    this.transactionsUpdated.next();
   }
 
   async getManualBalance(): Promise<number> {

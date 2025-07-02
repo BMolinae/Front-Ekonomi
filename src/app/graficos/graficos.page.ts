@@ -523,13 +523,15 @@ export class GraficosPage implements OnInit {
     const now = new Date();
     const meses: { nombre: string; ingresos: number; gastos: number; esMesActual: boolean }[] = [];
 
+    // Asegurarnos de incluir el mes actual y los 3 anteriores
     for (let i = 3; i >= 0; i--) {
       const fecha = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const inicioMes = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
       const finMes = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0);
 
+      // Quitar el filtro por modo para incluir todos los movimientos
       const movimientosDelMes = movimientos.filter(m => {
-        const fechaMovimiento = new Date(m.fecha);
+        const fechaMovimiento = m.fecha?.toDate ? m.fecha.toDate() : new Date(m.fecha);
         return fechaMovimiento >= inicioMes && fechaMovimiento <= finMes;
       });
 
@@ -549,7 +551,7 @@ export class GraficosPage implements OnInit {
         'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
       meses.push({
-        nombre: monthNames[fecha.getMonth()],
+        nombre: `${monthNames[fecha.getMonth()]} ${fecha.getFullYear().toString().slice(-2)}`,
         ingresos,
         gastos,
         esMesActual: i === 0
@@ -593,6 +595,8 @@ export class GraficosPage implements OnInit {
         }
       ]
     };
+
+    console.log('Datos para gráfico de línea:', this.lineData);
   }
 
   private configurarDailyExpensesChart(gastosPorDia: Record<number, number>) {

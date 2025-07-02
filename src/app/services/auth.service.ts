@@ -244,6 +244,24 @@ export class AuthService {
     await setDoc(ref, { gastoMensualActual: monto }, { merge: true });
   }
 
+  async resetGastoMensualManual(): Promise<void> {
+    const uid = this.auth.currentUser?.uid || await this.storage.get('userUid');
+    if (!uid) throw new Error('Usuario no autenticado');
+
+    const ref = doc(this.firestore, `users/${uid}`);
+    await setDoc(ref, {
+      gastoMensualActualManual: 0
+    }, { merge: true });
+  }
+
+  async updateGastoMensualManual(monto: number): Promise<void> {
+    const uid = this.auth.currentUser?.uid || await this.storage.get('userUid');
+    if (!uid) throw new Error('Usuario no autenticado');
+
+    const ref = doc(this.firestore, `users/${uid}`);
+    await setDoc(ref, { gastoMensualActualManual: monto }, { merge: true });
+  }
+
 
   async setLimit(limit: number, modo: 'manual' | 'tarjeta'): Promise<void> {
     const uid = this.auth.currentUser?.uid || localStorage.getItem('userUid');

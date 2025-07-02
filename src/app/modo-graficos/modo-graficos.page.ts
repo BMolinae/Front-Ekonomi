@@ -1,4 +1,3 @@
-// src/app/modo-graficos/modo-graficos.page.ts
 import 'chart.js/auto';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
@@ -39,10 +38,19 @@ export class ModoGraficosPage implements OnInit {
   @ViewChild('doughnutChart') doughnutChart?: BaseChartDirective;
 
   user: any;
-  monthlyLimit = 0;
-  limitLeft = 0;
+  monthlyLimit = {
+    manual: 0,
+    total: 0
+  };
+  limitLeft = {
+    manual: 0,
+    total: 0
+  };
+  usedLimit = {
+    manual: 0,
+    total: 0
+  };
   totalExpenses = 0;
-  usedLimit = 0;
   usedPercentage = 0;
   availablePercentage = 0;
   currentMonth: string = '';
@@ -81,13 +89,13 @@ export class ModoGraficosPage implements OnInit {
           label: (context) => {
             const label = context.label || '';
             const value = context.parsed;
-            
+
             if (label === 'Límite disponible') {
               return `${label}: $${value.toLocaleString('es-CL')} disponible`;
             }
-            
-            if (this.monthlyLimit > 0) {
-              const percentage = ((value / this.monthlyLimit) * 100).toFixed(1);
+
+            if (this.monthlyLimit.manual > 0) {
+              const percentage = ((value / this.monthlyLimit.manual) * 100).toFixed(1);
               return `${label}: $${value.toLocaleString('es-CL')} (${percentage}% del límite)`;
             } else {
               let total = 0;
@@ -103,13 +111,13 @@ export class ModoGraficosPage implements OnInit {
       datalabels: {
         formatter: (value: number, context) => {
           const label = context.chart.data.labels?.[context.dataIndex] as string;
-          
+
           if (label === 'Límite disponible') {
-            const percentage = this.monthlyLimit ? (value / this.monthlyLimit) * 100 : 0;
+            const percentage = this.monthlyLimit.manual ? (value / this.monthlyLimit.manual) * 100 : 0;
             return percentage > 10 ? `${percentage.toFixed(1)}%` : '';
           }
-          
-          const percentage = this.monthlyLimit ? (value / this.monthlyLimit) * 100 : 0;
+
+          const percentage = this.monthlyLimit.manual ? (value / this.monthlyLimit.manual) * 100 : 0;
           return percentage > 5 ? `${percentage.toFixed(1)}%` : '';
         },
         font: {
@@ -139,9 +147,9 @@ export class ModoGraficosPage implements OnInit {
           label: (context) => {
             const label = context.label || '';
             if (label === 'Usado') {
-              return `${label}: $${this.usedLimit.toLocaleString('es-CL')} (${this.usedPercentage.toFixed(1)}%)`;
+              return `${label}: $${this.usedLimit.manual.toLocaleString('es-CL')} (${this.usedPercentage.toFixed(1)}%)`;
             } else {
-              return `${label}: $${this.limitLeft.toLocaleString('es-CL')} (${this.availablePercentage.toFixed(1)}%)`;
+              return `${label}: $${this.limitLeft.manual.toLocaleString('es-CL')} (${this.availablePercentage.toFixed(1)}%)`;
             }
           }
         }
@@ -185,7 +193,7 @@ export class ModoGraficosPage implements OnInit {
         ticks: {
           color: '#666',
           font: { size: 12 },
-          callback: function(value) {
+          callback: function (value) {
             return '$' + Number(value).toLocaleString('es-CL');
           }
         }
@@ -225,7 +233,7 @@ export class ModoGraficosPage implements OnInit {
         ticks: {
           color: '#666',
           font: { size: 11 },
-          callback: function(value) {
+          callback: function (value) {
             return '$' + Number(value).toLocaleString('es-CL');
           }
         }
@@ -239,9 +247,28 @@ export class ModoGraficosPage implements OnInit {
   ) { }
 
   async ngOnInit() {
-    this.user = await this.authService.getCurrentUserData();
-    this.monthlyLimit = this.user?.limiteMensualManual || 0;
+    await this.loadAndProcessData();
+  }
 
+  private async loadAndProcessData() {
+    // Cargar datos del usuario
+    this.user = await this.authService.getCurrentUserData();
+
+    // Establecer límites manuales
+    this.monthlyLimit.manual = this.user?.limiteMensualManual || 0;
+    this.monthlyLimit.total = this.monthlyLimit.manual;
+
+    // Usar gasto mensual manual de Firebase
+    this.usedLimit.manual = this.user?.gastoMensualActualManual || 0;
+    this.limitLeft.manual = Math.max(0, this.monthlyLimit.manual - this.usedLimit.manual);
+
+    // Calcular porcentajes
+    this.usedPercentage = this.monthlyLimit.manual > 0
+      ? Math.min((this.usedLimit.manual / this.monthlyLimit.manual) * 100, 100)
+      : 0;
+    this.availablePercentage = Math.max(0, 100 - this.usedPercentage);
+
+    // Configurar mes actual
     const now = new Date();
     const monthNames = [
       'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -249,67 +276,44 @@ export class ModoGraficosPage implements OnInit {
     ];
     this.currentMonth = monthNames[now.getMonth()] + ' ' + now.getFullYear();
 
-    await this.loadAndProcessData();
-  }
-
-  async loadAndProcessData() {
-    try {
-      const transactions = await this.manualTransactionService.getTransactions().toPromise();
-      if (transactions) {
-        this.procesarDatos(transactions);
-        this.generateLimitMessage();
-        this.updateCharts();
-      }
-    } catch (error) {
-      console.error('Error al cargar transacciones manuales:', error);
+    // Cargar transacciones y procesar datos
+    const transactions = await this.manualTransactionService.getTransactions().toPromise();
+    if (transactions) {
+      this.procesarTransacciones(transactions);
     }
+
+    this.generateLimitMessage();
+    this.updateCharts();
   }
 
-  private procesarDatos(transactions: any[]) {
+  private procesarTransacciones(transactions: any[]) {
     const now = new Date();
     const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Mapear transacciones a formato compatible
-    const movimientos = transactions.map(t => ({
-      ...t,
-      tipo: t.monto >= 0 ? 'ingreso' : 'gasto',
-      monto: Math.abs(t.monto),
-      categoria: t.categoria || 'Otros',
-      fecha: t.fecha || t.createdAt
-    }));
+    // Filtrar solo gastos del mes actual
+    const gastosDelMes = transactions.filter(t => {
+      const fecha = t.fecha?.toDate?.() || t.createdAt?.toDate?.() || new Date();
+      return fecha >= inicioMes && t.tipo === 'gasto';
+    });
 
-    const movimientosDelMes = movimientos.filter(
-      m => new Date(m.fecha) >= inicioMes
-    );
-
+    // Procesar gastos por categoría
     const gastosPorCategoria: Record<string, number> = {};
     const gastosPorDia: Record<number, number> = {};
 
-    this.totalExpenses = 0;
-
-    for (const m of movimientosDelMes) {
-      const fecha = new Date(m.fecha);
+    gastosDelMes.forEach(t => {
+      const fecha = t.fecha?.toDate?.() || t.createdAt?.toDate?.() || new Date();
       const dia = fecha.getDate();
-      const monto = +m.monto;
-      const cat = m.categoria || 'Otros';
+      const monto = Math.abs(t.monto);
+      const categoria = t.categoria || 'Otros';
 
-      if (m.tipo === 'gasto') {
-        gastosPorCategoria[cat] = (gastosPorCategoria[cat] || 0) + monto;
-        gastosPorDia[dia] = (gastosPorDia[dia] || 0) + monto;
-        this.totalExpenses += monto;
-      }
-    }
+      gastosPorCategoria[categoria] = (gastosPorCategoria[categoria] || 0) + monto;
+      gastosPorDia[dia] = (gastosPorDia[dia] || 0) + monto;
+    });
 
-    this.usedLimit = this.totalExpenses;
-    this.limitLeft = Math.max(0, this.monthlyLimit - this.usedLimit);
-    this.usedPercentage = this.monthlyLimit
-      ? Math.min((this.usedLimit / this.monthlyLimit) * 100, 100)
-      : 0;
-    this.availablePercentage = Math.max(0, 100 - this.usedPercentage);
-
+    // Configurar gráficos
     this.configurarPieChart(gastosPorCategoria);
     this.configurarDoughnutChart();
-    this.configurarLineChart(movimientos);
+    this.configurarLineChart(transactions);
     this.configurarDailyExpensesChart(gastosPorDia);
   }
 
@@ -320,14 +324,14 @@ export class ModoGraficosPage implements OnInit {
 
     this.categoryDetails = [];
 
-    if (this.monthlyLimit > 0) {
+    if (this.monthlyLimit.manual > 0) {
       const sortedCategories = Object.entries(gastosPorCategoria)
         .sort(([, a], [, b]) => b - a);
 
       let colorIndex = 0;
 
       for (const [categoria, monto] of sortedCategories) {
-        const percentage = (monto / this.monthlyLimit) * 100;
+        const percentage = (monto / this.monthlyLimit.manual) * 100;
         const color = this.obtenerColorCategoria(categoria, colorIndex);
 
         labels.push(categoria);
@@ -344,16 +348,16 @@ export class ModoGraficosPage implements OnInit {
         colorIndex++;
       }
 
-      if (this.limitLeft > 0) {
-        const availablePercentage = (this.limitLeft / this.monthlyLimit) * 100;
-        
+      if (this.limitLeft.manual > 0) {
+        const availablePercentage = (this.limitLeft.manual / this.monthlyLimit.manual) * 100;
+
         labels.push('Límite disponible');
-        data.push(this.limitLeft);
+        data.push(this.limitLeft.manual);
         backgroundColors.push('#ecf0f1');
 
         this.categoryDetails.push({
           name: 'Límite disponible',
-          amount: this.limitLeft,
+          amount: this.limitLeft.manual,
           percentage: Math.round(availablePercentage),
           color: '#ecf0f1'
         });
@@ -401,13 +405,10 @@ export class ModoGraficosPage implements OnInit {
     const usedColor = this.usedPercentage >= 90 ? '#e74c3c' :
       this.usedPercentage >= 70 ? '#f39c12' : '#4ecdc4';
 
-    const usedPercentageForChart = Math.min(this.usedPercentage, 100);
-    const availablePercentageForChart = Math.max(0, 100 - usedPercentageForChart);
-
     this.doughnutData = {
       labels: ['Usado', 'Disponible'],
       datasets: [{
-        data: [usedPercentageForChart, availablePercentageForChart],
+        data: [this.usedPercentage, this.availablePercentage],
         backgroundColor: [usedColor, '#ecf0f1'],
         borderWidth: 0,
         hoverOffset: 5
@@ -445,7 +446,7 @@ export class ModoGraficosPage implements OnInit {
         'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
       meses.push({
-        nombre: monthNames[fecha.getMonth()],
+        nombre: `${monthNames[fecha.getMonth()]} ${fecha.getFullYear().toString().slice(-2)}`,
         ingresos,
         gastos,
         esMesActual: i === 0
@@ -544,29 +545,27 @@ export class ModoGraficosPage implements OnInit {
   }
 
   private generateLimitMessage() {
-    if (this.monthlyLimit <= 0) {
-      this.limitMessage = 'No has definido un límite mensual.';
-    } else if (this.usedLimit >= this.monthlyLimit) {
-      this.limitMessage = '¡Has alcanzado tu límite mensual!';
+    if (this.monthlyLimit.manual <= 0) {
+      this.limitMessage = 'No has definido un límite mensual manual.';
+      return;
+    }
+
+    if (this.usedPercentage >= 100) {
+      this.limitMessage = '¡Has alcanzado tu límite mensual manual!';
     } else if (this.usedPercentage >= 90) {
-      this.limitMessage = '¡Cuidado! Estás cerca del límite mensual.';
+      this.limitMessage = '¡Cuidado! Estás cerca del límite mensual manual.';
     } else if (this.usedPercentage >= 70) {
-      this.limitMessage = `Has usado más del ${this.usedPercentage.toFixed(0)}% de tu límite.`;
+      this.limitMessage = `Has usado el ${Math.round(this.usedPercentage)}% de tu límite manual.`;
     } else {
-      this.limitMessage = `Te queda $${this.limitLeft.toLocaleString('es-CL')} del límite mensual.`;
+      this.limitMessage = `Te queda $${this.limitLeft.manual.toLocaleString('es-CL')} del límite mensual manual.`;
     }
   }
 
   private updateCharts() {
     setTimeout(() => {
-      this.doughnutChart?.update();
-      this.chart?.update();
-      this.pieChart?.update();
-      this.lineChart?.update();
+      this.doughnutChart?.chart?.update();
+      this.pieChart?.chart?.update();
+      this.lineChart?.chart?.update();
     }, 100);
-  }
-
-  async onTransactionAdded() {
-    await this.loadAndProcessData();
   }
 }

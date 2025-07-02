@@ -85,7 +85,7 @@
             <div class="stat-item limit-section">
               <div class="stat-icon"><ion-icon name="wallet-outline"></ion-icon></div>
               <div class="stat-content">
-                <div class="stat-label">Límite Disponible</div>
+                <div class="stat-label">Límite Disponible ({{ diasRestantesMes }} días restantes)</div>
                 <div class="stat-value">{{ limitLeft | number:'1.0-0' }}</div>
                 <div class="stat-progress">
                   <div class="progress-bar" [style.width]="percentOfLimit + '%'"></div>
@@ -99,7 +99,7 @@
                 <div class="stat-icon"><ion-icon name="trending-down-outline"></ion-icon></div>
                 <div class="stat-content">
                   <div class="stat-label">Gastos del mes</div>
-                  <div class="stat-value">{{ gastosMes | number:'1.0-0' }}</div>
+                  <div class="stat-value">{{ gastoMensualActual | number:'1.0-0' }}</div>
                   <div class="small-text">{{ percentOfLimit }}% del límite</div>
                 </div>
               </div>

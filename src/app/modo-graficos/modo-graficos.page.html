@@ -13,9 +13,9 @@
       <div class="dashboard-card">
         <div class="card-header">
           <h2>Límite restante</h2>
-          <span class="badge">Débito</span>
+          <span class="badge">Manual</span>
         </div>
-        <div class="amount-large">${{ limitLeft | number }}</div>
+        <div class="amount-large">${{ limitLeft.manual | number }}</div>
         <div class="success-message">
           <ion-icon name="checkmark-circle"></ion-icon>
           {{ limitMessage }}
@@ -23,11 +23,11 @@
         <div class="stat-grid">
           <div class="stat-item">
             <p class="stat-label">Límite Total</p>
-            <p class="stat-value">${{ monthlyLimit | number }}</p>
+            <p class="stat-value">${{ monthlyLimit.manual | number }}</p>
           </div>
           <div class="stat-item">
             <p class="stat-label">Utilizado</p>
-            <p class="stat-value">${{ usedLimit | number }}</p>
+            <p class="stat-value">${{ usedLimit.manual | number }}</p>
           </div>
         </div>
       </div>
