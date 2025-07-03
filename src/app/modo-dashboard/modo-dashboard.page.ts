@@ -201,9 +201,6 @@ export class ModoDashboardPage implements OnInit, OnDestroy {
       ? Math.min((this.gastoMensualActual / this.monthlyLimit) * 100, 100)
       : 0;
 
-    // Calcular saldo (ingresos - gastos)
-    this.saldo = this.ingresoMes - this.gastoMensualActual;
-
     // Calcular días restantes
     const ultimoDiaMes = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     this.diasRestantesMes = ultimoDiaMes.getDate() - now.getDate();

@@ -48,6 +48,7 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
   public monthlyLimit: number = 0;
   public limitLeft: number = 0;
   public usedLimit: number = 0;
+  public gasto: number = 0;
   public movimientos: any[] = [];
 
   private awaitingResetConfirmation = false;
@@ -103,6 +104,7 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
       if (userData) {
         this.monthlyLimit = userData.limiteMensualManual || 0;
         this.saldo = userData.saldoManual || 0;
+        this.gasto = userData.gastoMensualActualManual || 0;
       }
 
       // Obtener movimientos manuales directamente
@@ -246,17 +248,17 @@ export class ModoChatbotPage implements OnInit, OnDestroy {
     }
 
     if (lowerMsg === '¿cuánto he gastado este mes?') {
-      return `📉 Este mes has gastado $${this.gastosMes.toLocaleString('es-CL')} ` +
-        `(${this.monthlyLimit > 0 ? Math.round((this.gastosMes / this.monthlyLimit) * 100) : 0}% de tu límite).`;
+      return `📉 Este mes has gastado $${this.gasto.toLocaleString('es-CL')} ` +
+        `(${this.monthlyLimit > 0 ? Math.round((this.gasto / this.saldo) * 100) : 0}% de tu saldo).`;
     }
 
-    if (lowerMsg === 'ver mi límite') {
+    if (lowerMsg === 'ver mi límite' || lowerMsg.includes('límite mensual')) {
       if (this.monthlyLimit <= 0) {
         return `📊 Aún no has establecido un límite mensual. Puedes configurarlo en el Dashboard.`;
       }
       return `🏦 Tu límite mensual es $${this.monthlyLimit.toLocaleString('es-CL')}. ` +
-        `Has gastado $${this.gastosMes.toLocaleString('es-CL')} ` +
-        `(te quedan $${this.limitLeft.toLocaleString('es-CL')}).`;
+        `Has gastado $${this.gasto.toLocaleString('es-CL')} ` +
+        `(te quedan $${Math.round((this.monthlyLimit - this.gasto))}).`;
     }
 
     return null;
