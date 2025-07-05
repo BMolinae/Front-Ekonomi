@@ -5,6 +5,7 @@ import { Firestore, collection, getDocs } from '@angular/fire/firestore';
 import { Chart, registerables } from 'chart.js';
 import { PdfService } from '../services/pdf.service';
 import { AuthService } from '../services/auth.service';
+import { ManualTransactionService } from '../services/manual-transaction.service';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
 import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
@@ -32,6 +33,7 @@ export class ModoDocumentosPage {
     private pdfService: PdfService,
     private platform: Platform,
     private alertController: AlertController,
+    private manualTransactionService: ManualTransactionService,
     private loadingController: LoadingController,
     private androidPermissions: AndroidPermissions
   ) { }
@@ -43,7 +45,7 @@ export class ModoDocumentosPage {
   async renderExportCharts() {
     try {
       const user = await this.auth.getCurrentUserData();
-      const movimientos = await this.auth.getMovimientos();
+      const movimientos: any[] = (await this.manualTransactionService.getTransactions().toPromise()) || [];
 
       const saldo = user.saldoManual || 0;
       const limite = user.limiteMensualManual || 0;
@@ -51,7 +53,7 @@ export class ModoDocumentosPage {
       const gastos = movimientos.filter(m => m.tipo === 'gasto');
       const ingresos = movimientos.filter(m => m.tipo === 'ingreso');
 
-      const usado = gastos.reduce((sum, g) => sum + +g.monto, 0);
+      const usado = user.gastoMensualActualManual
       const restante = limite - usado;
 
       // 🍩 Doughnut: Uso del Límite
