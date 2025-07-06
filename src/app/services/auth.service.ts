@@ -84,7 +84,7 @@ export class AuthService {
           return setDoc(userRef, {
             email,
             username,
-            saldoTarjeta: 500000,
+            saldoTarjeta: 0,
             saldoManual: 0,
             limiteMensual: 0,
             limiteMensualManual: 0,
