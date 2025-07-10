@@ -343,7 +343,7 @@ export class DashboardPage implements OnInit, OnDestroy {
           handler: async (data) => {
             try {
               // Validación de campos
-              if (!data.cardNumber || data.cardNumber.length !== 16) {
+              if (!data.cardNumber || data.cardNumber.length !== 16 || !/^\d{16}$/.test(data.cardNumber)) {
                 this.showToast('Número de tarjeta inválido');
                 return false;
               }
@@ -355,6 +355,22 @@ export class DashboardPage implements OnInit, OnDestroy {
                 this.showToast('Seleccione fecha de expiración');
                 return false;
               }
+
+              if (!data.expiryDate) {
+                this.showToast('Seleccione fecha de expiración');
+                return false;
+              }
+              const today = new Date();
+              const [month, year] = data.expiryDate.split('/');
+              const monthNumber = parseInt(month, 10);
+              const yearNumber = parseInt(year, 10) + 2000; // "25" → 2025
+              const expiryDate = new Date(yearNumber, monthNumber, 0);
+
+              if (expiryDate < today) {
+                this.showToast('La tarjeta está vencida');
+                return false;
+              }
+
               if (!data.cvv || data.cvv.length !== 3) {
                 this.showToast('CVV inválido');
                 return false;
